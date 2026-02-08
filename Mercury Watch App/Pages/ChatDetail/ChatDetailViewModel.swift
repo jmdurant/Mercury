@@ -160,7 +160,7 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
         canSendVoiceNotes = true
         canSendStickers = true
         
-        chatName = "Astro"
+        chatName = "Houston"
         avatar = .astro
         
         sendService = SendMessageServiceMock(insertMessage)
@@ -180,32 +180,44 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
                 isSenderHidden: true,
                 date: .iPhonePresentationDate,
                 isOutgoing: false,
-                content: .text("Hello World 👋")
+                content: .text("Many supported ✌️")
             ),
             .init(
                 id: 1,
                 isSenderHidden: true,
                 date: .iPhonePresentationDate,
                 isOutgoing: false,
-                content: .text("Landed on Mercury? 👽")
+                content: .text("**hello**")
             ),
             .init(
                 id: 2,
                 isSenderHidden: true,
                 date: .appleWatchPresentationDate,
                 isOutgoing: true,
-                content: .text("Yes, it's amazing! 😍")
+                content: .stickerImage(model: .init(emoji: "", getImage: {
+                    return UIImage(named: "sticker-alien")
+                }))
             ),
-//            
-//            .init(
-//                id: 3,
-//                isSenderHidden: true,
-//                date: .now,
-//                isOutgoing: false,
-//                content: .voiceNote(model: .init(getPlayer: {
-//                    PlayerServiceMock()
-//                }))
-//            ),
+//
+            .init(
+                id: 3,
+                isSenderHidden: true,
+                date: .iPhonePresentationDate,
+                isOutgoing: true,
+                content: .voiceNote(model: .init(getPlayer: {
+                    PlayerServiceMock()
+                }))
+            ),
+            
+                .init(
+                    id: 4,
+                    isSenderHidden: true,
+                    date: .appleWatchPresentationDate,
+                    isOutgoing: false,
+                    content: .location(model: .init(title: "Apple Park", coordinate: CLLocationCoordinate2DMake(
+                        37.3348015587359, (-122.00891835050895 - 0.00009)
+                    )))
+                ),
         ]
     }
 }
