@@ -39,6 +39,12 @@ struct LoginPage: View {
                 }
             }
             .loadable(isLoading: vm.isLoading)
+            .sheet(isPresented: .constant(vm.showTermsOfService)) {
+                AlertView.termsOfService {
+                    vm.didPressAcceptTermsOfService()
+                }
+                .toolbar(.hidden, for: .navigationBar)
+            }
             .sheet(isPresented: vm.showPassword) {
                 InputCtaView(
                     model: vm.state == .twoFactorPasswordFailure ? .passwordError : .password,
