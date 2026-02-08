@@ -102,6 +102,8 @@
 		A0CF53292BDFD79400BA394B /* TDLibManagerProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF53282BDFD79400BA394B /* TDLibManagerProtocols.swift */; };
 		A0CF532B2BDFD79D00BA394B /* TDLibViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */; };
 		A0DF848A2CCB9A7500CC101E /* FileManager+.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DF84892CCB9A6F00CC101E /* FileManager+.swift */; };
+		A9EF32402F38D9C100BD8A8B /* ProfileDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */; };
+		A9EF32422F38DC7F00BD8A8B /* ProfileDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -214,6 +216,8 @@
 		A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDLibViewModel.swift; sourceTree = "<group>"; };
 		A0DF84892CCB9A6F00CC101E /* FileManager+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+.swift"; sourceTree = "<group>"; };
 		A0F63BD82BD63B0500F7135E /* Mercury-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Mercury-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
+		A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailPage.swift; sourceTree = "<group>"; };
+		A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -458,6 +462,7 @@
 				A080D8A02CD64B1700920564 /* Settings */,
 				A080D8972CD64B1700920564 /* ChatList */,
 				A080D8942CD64B1700920564 /* ChatDetail */,
+				A9EF323E2F38D9AC00BD8A8B /* ProfileDetail */,
 			);
 			path = Pages;
 			sourceTree = "<group>";
@@ -552,6 +557,15 @@
 				A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */,
 			);
 			path = TDLib;
+			sourceTree = "<group>";
+		};
+		A9EF323E2F38D9AC00BD8A8B /* ProfileDetail */ = {
+			isa = PBXGroup;
+			children = (
+				A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */,
+				A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */,
+			);
+			path = ProfileDetail;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -692,6 +706,7 @@
 				A080D8C82CDA239B00920564 /* MessageView.swift in Sources */,
 				9B0BD4A72CD6951200ADE7C9 /* QRCodeView.swift in Sources */,
 				9B5600FF2D59D78D005E28F1 /* ScalingButtonStyle.swift in Sources */,
+				A9EF32422F38DC7F00BD8A8B /* ProfileDetailViewModel.swift in Sources */,
 				A0CF53272BDFD78900BA394B /* TDLibManager.swift in Sources */,
 				9BA9A4F22CE798C5005C717C /* FlowLayout.swift in Sources */,
 				9B53DD7C2C5F933A00CAA125 /* MessageBubbleView.swift in Sources */,
@@ -746,6 +761,7 @@
 				A05C1AC52BECCF4B00724B6E /* Message+.swift in Sources */,
 				A080D8E02CDC08FF00920564 /* PillView.swift in Sources */,
 				A080D8B82CD7843000920564 /* ChatCellView.swift in Sources */,
+				A9EF32402F38D9C100BD8A8B /* ProfileDetailPage.swift in Sources */,
 				4A4743F22BF796DF00264855 /* Color+.swift in Sources */,
 				9BB3BCB62D14379400CAFB31 /* KeypadView.swift in Sources */,
 				9B0418F02CE10DF700DFFA3F /* ChatDetailViewModel+MessageContents.swift in Sources */,

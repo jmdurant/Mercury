@@ -73,7 +73,9 @@ struct ChatDetailPage: View {
             .onDisappear(perform: vm.onCloseChat)
         }
         .sheet(isPresented: $vm.showChatInfoView) {
-            AlertView.inDevelopment("chat info is")
+            if let profileDetailType = vm.getProfileDetailPageType() {
+                ProfileDetailPage(type: profileDetailType)
+            }
         }
         .sheet(isPresented: $vm.showStickersView) {
             StickersPickerSubpage(
