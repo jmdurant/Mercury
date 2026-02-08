@@ -58,7 +58,7 @@ struct ChatDetailPage: View {
                 }
                 
                 ToolbarItemGroup(placement: .bottomBar) {
-                    toolbarActions()
+                    if !vm.isChatBlocked { toolbarActions() }
                 }
             }
             .containerBackground(for: .navigation) {
@@ -71,6 +71,11 @@ struct ChatDetailPage: View {
             .toolbarForegroundStyle(.white, for: .navigationBar)
             .onAppear(perform: vm.onOpenChat)
             .onDisappear(perform: vm.onCloseChat)
+        }
+        .overlay {
+            if vm.isChatBlocked {
+                blockView()
+            }
         }
         .sheet(isPresented: $vm.showChatInfoView) {
             if let profileDetailType = vm.getProfileDetailPageType() {
@@ -162,6 +167,28 @@ struct ChatDetailPage: View {
         
         Rectangle()
             .foregroundStyle(gradient)
+    }
+    
+    @ViewBuilder
+    private func blockView() -> some View {
+        VStack {
+            Text("You've blocked this user. Messaging is currently disabled.")
+                .foregroundStyle(.secondary)
+                .padding(.bottom)
+                .multilineTextAlignment(.center)
+            
+            Button(action: vm.unblockUser, label: {
+                Label("Unblock", systemImage: "lock.open.fill")
+            })
+            .tint(.red)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .background {
+            Rectangle()
+                .fill(.thinMaterial)
+                .ignoresSafeArea()
+        }
+        
     }
     
 }

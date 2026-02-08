@@ -46,6 +46,7 @@ class ChatDetailViewModel: TDLibViewModel {
     var chatActionTimer: Timer?
     
     private var chatType: ChatType?
+    var isChatBlocked: Bool = false
     
     init(chatId: Int64) {
         self.chatId = chatId
@@ -87,6 +88,7 @@ class ChatDetailViewModel: TDLibViewModel {
                     self.lastReadInboxMessageId = chat.lastReadInboxMessageId
                     self.avatar = chat.toAvatarModel()
                     self.chatType = chat.type
+                    self.isChatBlocked = chat.blockList != nil
                 }
                 
                 let newMessages = await self.requestMessages(firstBatch: true)
@@ -129,6 +131,8 @@ class ChatDetailViewModel: TDLibViewModel {
                 self.updateChatReadOutbox(update)
             case .updateMessageContentOpened(let update):
                 self.updateMessageContentOpened(update)
+            case .updateChatBlockList(let list):
+                self.updateChatBlockList(list)
             default:
                 break
             }
@@ -172,6 +176,18 @@ class ChatDetailViewModel: TDLibViewModel {
         default:
             // TODO: Implement all cases (missing .chatTypeSecret)
             return nil
+        }
+    }
+    
+    public func unblockUser() {
+        if case .chatTypePrivate(let chatTypePrivate) = self.chatType {
+            let userId = chatTypePrivate.userId
+            Task.detached {
+                try await TDLibManager.shared.client?.setMessageSenderBlockList(
+                    blockList: nil,
+                    senderId: .messageSenderUser(.init(userId: userId))
+                )
+            }
         }
     }
     

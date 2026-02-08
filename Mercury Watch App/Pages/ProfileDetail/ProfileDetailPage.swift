@@ -19,6 +19,9 @@ struct ProfileDetailPage: View {
     @Mockable
     var vm: ProfileDetailViewModel
     
+    @Environment(\.dismiss) private var dismiss
+
+    
     init(type: ProfileDetailPageType) {
         _vm = Mockable.state(
             value: { ProfileDetailViewModel(type: type) },
@@ -28,45 +31,78 @@ struct ProfileDetailPage: View {
     
     var body: some View {
         
-        VStack(alignment: .leading) {
-            if let title = vm.title {
-                Text(title)
-                    .font(.title2)
-                    .fontDesign(.rounded)
-                    .fontWeight(.semibold)
+        GeometryReader { geo in
+            ScrollView {
+                
+                VStack(alignment: .leading) {
+                    if let title = vm.title {
+                        Text(title)
+                            .font(.title2)
+                            .fontDesign(.rounded)
+                            .fontWeight(.semibold)
+                    }
+                    if let subtitle = vm.subtitle {
+                        Text(subtitle)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .safeAreaPadding([.bottom, .leading])
+                .padding(.bottom, 20)
+                .frame(width: geo.size.width, alignment: .leading)
+                .frame(height: geo.size.height, alignment: .bottom)
+                
+                bottomView()
+                    .padding(.bottom)
             }
-            if let subtitle = vm.subtitle {
-                Text(subtitle)
-                    .foregroundStyle(.secondary)
+            .background {
+                backgroundImage()
             }
         }
-        .padding(.leading)
-        .padding(.bottom, -6)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(maxHeight: .infinity, alignment: .bottom)
-        .background {
-            backgroundImage()
-        }
+        .ignoresSafeArea()
         
     }
     
     @ViewBuilder
-    func backgroundImage() -> some View {
+    private func backgroundImage() -> some View {
         
         if let avatarModel = vm.avatarModel {
-            GeometryReader { geo in
-                AvatarView(model: avatarModel)
-                    .scaledToFill()
-                    .frame(
-                        width: geo.size.width,
-                        height: geo.size.height
-                    )
+            
+            AvatarView(model: avatarModel)
+                .scaledToFill()
+                .overlay {
+                    Rectangle()
+                        .foregroundStyle(Gradient(colors: [.clear, .clear, .black]))
+                }
+                .ignoresSafeArea()
+        }
+    }
+    
+    @ViewBuilder
+    private func bottomView() -> some View {
+        VStack {
+            // TODO: add profile info rows
+            if vm.isBlockEnabled {
+                blockButton()
             }
-            .overlay {
-                Rectangle()
-                    .foregroundStyle(Gradient(colors: [.clear, .clear, .black]))
+        }
+    }
+    
+    @ViewBuilder
+    private func blockButton() -> some View {
+        let title = "Block"
+        if #available(watchOS 26.0, *) {
+            Button(title) {
+                vm.onBlockUserTap()
+                dismiss()
             }
-            .ignoresSafeArea()
+            .buttonStyle(.glass)
+            .tint(.red)
+        } else {
+            Button(title) {
+                vm.onBlockUserTap()
+                dismiss()
+            }
+            .tint(.red)
         }
     }
     
