@@ -37,6 +37,7 @@
 		9BB3BCB42D14376700CAFB31 /* CodeKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB32D14376700CAFB31 /* CodeKeypadView.swift */; };
 		9BB3BCB62D14379400CAFB31 /* KeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB52D14379400CAFB31 /* KeypadView.swift */; };
 		9BB3BCB82D14379F00CAFB31 /* PhoneKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB72D14379F00CAFB31 /* PhoneKeypadView.swift */; };
+		9BCDA5002F5DCD1500FEBAE4 /* ReportReason+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */; };
 		9BD9F9E42CDD044900833C48 /* AsyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD9F9E32CDD044900833C48 /* AsyncView.swift */; };
 		9BF303562D3A70EB00309992 /* TextDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF303552D3A70EB00309992 /* TextDivider.swift */; };
 		A0054EA62BF3E12F009F2CEB /* TDLibKit in Frameworks */ = {isa = PBXBuildFile; productRef = A0054EA52BF3E12F009F2CEB /* TDLibKit */; };
@@ -159,6 +160,7 @@
 		9BB3BCB32D14376700CAFB31 /* CodeKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeKeypadView.swift; sourceTree = "<group>"; };
 		9BB3BCB52D14379400CAFB31 /* KeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeypadView.swift; sourceTree = "<group>"; };
 		9BB3BCB72D14379F00CAFB31 /* PhoneKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneKeypadView.swift; sourceTree = "<group>"; };
+		9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReportReason+.swift"; sourceTree = "<group>"; };
 		9BD9F9E32CDD044900833C48 /* AsyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncView.swift; sourceTree = "<group>"; };
 		9BF303552D3A70EB00309992 /* TextDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextDivider.swift; sourceTree = "<group>"; };
 		A04ABE502CE00F1600641BC1 /* MessageOptionsSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageOptionsSubpage.swift; sourceTree = "<group>"; };
@@ -271,6 +273,7 @@
 				9B4451F92C45C63D00A6EBC2 /* User+.swift */,
 				9B2805CB2C4671C500F7DF72 /* TDImage+.swift */,
 				9B8493E72C7623B700AC90E9 /* View+.swift */,
+				9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -757,6 +760,7 @@
 				9BD9F9E42CDD044900833C48 /* AsyncView.swift in Sources */,
 				A0DF848A2CCB9A7500CC101E /* FileManager+.swift in Sources */,
 				A080D8F22CDE2AFB00920564 /* ChatDetailViewModel+Messages.swift in Sources */,
+				9BCDA5002F5DCD1500FEBAE4 /* ReportReason+.swift in Sources */,
 				A0CDF8BE2CE78FC70015E20E /* UserCellView.swift in Sources */,
 				A05C1AC52BECCF4B00724B6E /* Message+.swift in Sources */,
 				A080D8E02CDC08FF00920564 /* PillView.swift in Sources */,

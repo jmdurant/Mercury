@@ -104,7 +104,8 @@ struct ChatDetailPage: View {
                     model: .init(
                         chatId: vm.chatId,
                         messageId: messageId,
-                        sendService: sendService
+                        sendService: sendService,
+                        chatType: vm.chatType
                     )
                 )
             }

@@ -45,7 +45,7 @@ class ChatDetailViewModel: TDLibViewModel {
     var chatAction: ChatAction?
     var chatActionTimer: Timer?
     
-    private var chatType: ChatType?
+    var chatType: ChatType?
     var isChatBlocked: Bool = false
     
     init(chatId: Int64) {

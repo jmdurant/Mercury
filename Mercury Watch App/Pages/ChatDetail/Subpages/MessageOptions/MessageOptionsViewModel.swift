@@ -13,8 +13,16 @@ class MessageOptionsViewModel {
     
     var emojis: [String] = []
     var selectedEmoji: String? = nil
+    var showReportMessageOptions: Bool = false
+    
+    var shouldDisplayReportButton: Bool {
+        if case .chatTypeBasicGroup(_) = model.chatType { return true }
+        if case .chatTypeSupergroup(_) = model.chatType { return true }
+        return false
+    }
     
     let model: MessageOptionsModel
+    let reportMessageOptions: [ReportReason] = [.reportReasonSpam, .reportReasonViolence, .reportReasonPornography, .reportReasonChildAbuse, .reportReasonCopyright, .reportReasonUnrelatedLocation, .reportReasonFake, .reportReasonIllegalDrugs, .reportReasonPersonalDetails]
     
     private let logger = LoggerService(MessageOptionsViewModel.self)
     
@@ -91,6 +99,23 @@ class MessageOptionsViewModel {
             messageId: messageId
         )
         
+    }
+    
+    func reportMessage(_ reason: ReportReason) {
+        let chatId = model.chatId
+        let messageId = model.messageId
+        
+        Task {
+            do {
+                try await TDLibManager.shared.client?.reportChat(chatId: chatId, messageIds: [messageId], reason: reason, text: nil)
+            } catch {
+                logger.log(error)
+            }
+            
+            await MainActor.run {
+                self.showReportMessageOptions = false
+            }
+        }
     }
 }
 
