@@ -21,7 +21,13 @@ class ChatDetailViewModel: TDLibViewModel {
     var isLoadingMoreMessages: Bool = false
     
     var showAudioMessageView: Bool = false
-    var showStickersView: Bool = false
+    var showStickersView: Bool = false {
+        didSet {
+            if !showStickersView {
+                self.chatAction = nil
+            }
+        }
+    }
     var showOptionsView: Bool = false
     var showChatInfoView: Bool = false
     
@@ -156,6 +162,15 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
         
         chatName = "Astro"
         avatar = .astro
+        
+        sendService = SendMessageServiceMock(insertMessage)
+    }
+    
+    func insertMessage(_ msg: MessageModel.MessageContent) {
+        self.messages.append(.mock(
+            id: self.messages.count,
+            content: msg
+        ))
     }
     
     override func loadChatData() {
