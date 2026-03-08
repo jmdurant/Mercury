@@ -34,7 +34,7 @@ class MessageOptionsViewModel {
         }
     }
     
-    private func getReactions() async {
+    fileprivate func getReactions() async {
         
         let chatId = model.chatId
         let messageId = model.messageId
@@ -57,7 +57,7 @@ class MessageOptionsViewModel {
         }
     }
     
-    private func getSelectedEmoji() async {
+    fileprivate func getSelectedEmoji() async {
         
         let chatId = model.chatId
         let messageId = model.messageId
@@ -128,5 +128,21 @@ class MessageOptionsViewModelMock: MessageOptionsViewModel {
                 sendService: SendMessageServiceMock { _ in }
             )
         )
+        
+    }
+    
+    override var shouldDisplayReportButton: Bool {
+        return true
+    }
+    
+    override func getReactions() async {
+        self.emojis = ["🤣", "❤️", "🤝", "🔥",
+                       "👌", "😱", "👀", "‍‍❤️‍🔥",
+                       "🤯", "😢", "😭", "🗿"]
+    }
+    
+    override func getSelectedEmoji() async {}
+    override func reportMessage(_ reason: ReportReason) {
+        self.showReportMessageOptions = false
     }
 }

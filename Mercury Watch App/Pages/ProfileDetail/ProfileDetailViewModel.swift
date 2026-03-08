@@ -65,10 +65,12 @@ class ProfileDetailViewModel: TDLibViewModel {
 class ProfileDetailViewModelMock: ProfileDetailViewModel {
     init() {
         super.init(type: .user(userId: 0))
-        self.title = "Title"
-        self.subtitle = "Subtitle"
-        self.avatarModel = .alessandro
+        self.title = "Huston"
+        self.subtitle = "42 members"
+        self.avatarModel = .huston(isFullScreen: true)
     }
+    
+    override var isBlockEnabled: Bool { return true }
     
     override func fetchData(_ type: ProfileDetailPageType) async throws { }
 }

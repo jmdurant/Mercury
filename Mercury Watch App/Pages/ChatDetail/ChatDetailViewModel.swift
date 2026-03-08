@@ -140,7 +140,7 @@ class ChatDetailViewModel: TDLibViewModel {
     }
      
     /// Do not call this function manually, it is periodically called from a task
-    private func setChatAction(_ action: ChatAction?) {
+    fileprivate func setChatAction(_ action: ChatAction?) {
         Task.detached(priority: .background) {
             do {
                 try await TDLibManager.shared.client?.sendChatAction(
@@ -204,7 +204,7 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
         canSendStickers = true
         
         chatName = "Houston"
-        avatar = .astro
+        avatar = .huston()
         
         sendService = SendMessageServiceMock(insertMessage)
     }
@@ -223,14 +223,14 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
                 isSenderHidden: true,
                 date: .iPhonePresentationDate,
                 isOutgoing: false,
-                content: .text("Many supported ✌️")
+                content: .text("Hello World 👋")
             ),
             .init(
                 id: 1,
                 isSenderHidden: true,
                 date: .iPhonePresentationDate,
                 isOutgoing: false,
-                content: .text("**hello**")
+                content: .text("Landed on Mercury? 👽")
             ),
             .init(
                 id: 2,
@@ -240,27 +240,27 @@ class ChatDetailViewModelMock: ChatDetailViewModel {
                 content: .stickerImage(model: .init(emoji: "", getImage: {
                     return UIImage(named: "sticker-alien")
                 }))
-            ),
-//
-            .init(
-                id: 3,
-                isSenderHidden: true,
-                date: .iPhonePresentationDate,
-                isOutgoing: true,
-                content: .voiceNote(model: .init(getPlayer: {
-                    PlayerServiceMock()
-                }))
-            ),
-            
-                .init(
-                    id: 4,
-                    isSenderHidden: true,
-                    date: .appleWatchPresentationDate,
-                    isOutgoing: false,
-                    content: .location(model: .init(title: "Apple Park", coordinate: CLLocationCoordinate2DMake(
-                        37.3348015587359, (-122.00891835050895 - 0.00009)
-                    )))
-                ),
+            )
         ]
+        
+        if let player = PlayerServiceMock() {
+            self.messages.append (
+                .init(
+                    id: 3,
+                    isSenderHidden: true,
+                    date: .iPhonePresentationDate,
+                    isOutgoing: true,
+                    content: .voiceNote(model: .init(getPlayer: { return player }))
+                )
+            )
+        }
+        
+            
     }
+    
+    override public func getProfileDetailPageType() -> ProfileDetailPageType? {
+        return .user(userId: 0)
+    }
+    
+    override func setChatAction(_ action: ChatAction?) {}
 }

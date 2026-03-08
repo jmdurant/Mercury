@@ -138,16 +138,16 @@ extension AvatarModel {
             avatarImage: AsyncImageModel(
                 thumbnail: UIImage(named: "alessandro"),
                 getImage: { UIImage(named: "alessandro") }
-            ), isFullScreen: true
+            )
         )
     }
     
-    static var astro: AvatarModel {
+    static func huston(isFullScreen: Bool = false) -> AvatarModel {
         AvatarModel(
             avatarImage: AsyncImageModel(
-                thumbnail: UIImage(named: "astro"),
-                getImage: { UIImage(named: "astro") }
-            )
+                thumbnail: UIImage(named: "huston"),
+                getImage: { UIImage(named: "huston") }
+            ), isFullScreen: isFullScreen
         )
     }
 }
