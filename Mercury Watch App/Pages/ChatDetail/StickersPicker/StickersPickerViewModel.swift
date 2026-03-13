@@ -146,7 +146,7 @@ class StickersPickerViewModelMock: StickersPickerViewModel {
         
         self.isLoading = false
         self.recentStickers = [
-            .init(getImage: { UIImage(named: "alessandro") }),
+            .init(getImage: { UIImage(named: "sticker-alien") }),
             .init(getImage: { UIImage(named: "marco") })
         ]
         

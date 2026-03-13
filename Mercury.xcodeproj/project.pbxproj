@@ -37,6 +37,7 @@
 		9BB3BCB42D14376700CAFB31 /* CodeKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB32D14376700CAFB31 /* CodeKeypadView.swift */; };
 		9BB3BCB62D14379400CAFB31 /* KeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB52D14379400CAFB31 /* KeypadView.swift */; };
 		9BB3BCB82D14379F00CAFB31 /* PhoneKeypadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BB3BCB72D14379F00CAFB31 /* PhoneKeypadView.swift */; };
+		9BCDA5002F5DCD1500FEBAE4 /* ReportReason+.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */; };
 		9BD9F9E42CDD044900833C48 /* AsyncView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BD9F9E32CDD044900833C48 /* AsyncView.swift */; };
 		9BF303562D3A70EB00309992 /* TextDivider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BF303552D3A70EB00309992 /* TextDivider.swift */; };
 		A0054EA62BF3E12F009F2CEB /* TDLibKit in Frameworks */ = {isa = PBXBuildFile; productRef = A0054EA52BF3E12F009F2CEB /* TDLibKit */; };
@@ -102,6 +103,8 @@
 		A0CF53292BDFD79400BA394B /* TDLibManagerProtocols.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF53282BDFD79400BA394B /* TDLibManagerProtocols.swift */; };
 		A0CF532B2BDFD79D00BA394B /* TDLibViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */; };
 		A0DF848A2CCB9A7500CC101E /* FileManager+.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0DF84892CCB9A6F00CC101E /* FileManager+.swift */; };
+		A9EF32402F38D9C100BD8A8B /* ProfileDetailPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */; };
+		A9EF32422F38DC7F00BD8A8B /* ProfileDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -157,6 +160,7 @@
 		9BB3BCB32D14376700CAFB31 /* CodeKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodeKeypadView.swift; sourceTree = "<group>"; };
 		9BB3BCB52D14379400CAFB31 /* KeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeypadView.swift; sourceTree = "<group>"; };
 		9BB3BCB72D14379F00CAFB31 /* PhoneKeypadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneKeypadView.swift; sourceTree = "<group>"; };
+		9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReportReason+.swift"; sourceTree = "<group>"; };
 		9BD9F9E32CDD044900833C48 /* AsyncView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AsyncView.swift; sourceTree = "<group>"; };
 		9BF303552D3A70EB00309992 /* TextDivider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextDivider.swift; sourceTree = "<group>"; };
 		A04ABE502CE00F1600641BC1 /* MessageOptionsSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MessageOptionsSubpage.swift; sourceTree = "<group>"; };
@@ -214,6 +218,8 @@
 		A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDLibViewModel.swift; sourceTree = "<group>"; };
 		A0DF84892CCB9A6F00CC101E /* FileManager+.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "FileManager+.swift"; sourceTree = "<group>"; };
 		A0F63BD82BD63B0500F7135E /* Mercury-Watch-App-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Mercury-Watch-App-Info.plist"; sourceTree = SOURCE_ROOT; };
+		A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailPage.swift; sourceTree = "<group>"; };
+		A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileDetailViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -267,6 +273,7 @@
 				9B4451F92C45C63D00A6EBC2 /* User+.swift */,
 				9B2805CB2C4671C500F7DF72 /* TDImage+.swift */,
 				9B8493E72C7623B700AC90E9 /* View+.swift */,
+				9BCDA4FF2F5DCD1500FEBAE4 /* ReportReason+.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -458,6 +465,7 @@
 				A080D8A02CD64B1700920564 /* Settings */,
 				A080D8972CD64B1700920564 /* ChatList */,
 				A080D8942CD64B1700920564 /* ChatDetail */,
+				A9EF323E2F38D9AC00BD8A8B /* ProfileDetail */,
 			);
 			path = Pages;
 			sourceTree = "<group>";
@@ -552,6 +560,15 @@
 				A0CF532A2BDFD79D00BA394B /* TDLibViewModel.swift */,
 			);
 			path = TDLib;
+			sourceTree = "<group>";
+		};
+		A9EF323E2F38D9AC00BD8A8B /* ProfileDetail */ = {
+			isa = PBXGroup;
+			children = (
+				A9EF323F2F38D9BE00BD8A8B /* ProfileDetailPage.swift */,
+				A9EF32412F38DC7F00BD8A8B /* ProfileDetailViewModel.swift */,
+			);
+			path = ProfileDetail;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -692,6 +709,7 @@
 				A080D8C82CDA239B00920564 /* MessageView.swift in Sources */,
 				9B0BD4A72CD6951200ADE7C9 /* QRCodeView.swift in Sources */,
 				9B5600FF2D59D78D005E28F1 /* ScalingButtonStyle.swift in Sources */,
+				A9EF32422F38DC7F00BD8A8B /* ProfileDetailViewModel.swift in Sources */,
 				A0CF53272BDFD78900BA394B /* TDLibManager.swift in Sources */,
 				9BA9A4F22CE798C5005C717C /* FlowLayout.swift in Sources */,
 				9B53DD7C2C5F933A00CAA125 /* MessageBubbleView.swift in Sources */,
@@ -742,10 +760,12 @@
 				9BD9F9E42CDD044900833C48 /* AsyncView.swift in Sources */,
 				A0DF848A2CCB9A7500CC101E /* FileManager+.swift in Sources */,
 				A080D8F22CDE2AFB00920564 /* ChatDetailViewModel+Messages.swift in Sources */,
+				9BCDA5002F5DCD1500FEBAE4 /* ReportReason+.swift in Sources */,
 				A0CDF8BE2CE78FC70015E20E /* UserCellView.swift in Sources */,
 				A05C1AC52BECCF4B00724B6E /* Message+.swift in Sources */,
 				A080D8E02CDC08FF00920564 /* PillView.swift in Sources */,
 				A080D8B82CD7843000920564 /* ChatCellView.swift in Sources */,
+				A9EF32402F38D9C100BD8A8B /* ProfileDetailPage.swift in Sources */,
 				4A4743F22BF796DF00264855 /* Color+.swift in Sources */,
 				9BB3BCB62D14379400CAFB31 /* KeypadView.swift in Sources */,
 				9B0418F02CE10DF700DFFA3F /* ChatDetailViewModel+MessageContents.swift in Sources */,
@@ -893,7 +913,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = 6MWN6EWBL2;
 				ENABLE_PREVIEWS = YES;
@@ -925,7 +945,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = 6MWN6EWBL2;
 				ENABLE_PREVIEWS = YES;
@@ -957,7 +977,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 6MWN6EWBL2;
 				INFOPLIST_KEY_CFBundleDisplayName = Mercury;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
@@ -974,7 +994,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = 6MWN6EWBL2;
 				INFOPLIST_KEY_CFBundleDisplayName = Mercury;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;

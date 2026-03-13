@@ -33,9 +33,7 @@ extension ChatDetailViewModel {
     }
     
     func onPressAvatar() {
-#if DEBUG
         self.showChatInfoView = true
-#endif
     }
     
     func onPressTextInsert() {
@@ -68,7 +66,6 @@ extension ChatDetailViewModel {
     }
     
     func onDublePressOf(_ message: MessageModel) {
-        guard !AppState.shared.isMock else { return }
         selectedMessage = message
         showOptionsView = true
     }

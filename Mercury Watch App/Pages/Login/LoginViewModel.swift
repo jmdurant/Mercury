@@ -34,6 +34,7 @@ class LoginViewModel: TDLibViewModel {
     
     var isLoading: Bool = true
     var showFullscreenQR: Bool = false
+    var showTermsOfService: Bool = !UserDefaults.standard.bool(forKey: "hasAcceptedTermsOfService")
     var qrCodeLink: String? = nil
     var lastInputCta: String? = nil
     
@@ -88,6 +89,11 @@ class LoginViewModel: TDLibViewModel {
     
     func didPressLoginButton() {
         self.state = .phoneNumberLogin
+    }
+    
+    func didPressAcceptTermsOfService() {
+        showTermsOfService = false
+        UserDefaults.standard.set(true, forKey: "hasAcceptedTermsOfService")
     }
     
     // MARK: - TDLib

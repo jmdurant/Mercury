@@ -212,7 +212,7 @@ class ChatListViewModelMock: ChatListViewModel {
                 avatar: .alessandro,
                 isMuted: false,
                 isPinned: false,
-                messageStyle: .message("Lorem ipsum dolor sit amet."),
+                messageStyle: .message("Manage multiple chats and folders 📁"),
                 unreadBadgeStyle: .message(count: 3)
             ),
             .init(
@@ -222,8 +222,7 @@ class ChatListViewModelMock: ChatListViewModel {
                 avatar: .marco,
                 isMuted: false,
                 isPinned: false,
-                messageStyle: .action("is typing"),
-                unreadBadgeStyle: .reaction
+                messageStyle: .action("is typing")
             ),
         ]
     }
