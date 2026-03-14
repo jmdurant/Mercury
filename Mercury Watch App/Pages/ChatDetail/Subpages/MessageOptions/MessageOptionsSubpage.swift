@@ -15,11 +15,13 @@ struct MessageOptionsSubpage: View {
     var vm: MessageOptionsViewModel
     
     @Binding var isPresented: Bool
-    
-    init(isPresented: Binding<Bool>, model: MessageOptionsModel) {
+    var onReply: (() -> Void)?
+
+    init(isPresented: Binding<Bool>, model: MessageOptionsModel, onReply: (() -> Void)? = nil) {
         self._isPresented = isPresented
+        self.onReply = onReply
         _vm = Mockable.state(
-            value: { MessageOptionsViewModel(model: model) },
+            value: { MessageOptionsViewModel(model: model, onReply: onReply) },
             mock: { MessageOptionsViewModelMock() }
         )
     }
@@ -54,6 +56,22 @@ struct MessageOptionsSubpage: View {
             }
             .padding(.horizontal)
             
+            Divider()
+                .padding(.vertical, 4)
+
+            Button {
+                vm.replyToMessage()
+                isPresented = false
+            } label: {
+                Label("Reply", systemImage: "arrowshape.turn.up.left.fill")
+            }
+
+            Button(role: .destructive) {
+                vm.showDeleteConfirmation = true
+            } label: {
+                Label("Delete", systemImage: "trash.fill")
+            }
+
             if vm.shouldDisplayReportButton {
                 Button(action: {
                     vm.showReportMessageOptions = true
@@ -62,6 +80,19 @@ struct MessageOptionsSubpage: View {
                 })
                 .tint(.red)
             }
+        }
+        .confirmationDialog("Delete Message", isPresented: $vm.showDeleteConfirmation) {
+            Button("Delete for Me", role: .destructive) {
+                vm.deleteMessage(forEveryone: false)
+                isPresented = false
+            }
+            if vm.canDeleteForEveryone {
+                Button("Delete for Everyone", role: .destructive) {
+                    vm.deleteMessage(forEveryone: true)
+                    isPresented = false
+                }
+            }
+            Button("Cancel", role: .cancel) {}
         }
         .sheet(isPresented: $vm.showReportMessageOptions) {
             List {

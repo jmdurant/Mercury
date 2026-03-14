@@ -14,6 +14,9 @@ class MessageOptionsViewModel {
     var emojis: [String] = []
     var selectedEmoji: String? = nil
     var showReportMessageOptions: Bool = false
+    var showDeleteConfirmation: Bool = false
+    var canDeleteForEveryone: Bool = false
+    var onReply: (() -> Void)?
     
     var shouldDisplayReportButton: Bool {
         if case .chatTypeBasicGroup(_) = model.chatType { return true }
@@ -26,11 +29,13 @@ class MessageOptionsViewModel {
     
     private let logger = LoggerService(MessageOptionsViewModel.self)
     
-    init(model: MessageOptionsModel) {
+    init(model: MessageOptionsModel, onReply: (() -> Void)? = nil) {
         self.model = model
+        self.onReply = onReply
         Task.detached(priority: .high) {
             await self.getReactions()
             await self.getSelectedEmoji()
+            await self.checkCanDelete()
         }
     }
     
@@ -101,6 +106,39 @@ class MessageOptionsViewModel {
         
     }
     
+    fileprivate func checkCanDelete() async {
+        do {
+            guard let message = try await TDLibManager.shared.client?.getMessage(
+                chatId: model.chatId,
+                messageId: model.messageId
+            ) else { return }
+
+            await MainActor.run {
+                self.canDeleteForEveryone = message.canBeDeletedForAllUsers
+            }
+        } catch {
+            logger.log(error, level: .error)
+        }
+    }
+
+    func deleteMessage(forEveryone: Bool) {
+        Task {
+            do {
+                try await TDLibManager.shared.client?.deleteMessages(
+                    chatId: model.chatId,
+                    messageIds: [model.messageId],
+                    revoke: forEveryone
+                )
+            } catch {
+                logger.log(error, level: .error)
+            }
+        }
+    }
+
+    func replyToMessage() {
+        onReply?()
+    }
+
     func reportMessage(_ reason: ReportReason) {
         let chatId = model.chatId
         let messageId = model.messageId
@@ -126,9 +164,9 @@ class MessageOptionsViewModelMock: MessageOptionsViewModel {
                 chatId: 0,
                 messageId: 0,
                 sendService: SendMessageServiceMock { _ in }
-            )
+            ),
+            onReply: nil
         )
-        
     }
     
     override var shouldDisplayReportButton: Bool {

@@ -43,6 +43,32 @@ class SendMessageService {
         }
     }
     
+    func sendReply(_ text: String, toMessageId messageId: Int64) {
+
+        let formattedText: FormattedText = .init(entities: [], text: text)
+        let message: InputMessageText = .init(clearDraft: true, linkPreviewOptions: nil, text: formattedText)
+        let messageContent: InputMessageContent = .inputMessageText(message)
+        let replyTo: InputMessageReplyTo = .inputMessageReplyToMessage(
+            .init(chatId: 0, messageId: messageId, quote: nil)
+        )
+
+        Task.detached {
+            do {
+                let result = try await TDLibManager.shared.client?.sendMessage(
+                    chatId: self.chat?.id,
+                    inputMessageContent: messageContent,
+                    messageThreadId: nil,
+                    options: nil,
+                    replyMarkup: nil,
+                    replyTo: replyTo
+                )
+                self.logger.log(result)
+            } catch {
+                self.logger.log(error, level: .error)
+            }
+        }
+    }
+
     func sendVoiceNote(_ filePath: URL, _ duration: Int, didProcessAudio: @escaping () -> Void) {
         
         Task.detached {

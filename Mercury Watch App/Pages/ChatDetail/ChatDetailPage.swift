@@ -114,7 +114,12 @@ struct ChatDetailPage: View {
                         messageId: messageId,
                         sendService: sendService,
                         chatType: vm.chatType
-                    )
+                    ),
+                    onReply: {
+                        vm.replyingToMessageId = messageId
+                        vm.showOptionsView = false
+                        vm.onPressTextInsert()
+                    }
                 )
             }
         }

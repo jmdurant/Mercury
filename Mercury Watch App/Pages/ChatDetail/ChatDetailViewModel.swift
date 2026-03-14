@@ -43,6 +43,7 @@ class ChatDetailViewModel: TDLibViewModel {
     var sendService: SendMessageService?
     var lastReadInboxMessageId: Int64?
     
+    var replyingToMessageId: Int64?
     var chatAction: ChatAction?
     var chatActionTimer: Timer?
     

@@ -37,21 +37,26 @@ extension ChatDetailViewModel {
     }
     
     func onPressTextInsert() {
-        
+
         self.chatAction = .chatActionTyping
-        
+
         WKExtension.shared()
             .visibleInterfaceController?
             .presentTextInputController(withSuggestions: [],
                                         allowedInputMode: .allowEmoji) { result in
-                
+
                 self.chatAction = nil
                 guard let result = result as? [String],
                       let text = result.first
                 else { return }
-                
-                self.sendService?.sendTextMessage(text)
-                
+
+                if let replyId = self.replyingToMessageId {
+                    self.sendService?.sendReply(text, toMessageId: replyId)
+                    self.replyingToMessageId = nil
+                } else {
+                    self.sendService?.sendTextMessage(text)
+                }
+
             }
     }
     
