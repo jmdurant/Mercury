@@ -37,6 +37,15 @@ extension ChatDetailViewModel {
                 return .text(msg.description)
             }
             
+        case .messageVideo(let message):
+            return .video(model: message.getModel())
+
+        case .messageAnimation(let message):
+            return .video(model: message.getModel())
+
+        case .messageVideoNote(let message):
+            return .video(model: message.getModel())
+
         case .messageLocation(let message):
             return .location(model: message.getModel())
             
@@ -114,6 +123,57 @@ extension MessageSticker {
                       let data = try? Data(contentsOf: filePath)
                 else { return nil }
                 return SDImageWebPCoder.shared.decodedImage(with: data, options: nil)
+            }
+        )
+    }
+}
+
+extension MessageVideo {
+    func getModel() -> VideoModel {
+        var thumbnail: UIImage? = nil
+        if let data = video.minithumbnail?.data {
+            thumbnail = UIImage(data: data)
+        }
+        return VideoModel(
+            thumbnail: thumbnail,
+            autoplay: false,
+            caption: caption.text.isEmpty ? nil : caption.text,
+            getVideoURL: {
+                return await FileService.getFilePath(for: self.video.video)
+            }
+        )
+    }
+}
+
+extension MessageAnimation {
+    func getModel() -> VideoModel {
+        var thumbnail: UIImage? = nil
+        if let data = animation.minithumbnail?.data {
+            thumbnail = UIImage(data: data)
+        }
+        return VideoModel(
+            thumbnail: thumbnail,
+            autoplay: true,
+            caption: caption.text.isEmpty ? nil : caption.text,
+            getVideoURL: {
+                return await FileService.getFilePath(for: self.animation.animation)
+            }
+        )
+    }
+}
+
+extension MessageVideoNote {
+    func getModel() -> VideoModel {
+        var thumbnail: UIImage? = nil
+        if let data = videoNote.minithumbnail?.data {
+            thumbnail = UIImage(data: data)
+        }
+        return VideoModel(
+            thumbnail: thumbnail,
+            autoplay: false,
+            caption: nil,
+            getVideoURL: {
+                return await FileService.getFilePath(for: self.videoNote.video)
             }
         )
     }

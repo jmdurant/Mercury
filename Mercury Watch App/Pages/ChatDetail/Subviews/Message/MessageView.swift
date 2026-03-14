@@ -63,23 +63,18 @@ struct MessageView: View {
                 }
                 
                 
+            case .video(let videoModel):
+                MessageBubbleView(model: self.model, style: .fullScreen(caption: videoModel.caption ?? "")) {
+                    VideoPlayerView(model: videoModel)
+                }
+
             case .location(let locationModel):
                 MessageBubbleView(model: self.model, style: .fullScreen(caption: "")) {
                     LocationView(model: locationModel)
                 }
-            
+
             case .pill(let title, let description):
                 PillView(title: title, description: description)
-//                
-//            case .video:
-//                MessageBubbleView(model: self.model)(style: .fullScreen, caption: message.caption.text) {
-//                    TdImageView(tdImage: message.video)
-//                }
-//                .overlay {
-//                    Image(systemName: "play.circle.fill")
-//                        .font(.largeTitle)
-//                        .foregroundStyle(.white, .ultraThinMaterial)
-//                }
             }
     }
 }
@@ -112,6 +107,7 @@ struct MessageModel: Identifiable {
         case text(AttributedString)
         case voiceNote(model: VoiceNoteModel)
         case photo(model: AsyncImageModel, caption: String?)
+        case video(model: VideoModel)
         case stickerImage(model: StickerImageModel)
         case location(model: LocationModel)
         case pill(title: String?, description: LocalizedStringKey)
