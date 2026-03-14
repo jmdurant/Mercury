@@ -15,8 +15,10 @@ class MessageOptionsViewModel {
     var selectedEmoji: String? = nil
     var showReportMessageOptions: Bool = false
     var showDeleteConfirmation: Bool = false
+    var showMessageInfo: Bool = false
     var canDeleteForEveryone: Bool = false
     var onReply: (() -> Void)?
+    var messageInfo: MessageInfoData?
     
     var shouldDisplayReportButton: Bool {
         if case .chatTypeBasicGroup(_) = model.chatType { return true }
@@ -139,6 +141,57 @@ class MessageOptionsViewModel {
         onReply?()
     }
 
+    func loadMessageInfo() {
+        Task {
+            do {
+                guard let message = try await TDLibManager.shared.client?.getMessage(
+                    chatId: model.chatId,
+                    messageId: model.messageId
+                ) else { return }
+
+                let senderName = await message.senderId.username() ?? "Unknown"
+                let date = Date(timeIntervalSince1970: TimeInterval(message.date))
+
+                var forwardedFrom: String? = nil
+                if let forwardInfo = message.forwardInfo {
+                    let forwardDate = Date(timeIntervalSince1970: TimeInterval(forwardInfo.date))
+                    switch forwardInfo.origin {
+                    case .messageOriginUser(let user):
+                        let u = try? await TDLibManager.shared.client?.getUser(userId: user.senderUserId)
+                        forwardedFrom = "\(u?.fullName ?? "User") on \(forwardDate.formatted(.dateTime.month().day().hour().minute()))"
+                    case .messageOriginChat(let chat):
+                        forwardedFrom = chat.senderChatId != 0 ? "Chat" : "Unknown"
+                    case .messageOriginChannel(let channel):
+                        let c = try? await TDLibManager.shared.client?.getChat(chatId: channel.chatId)
+                        forwardedFrom = c?.title ?? "Channel"
+                    case .messageOriginHiddenUser(let hidden):
+                        forwardedFrom = hidden.senderName
+                    }
+                }
+
+                let viewCount = message.interactionInfo?.viewCount ?? 0
+                let forwardCount = message.interactionInfo?.forwardCount ?? 0
+
+                let info = MessageInfoData(
+                    senderName: senderName,
+                    date: date,
+                    messageId: message.id,
+                    forwardedFrom: forwardedFrom,
+                    viewCount: viewCount > 0 ? viewCount : nil,
+                    forwardCount: forwardCount > 0 ? forwardCount : nil,
+                    isOutgoing: message.isOutgoing
+                )
+
+                await MainActor.run {
+                    self.messageInfo = info
+                    self.showMessageInfo = true
+                }
+            } catch {
+                logger.log(error, level: .error)
+            }
+        }
+    }
+
     func reportMessage(_ reason: ReportReason) {
         let chatId = model.chatId
         let messageId = model.messageId
@@ -155,6 +208,16 @@ class MessageOptionsViewModel {
             }
         }
     }
+}
+
+struct MessageInfoData {
+    let senderName: String
+    let date: Date
+    let messageId: Int64
+    let forwardedFrom: String?
+    let viewCount: Int?
+    let forwardCount: Int?
+    let isOutgoing: Bool
 }
 
 class MessageOptionsViewModelMock: MessageOptionsViewModel {

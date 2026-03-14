@@ -66,6 +66,12 @@ struct MessageOptionsSubpage: View {
                 Label("Reply", systemImage: "arrowshape.turn.up.left.fill")
             }
 
+            Button {
+                vm.loadMessageInfo()
+            } label: {
+                Label("Info", systemImage: "info.circle")
+            }
+
             Button(role: .destructive) {
                 vm.showDeleteConfirmation = true
             } label: {
@@ -79,6 +85,11 @@ struct MessageOptionsSubpage: View {
                     Label("Report content", systemImage: "exclamationmark.triangle")
                 })
                 .tint(.red)
+            }
+        }
+        .sheet(isPresented: $vm.showMessageInfo) {
+            if let info = vm.messageInfo {
+                MessageInfoView(info: info)
             }
         }
         .confirmationDialog("Delete Message", isPresented: $vm.showDeleteConfirmation) {
@@ -113,6 +124,50 @@ struct MessageOptionsModel {
     var messageId: Int64
     var sendService: SendMessageService
     var chatType: ChatType?
+}
+
+struct MessageInfoView: View {
+    let info: MessageInfoData
+
+    var body: some View {
+        List {
+            Section("Sender") {
+                Label(info.senderName, systemImage: info.isOutgoing ? "arrow.up.circle" : "arrow.down.circle")
+            }
+
+            Section("Date") {
+                Label(
+                    info.date.formatted(.dateTime.year().month().day().hour().minute()),
+                    systemImage: "calendar"
+                )
+            }
+
+            if let forwarded = info.forwardedFrom {
+                Section("Forwarded from") {
+                    Label(forwarded, systemImage: "arrowshape.turn.up.right")
+                }
+            }
+
+            if let views = info.viewCount {
+                Section("Views") {
+                    Label("\(views)", systemImage: "eye")
+                }
+            }
+
+            if let forwards = info.forwardCount {
+                Section("Forwards") {
+                    Label("\(forwards)", systemImage: "arrowshape.turn.up.forward")
+                }
+            }
+
+            Section("Message ID") {
+                Text("\(info.messageId)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .navigationTitle("Message Info")
+    }
 }
 
 #Preview {
