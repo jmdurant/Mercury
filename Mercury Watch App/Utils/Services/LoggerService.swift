@@ -52,7 +52,11 @@ class LoggerService {
     public func log(_ message: String,
                     caller: String = #function,
                     level: Level = .debug) {
-        
+
+        #if !DEBUG
+        guard level == .error || level == .fatal else { return }
+        #endif
+
         let prefix: String = "[\(subsystem)] [\(level.rawValue)] [\(self.category)] [\(caller)]"
         
         switch level {

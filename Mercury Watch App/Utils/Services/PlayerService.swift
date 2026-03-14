@@ -72,10 +72,11 @@ class PlayerService: NSObject {
         elapsedTimeTimer?.invalidate()
         audioPlayer?.stop()
         audioPlayer = nil
-        removeM4aAudio()
+        cleanupAudioFile()
     }
-    
-    private func removeM4aAudio() {
+
+    func cleanupAudioFile() {
+        guard FileManager.default.fileExists(atPath: filePath.path) else { return }
         do {
             try FileManager.default.removeItem(at: self.filePath)
         } catch {
@@ -124,7 +125,10 @@ class PlayerService: NSObject {
 
 extension PlayerService: AVAudioPlayerDelegate {
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        if flag { self.stopPlayingAudio() }
+        if flag {
+            self.stopPlayingAudio()
+            self.cleanupAudioFile()
+        }
     }
 }
 

@@ -18,7 +18,7 @@ extension FileManager {
                 try FileManager.default.createDirectory(
                     atPath: tmpDir.path,
                     withIntermediateDirectories: true,
-                    attributes: nil
+                    attributes: [.protectionKey: FileProtectionType.complete]
                 )
             } catch {
                 print(error.localizedDescription)

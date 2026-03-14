@@ -40,9 +40,9 @@ class FileService {
     }
     
     static func getPath(for file: File) async -> String? {
-        
+
         var filePath = file.local.path
-        
+
         if filePath.isEmpty {
             do {
                 let fileID = file.id
@@ -56,20 +56,28 @@ class FileService {
                     logger.log("Unable to retrive file", level: .error)
                     return nil
                 }
-                
+
                 filePath = file.local.path
-                
+
             } catch {
                 logger.log(error, level: .error)
             }
         }
-        
+
+        // Validate path is within app sandbox
+        let cachesDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first?.path ?? ""
+        let tmpDir = FileManager.default.temporaryDirectory.path
+        guard filePath.hasPrefix(cachesDir) || filePath.hasPrefix(tmpDir) else {
+            logger.log("File path outside app sandbox: \(filePath)", level: .error)
+            return nil
+        }
+
         return filePath
     }
     
     static func getLottieJson(for tgsPath: URL) -> Data? {
         let zipPath = tgsPath.deletingPathExtension().appendingPathExtension("zip")
-        
+
         do {
             // Change file extension
             if !FileManager.default.fileExists(atPath: zipPath.path) {
@@ -77,8 +85,13 @@ class FileService {
             }
             let sourceData = try Data(contentsOf: zipPath)
             let lottieJSONData = try sourceData.gunzipped()
+
+            // Clean up temporary zip copy
+            try? FileManager.default.removeItem(at: zipPath)
+
             return lottieJSONData
         } catch {
+            try? FileManager.default.removeItem(at: zipPath)
             return nil
         }
     }

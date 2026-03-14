@@ -260,16 +260,23 @@ class LoginViewModel: TDLibViewModel {
     }
     
     static func logout() {
-        
+
         let logger = LoggerService(LoginViewModel.self)
-        
+
         if AppState.shared.isMock {
             AppState.shared.isMock = false
             return
         }
-        
+
         AppState.shared.clear()
-        
+
+        // Clear persisted user data
+        UserDefaults.standard.removeObject(forKey: "hasAcceptedTermsOfService")
+        KeychainService.deleteAll()
+
+        // Clean temporary files
+        try? FileManager.default.removeItem(at: FileManager.default.temporaryDirectory)
+
         Task.detached {
             do {
                 let result = try await TDLibManager.shared.client?.logOut()
@@ -277,7 +284,7 @@ class LoginViewModel: TDLibViewModel {
             } catch {
                 logger.log(error, level: .error)
             }
-            
+
             TDLibManager.shared.close()
         }
     }

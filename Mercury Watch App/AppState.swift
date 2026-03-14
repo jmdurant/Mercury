@@ -34,5 +34,6 @@ class AppState {
     
     public func clear() {
         folders = [.main, .archive]
+        isAuthenticated = nil
     }
 }

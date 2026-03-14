@@ -97,6 +97,8 @@
 		A0CDF8BE2CE78FC70015E20E /* UserCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8BD2CE78FC70015E20E /* UserCellView.swift */; };
 		A0CDF8C02CE7D4AB0015E20E /* LoggerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8BF2CE7D4AB0015E20E /* LoggerService.swift */; };
 		A0CDF8C22CE7D4B10015E20E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8C12CE7D4B10015E20E /* FileService.swift */; };
+		B00SEC012D0A000000000001 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00SEC002D0A000000000001 /* KeychainService.swift */; };
+		B00SEC032D0A000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */; };
 		A0CDF8C62CE7D4D70015E20E /* SendMessageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */; };
 		A0CDF94D2CE7D6060015E20E /* AlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF94C2CE7D6060015E20E /* AlertView.swift */; };
 		A0CF53272BDFD78900BA394B /* TDLibManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF53262BDFD78900BA394B /* TDLibManager.swift */; };
@@ -211,6 +213,8 @@
 		A0CDF8BD2CE78FC70015E20E /* UserCellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserCellView.swift; sourceTree = "<group>"; };
 		A0CDF8BF2CE7D4AB0015E20E /* LoggerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoggerService.swift; sourceTree = "<group>"; };
 		A0CDF8C12CE7D4B10015E20E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
+		B00SEC002D0A000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
+		B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageService.swift; sourceTree = "<group>"; };
 		A0CDF94C2CE7D6060015E20E /* AlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertView.swift; sourceTree = "<group>"; };
 		A0CF53262BDFD78900BA394B /* TDLibManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDLibManager.swift; sourceTree = "<group>"; };
@@ -336,6 +340,7 @@
 			isa = PBXGroup;
 			children = (
 				A0F63BD82BD63B0500F7135E /* Mercury-Watch-App-Info.plist */,
+				B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */,
 				A07438F02BD10D2D00945CB5 /* Mercury Watch App */,
 				A07438E72BD10D2D00945CB5 /* Products */,
 			);
@@ -386,6 +391,7 @@
 				A0CDF8BF2CE7D4AB0015E20E /* LoggerService.swift */,
 				A0CDF8C12CE7D4B10015E20E /* FileService.swift */,
 				A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */,
+				B00SEC002D0A000000000001 /* KeychainService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -684,6 +690,7 @@
 				9BAA75E12CD4F08A0007B4E2 /* sticker.tgs in Resources */,
 				A07438F92BD10D2F00945CB5 /* Preview Assets.xcassets in Resources */,
 				A07438F62BD10D2F00945CB5 /* Assets.xcassets in Resources */,
+				B00SEC032D0A000000000002 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -736,6 +743,7 @@
 				A0CDF8C22CE7D4B10015E20E /* FileService.swift in Sources */,
 				A04ABE8A2CE0B99900641BC1 /* ChatListViewModel+Updates.swift in Sources */,
 				A0CDF8C02CE7D4AB0015E20E /* LoggerService.swift in Sources */,
+				B00SEC012D0A000000000001 /* KeychainService.swift in Sources */,
 				9B0B6CB72CD64F6100BB6A94 /* AppState.swift in Sources */,
 				A080D8C42CD9666C00920564 /* ChatNotificationSettings+.swift in Sources */,
 				9B0BD4A52CD688F000ADE7C9 /* PasswordView.swift in Sources */,
@@ -1042,7 +1050,7 @@
 /* Begin XCRemoteSwiftPackageReference section */
 		9BAA75DB2CD4EE370007B4E2 /* XCRemoteSwiftPackageReference "SDWebImageLottieCoder" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/SDWebImage/SDWebImageLottieCoder?tab=readme-ov-file";
+			repositoryURL = "https://github.com/SDWebImage/SDWebImageLottieCoder";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 0.2.0;
@@ -1068,8 +1076,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mercurytelegram/DSWaveformImage";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = revision;
+				revision = 50db34f453c82a4121d79946f27d4187a9517fbe;
 			};
 		};
 		A06AE85D2CCAB812003282B2 /* XCRemoteSwiftPackageReference "SDWebImageWebPCoder" */ = {
@@ -1082,7 +1090,7 @@
 		};
 		A0951E962C95CDFD00CF638C /* XCRemoteSwiftPackageReference "QRCode" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dagronf/QRCode?tab=readme-ov-file";
+			repositoryURL = "https://github.com/dagronf/QRCode";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 21.0.3;
@@ -1092,8 +1100,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mercurytelegram/swift-ogg";
 			requirement = {
-				branch = main;
-				kind = branch;
+				kind = revision;
+				revision = 9f76cb64a417d4771384b0ba6700de6359cc5192;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */

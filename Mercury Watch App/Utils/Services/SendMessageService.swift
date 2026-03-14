@@ -74,7 +74,7 @@ class SendMessageService {
                 )
                 
                 didProcessAudio()
-                
+
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: .inputMessageVoiceNote(audio),
@@ -83,9 +83,15 @@ class SendMessageService {
                     replyMarkup: nil,
                     replyTo: nil
                 )
-    
+
                 self.logger.log(result)
-    
+
+                // Clean up voice recording files after sending
+                try? FileManager.default.removeItem(at: filePath)
+                if audioFilePath != filePath {
+                    try? FileManager.default.removeItem(at: audioFilePath)
+                }
+
             } catch {
                 self.logger.log(error, level: .error)
             }

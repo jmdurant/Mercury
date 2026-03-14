@@ -102,7 +102,13 @@ final class TDLibManager {
             }
             break
         case .authorizationStateClosed:
-            try? FileManager.default.removeItem(atPath: tdlibPath!)
+            if let tdlibPath {
+                do {
+                    try FileManager.default.removeItem(atPath: tdlibPath)
+                } catch {
+                    LoggerService(TDLibManager.self).log(error, level: .error)
+                }
+            }
             TDLibManager.shared.createClient()
             DispatchQueue.main.async {
                 self.isClosing = false
@@ -119,17 +125,25 @@ final class TDLibManager {
         
         Task {
             do {
+                // Apply file protection to the TDLib database directory
+                if let tdlibPath {
+                    try? FileManager.default.setAttributes(
+                        [.protectionKey: FileProtectionType.complete],
+                        ofItemAtPath: tdlibPath
+                    )
+                }
+
                 let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                 let device = WKInterfaceDevice.current()
                 let deviceModel = device.name
                 let systemVersion = "\(device.systemName) \(device.systemVersion)"
-                
+
                 let result = try await self.client?.setTdlibParameters(
                     apiHash: SecretService.apiHash,
                     apiId: SecretService.apiId,
                     applicationVersion: appVersion,
                     databaseDirectory: tdlibPath,
-                    databaseEncryptionKey: nil,
+                    databaseEncryptionKey: KeychainService.getOrCreateDatabaseEncryptionKey(),
                     deviceModel: deviceModel,
                     filesDirectory: nil,
                     systemLanguageCode: "en-US",
