@@ -104,6 +104,8 @@
 		C00WID052D0B000000000003 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID042D0B000000000003 /* NotificationService.swift */; };
 		D00LOC012D0C000000000001 /* SendLocationSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00LOC002D0C000000000001 /* SendLocationSubpage.swift */; };
 		D00LOC032D0C000000000002 /* SendLocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00LOC022D0C000000000002 /* SendLocationViewModel.swift */; };
+		E00NEW012D0D000000000001 /* NewChatSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00NEW002D0D000000000001 /* NewChatSubpage.swift */; };
+		E00NEW032D0D000000000002 /* NewChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00NEW022D0D000000000002 /* NewChatViewModel.swift */; };
 		C00WID072D0B000000000004 /* MercuryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID062D0B000000000004 /* MercuryWidget.swift */; };
 		C00WID092D0B000000000005 /* MercuryWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID082D0B000000000005 /* MercuryWidgetViews.swift */; };
 		C00WID0B2D0B000000000006 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
@@ -230,6 +232,8 @@
 		C00WID042D0B000000000003 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		D00LOC002D0C000000000001 /* SendLocationSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendLocationSubpage.swift; sourceTree = "<group>"; };
 		D00LOC022D0C000000000002 /* SendLocationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendLocationViewModel.swift; sourceTree = "<group>"; };
+		E00NEW002D0D000000000001 /* NewChatSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChatSubpage.swift; sourceTree = "<group>"; };
+		E00NEW022D0D000000000002 /* NewChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChatViewModel.swift; sourceTree = "<group>"; };
 		C00WID062D0B000000000004 /* MercuryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidget.swift; sourceTree = "<group>"; };
 		C00WID082D0B000000000005 /* MercuryWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidgetViews.swift; sourceTree = "<group>"; };
 		C00WID0A2D0B000000000006 /* Mercury Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Mercury Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -350,6 +354,15 @@
 			path = VoiceNoteRecord;
 			sourceTree = "<group>";
 		};
+		E00NEW042D0D000000000003 /* Subpages */ = {
+			isa = PBXGroup;
+			children = (
+				E00NEW002D0D000000000001 /* NewChatSubpage.swift */,
+				E00NEW022D0D000000000002 /* NewChatViewModel.swift */,
+			);
+			path = Subpages;
+			sourceTree = "<group>";
+		};
 		D00LOC042D0C000000000003 /* SendLocation */ = {
 			isa = PBXGroup;
 			children = (
@@ -459,6 +472,7 @@
 			isa = PBXGroup;
 			children = (
 				A080D8AF2CD64B6500920564 /* Subviews */,
+				E00NEW042D0D000000000003 /* Subpages */,
 				A080D8952CD64B1700920564 /* ChatListPage.swift */,
 				A080D8962CD64B1700920564 /* ChatListViewModel.swift */,
 				A04ABE8B2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift */,
@@ -742,6 +756,8 @@
 				A04ABE5B2CE015F800641BC1 /* VoiceNoteRecordViewModel.swift in Sources */,
 				D00LOC012D0C000000000001 /* SendLocationSubpage.swift in Sources */,
 				D00LOC032D0C000000000002 /* SendLocationViewModel.swift in Sources */,
+				E00NEW012D0D000000000001 /* NewChatSubpage.swift in Sources */,
+				E00NEW032D0D000000000002 /* NewChatViewModel.swift in Sources */,
 				9B5EBE622CE5F16F00EDCCE3 /* FitStack.swift in Sources */,
 				A04ABE8C2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift in Sources */,
 				4AF90D692BEE65BA00435355 /* Date+.swift in Sources */,
