@@ -64,6 +64,11 @@ extension ChatDetailViewModel {
         self.chatAction = .chatActionChoosingSticker
         self.showStickersView = true
     }
+
+    func onPressLocation() {
+        self.chatAction = .chatActionChoosingLocation
+        self.showLocationView = true
+    }
     
     func onDublePressOf(_ message: MessageModel) {
         selectedMessage = message

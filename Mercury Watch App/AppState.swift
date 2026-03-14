@@ -15,6 +15,7 @@ class AppState {
     
     var isMock: Bool = false
     var isAuthenticated: Bool? = nil
+    var pendingNotificationChatId: Int64? = nil
     private(set) var folders: [ChatFolder] = [.main, .archive]
     
     func insertFolder(_ folder: ChatFolder) {

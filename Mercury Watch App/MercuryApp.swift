@@ -11,6 +11,7 @@ import SwiftUI
 struct MercuryApp: App {
     @Environment(\.isLuminanceReduced) var isLuminanceReduced
     @WKApplicationDelegateAdaptor var appDelegate: AppDelegate
+    private let unreadCountBridge = UnreadCountBridge()
     
     var body: some Scene {
         WindowGroup {

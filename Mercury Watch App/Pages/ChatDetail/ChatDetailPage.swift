@@ -97,6 +97,14 @@ struct ChatDetailPage: View {
                 )
             }
         }
+        .sheet(isPresented: $vm.showLocationView) {
+            if let sendService = vm.sendService {
+                SendLocationSubpage(
+                    vm: SendLocationViewModel(sendService: sendService),
+                    isPresented: $vm.showLocationView
+                )
+            }
+        }
         .sheet(isPresented: $vm.showOptionsView) {
             if let messageId = vm.selectedMessage?.id, let sendService = vm.sendService {
                 MessageOptionsSubpage(
@@ -149,6 +157,12 @@ struct ChatDetailPage: View {
             }
         }
         
+        if vm.canSendText ?? false {
+            Button("Location", systemImage: "location.fill") {
+                vm.onPressLocation()
+            }
+        }
+
         if vm.canSendStickers ?? false {
             Button("Stickers", systemImage: "face.smiling.inverse") {
                 vm.onPressStickersSelection()

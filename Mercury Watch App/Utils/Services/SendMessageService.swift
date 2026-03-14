@@ -119,6 +119,36 @@ class SendMessageService {
         }
     }
     
+    func sendLocation(latitude: Double, longitude: Double) {
+        let location = InputMessageLocation(
+            heading: 0,
+            livePeriod: 0,
+            location: Location(
+                horizontalAccuracy: 0,
+                latitude: latitude,
+                longitude: longitude
+            ),
+            proximityAlertRadius: 0
+        )
+        let messageContent: InputMessageContent = .inputMessageLocation(location)
+
+        Task.detached {
+            do {
+                let result = try await TDLibManager.shared.client?.sendMessage(
+                    chatId: self.chat?.id,
+                    inputMessageContent: messageContent,
+                    messageThreadId: nil,
+                    options: nil,
+                    replyMarkup: nil,
+                    replyTo: nil
+                )
+                self.logger.log(result)
+            } catch {
+                self.logger.log(error, level: .error)
+            }
+        }
+    }
+
     func sendReaction(_ emoji: String, chatId: Int64, messageId: Int64) {
         
         Task.detached {
@@ -142,7 +172,29 @@ class SendMessageService {
             }
         }
     }
-    
+
+    static func sendQuickReply(text: String, chatId: Int64) {
+        let logger = LoggerService(SendMessageService.self)
+        let formattedText = FormattedText(entities: [], text: text)
+        let message = InputMessageText(clearDraft: true, linkPreviewOptions: nil, text: formattedText)
+        let messageContent: InputMessageContent = .inputMessageText(message)
+
+        Task.detached {
+            do {
+                let result = try await TDLibManager.shared.client?.sendMessage(
+                    chatId: chatId,
+                    inputMessageContent: messageContent,
+                    messageThreadId: nil,
+                    options: nil,
+                    replyMarkup: nil,
+                    replyTo: nil
+                )
+                logger.log(result)
+            } catch {
+                logger.log(error, level: .error)
+            }
+        }
+    }
 }
 
 class SendMessageServiceMock: SendMessageService {

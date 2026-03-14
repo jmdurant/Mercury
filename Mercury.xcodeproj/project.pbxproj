@@ -99,6 +99,16 @@
 		A0CDF8C22CE7D4B10015E20E /* FileService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8C12CE7D4B10015E20E /* FileService.swift */; };
 		B00SEC012D0A000000000001 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00SEC002D0A000000000001 /* KeychainService.swift */; };
 		B00SEC032D0A000000000002 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */; };
+		C00WID012D0B000000000001 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
+		C00WID032D0B000000000002 /* UnreadCountBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID022D0B000000000002 /* UnreadCountBridge.swift */; };
+		C00WID052D0B000000000003 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID042D0B000000000003 /* NotificationService.swift */; };
+		D00LOC012D0C000000000001 /* SendLocationSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00LOC002D0C000000000001 /* SendLocationSubpage.swift */; };
+		D00LOC032D0C000000000002 /* SendLocationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D00LOC022D0C000000000002 /* SendLocationViewModel.swift */; };
+		C00WID072D0B000000000004 /* MercuryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID062D0B000000000004 /* MercuryWidget.swift */; };
+		C00WID092D0B000000000005 /* MercuryWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID082D0B000000000005 /* MercuryWidgetViews.swift */; };
+		C00WID0B2D0B000000000006 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
+		C00WID0D2D0B000000000007 /* WidgetAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C00WID0C2D0B000000000007 /* WidgetAssets.xcassets */; };
+		C00WID0F2D0B000000000008 /* Mercury Watch App.entitlements in Resources */ = {isa = PBXBuildFile; fileRef = C00WID0E2D0B000000000008 /* Mercury Watch App.entitlements */; };
 		A0CDF8C62CE7D4D70015E20E /* SendMessageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */; };
 		A0CDF94D2CE7D6060015E20E /* AlertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CDF94C2CE7D6060015E20E /* AlertView.swift */; };
 		A0CF53272BDFD78900BA394B /* TDLibManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CF53262BDFD78900BA394B /* TDLibManager.swift */; };
@@ -215,6 +225,17 @@
 		A0CDF8C12CE7D4B10015E20E /* FileService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileService.swift; sourceTree = "<group>"; };
 		B00SEC002D0A000000000001 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		C00WID002D0B000000000001 /* SharedDataStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedDataStore.swift; sourceTree = "<group>"; };
+		C00WID022D0B000000000002 /* UnreadCountBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnreadCountBridge.swift; sourceTree = "<group>"; };
+		C00WID042D0B000000000003 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		D00LOC002D0C000000000001 /* SendLocationSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendLocationSubpage.swift; sourceTree = "<group>"; };
+		D00LOC022D0C000000000002 /* SendLocationViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendLocationViewModel.swift; sourceTree = "<group>"; };
+		C00WID062D0B000000000004 /* MercuryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidget.swift; sourceTree = "<group>"; };
+		C00WID082D0B000000000005 /* MercuryWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidgetViews.swift; sourceTree = "<group>"; };
+		C00WID0A2D0B000000000006 /* Mercury Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Mercury Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C00WID0C2D0B000000000007 /* WidgetAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WidgetAssets.xcassets; sourceTree = "<group>"; };
+		C00WID0E2D0B000000000008 /* Mercury Watch App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Mercury Watch App.entitlements"; sourceTree = "<group>"; };
+		C00WID102D0B000000000009 /* Mercury Widget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Mercury Widget.entitlements"; sourceTree = "<group>"; };
 		A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageService.swift; sourceTree = "<group>"; };
 		A0CDF94C2CE7D6060015E20E /* AlertView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertView.swift; sourceTree = "<group>"; };
 		A0CF53262BDFD78900BA394B /* TDLibManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TDLibManager.swift; sourceTree = "<group>"; };
@@ -306,6 +327,7 @@
 			children = (
 				A04ABE592CE015F800641BC1 /* VoiceNoteRecord */,
 				A04ABE522CE00F1600641BC1 /* MessageOptions */,
+				D00LOC042D0C000000000003 /* SendLocation */,
 			);
 			path = Subpages;
 			sourceTree = "<group>";
@@ -328,6 +350,15 @@
 			path = VoiceNoteRecord;
 			sourceTree = "<group>";
 		};
+		D00LOC042D0C000000000003 /* SendLocation */ = {
+			isa = PBXGroup;
+			children = (
+				D00LOC002D0C000000000001 /* SendLocationSubpage.swift */,
+				D00LOC022D0C000000000002 /* SendLocationViewModel.swift */,
+			);
+			path = SendLocation;
+			sourceTree = "<group>";
+		};
 		A04ABE8D2CE117BB00641BC1 /* Subviews */ = {
 			isa = PBXGroup;
 			children = (
@@ -341,6 +372,7 @@
 			children = (
 				A0F63BD82BD63B0500F7135E /* Mercury-Watch-App-Info.plist */,
 				B00SEC022D0A000000000002 /* PrivacyInfo.xcprivacy */,
+				C00WID0E2D0B000000000008 /* Mercury Watch App.entitlements */,
 				A07438F02BD10D2D00945CB5 /* Mercury Watch App */,
 				A07438E72BD10D2D00945CB5 /* Products */,
 			);
@@ -392,6 +424,7 @@
 				A0CDF8C12CE7D4B10015E20E /* FileService.swift */,
 				A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */,
 				B00SEC002D0A000000000001 /* KeychainService.swift */,
+				C00WID042D0B000000000003 /* NotificationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -497,6 +530,8 @@
 			children = (
 				A080D8C02CD7927200920564 /* Models */,
 				A080D8BD2CD78CE600920564 /* Components */,
+				C00WID002D0B000000000001 /* SharedDataStore.swift */,
+				C00WID022D0B000000000002 /* UnreadCountBridge.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -705,6 +740,8 @@
 				A080D8E22CDC0B1800920564 /* VoiceNoteView.swift in Sources */,
 				A04ABE5A2CE015F800641BC1 /* VoiceNoteRecordSubpage.swift in Sources */,
 				A04ABE5B2CE015F800641BC1 /* VoiceNoteRecordViewModel.swift in Sources */,
+				D00LOC012D0C000000000001 /* SendLocationSubpage.swift in Sources */,
+				D00LOC032D0C000000000002 /* SendLocationViewModel.swift in Sources */,
 				9B5EBE622CE5F16F00EDCCE3 /* FitStack.swift in Sources */,
 				A04ABE8C2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift in Sources */,
 				4AF90D692BEE65BA00435355 /* Date+.swift in Sources */,
@@ -744,6 +781,9 @@
 				A04ABE8A2CE0B99900641BC1 /* ChatListViewModel+Updates.swift in Sources */,
 				A0CDF8C02CE7D4AB0015E20E /* LoggerService.swift in Sources */,
 				B00SEC012D0A000000000001 /* KeychainService.swift in Sources */,
+				C00WID012D0B000000000001 /* SharedDataStore.swift in Sources */,
+				C00WID032D0B000000000002 /* UnreadCountBridge.swift in Sources */,
+				C00WID052D0B000000000003 /* NotificationService.swift in Sources */,
 				9B0B6CB72CD64F6100BB6A94 /* AppState.swift in Sources */,
 				A080D8C42CD9666C00920564 /* ChatNotificationSettings+.swift in Sources */,
 				9B0BD4A52CD688F000ADE7C9 /* PasswordView.swift in Sources */,
@@ -920,6 +960,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Mercury Watch App/Mercury Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
@@ -952,6 +993,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = "Mercury Watch App/Mercury Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";

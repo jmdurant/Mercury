@@ -47,6 +47,21 @@ struct HomePage: View {
                     ChatDetailPage(chatId: id)
                 }
             }
+            .onChange(of: AppState.shared.pendingNotificationChatId) { _, chatId in
+                guard let chatId else { return }
+                let stub = ChatCellModel(
+                    id: chatId,
+                    title: "",
+                    time: "",
+                    avatar: AvatarModel(),
+                    isMuted: false,
+                    isPinned: false
+                )
+                vm.navigationPath = NavigationPath()
+                vm.navigationPath.append(ChatFolder.main)
+                vm.navigationPath.append(stub)
+                AppState.shared.pendingNotificationChatId = nil
+            }
         }
     }
 }
