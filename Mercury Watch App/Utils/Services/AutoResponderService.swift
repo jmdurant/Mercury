@@ -140,6 +140,42 @@ class AutoResponderService: TDLibManagerProtocol {
             }
         }
 
+        if matches(text, keywords: ["temperature", "wrist temp", "body temp"]) {
+            if let temp = await StatusDataService.buildWristTemperatureStatus() {
+                responses.append(temp)
+            }
+        }
+
+        if matches(text, keywords: ["vo2", "vo2 max", "cardio fitness", "fitness level"]) {
+            if let vo2 = await StatusDataService.buildVO2MaxStatus() {
+                responses.append(vo2)
+            }
+        }
+
+        if matches(text, keywords: ["breathing", "respiratory", "breath rate", "respiration"]) {
+            if let resp = await StatusDataService.buildRespiratoryRateStatus() {
+                responses.append(resp)
+            }
+        }
+
+        if matches(text, keywords: ["walking speed", "pace", "how fast"]) {
+            if let speed = await StatusDataService.buildWalkingSpeedStatus() {
+                responses.append(speed)
+            }
+        }
+
+        if matches(text, keywords: ["distance", "how far", "miles", "km"]) {
+            if let dist = await StatusDataService.buildDistanceStatus() {
+                responses.append(dist)
+            }
+        }
+
+        if matches(text, keywords: ["focus", "do not disturb", "dnd", "focus mode"]) {
+            if let focus = StatusDataService.buildFocusStatus() {
+                responses.append(focus)
+            }
+        }
+
         if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in", "everything"]) {
             if let health = await StatusDataService.buildHealthStatus() {
                 responses.append(health)
@@ -174,6 +210,12 @@ class AutoResponderService: TDLibManagerProtocol {
         if let np = StatusDataService.buildNowPlayingStatus() { parts.append(np) }
         if let noise = await StatusDataService.buildNoiseLevelStatus() { parts.append(noise) }
         if let alt = await StatusDataService.buildAltitudeStatus() { parts.append(alt) }
+        if let temp = await StatusDataService.buildWristTemperatureStatus() { parts.append(temp) }
+        if let vo2 = await StatusDataService.buildVO2MaxStatus() { parts.append(vo2) }
+        if let resp = await StatusDataService.buildRespiratoryRateStatus() { parts.append(resp) }
+        if let speed = await StatusDataService.buildWalkingSpeedStatus() { parts.append(speed) }
+        if let dist = await StatusDataService.buildDistanceStatus() { parts.append(dist) }
+        if let focus = StatusDataService.buildFocusStatus() { parts.append(focus) }
         if let bat = StatusDataService.buildBatteryStatus() { parts.append(bat) }
 
         guard !parts.isEmpty else { return nil }

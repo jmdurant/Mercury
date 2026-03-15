@@ -13,6 +13,7 @@ import WeatherKit
 import CoreLocation
 import CoreMotion
 import WatchKit
+import Intents
 
 enum StatusDataService {
 
@@ -30,6 +31,11 @@ enum StatusDataService {
             HKQuantityType(.oxygenSaturation),
             HKQuantityType(.environmentalAudioExposure),
             HKCategoryType(.sleepAnalysis),
+            HKQuantityType(.appleSleepingWristTemperature),
+            HKQuantityType(.vo2Max),
+            HKQuantityType(.respiratoryRate),
+            HKQuantityType(.walkingSpeed),
+            HKQuantityType(.distanceWalkingRunning),
         ]
         let workoutType = HKObjectType.workoutType()
         let activityType = HKObjectType.activitySummaryType()
@@ -427,6 +433,145 @@ enum StatusDataService {
                 continuation.resume(returning: "Relative altitude: \(feet) ft")
             }
         }
+    }
+
+    static func buildWristTemperatureStatus() async -> String? {
+        let tempType = HKQuantityType(.appleSleepingWristTemperature)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-86400),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: tempType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let celsius = sample.quantity.doubleValue(for: .degreeCelsius())
+                let fahrenheit = celsius * 9.0 / 5.0 + 32.0
+                continuation.resume(returning: String(format: "Wrist temp: %.1f°F (%.1f°C)", fahrenheit, celsius))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildVO2MaxStatus() async -> String? {
+        let vo2Type = HKQuantityType(.vo2Max)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let query = HKSampleQuery(
+                sampleType: vo2Type,
+                predicate: nil,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let vo2 = sample.quantity.doubleValue(for: HKUnit(from: "mL/kg*min"))
+                continuation.resume(returning: String(format: "VO2 Max: %.1f mL/kg/min", vo2))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildRespiratoryRateStatus() async -> String? {
+        let respType = HKQuantityType(.respiratoryRate)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-86400),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: respType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let rate = Int(sample.quantity.doubleValue(for: HKUnit.count().unitDivided(by: .minute())))
+                continuation.resume(returning: "Respiratory rate: \(rate) breaths/min")
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildWalkingSpeedStatus() async -> String? {
+        let speedType = HKQuantityType(.walkingSpeed)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-3600),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: speedType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let mph = sample.quantity.doubleValue(for: HKUnit.mile().unitDivided(by: .hour()))
+                continuation.resume(returning: String(format: "Walking speed: %.1f mph", mph))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildDistanceStatus() async -> String? {
+        let distType = HKQuantityType(.distanceWalkingRunning)
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: Date())
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: startOfDay,
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKStatisticsQuery(
+                quantityType: distType,
+                quantitySamplePredicate: predicate,
+                options: .cumulativeSum
+            ) { _, result, _ in
+                guard let sum = result?.sumQuantity() else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let miles = sum.doubleValue(for: .mile())
+                continuation.resume(returning: String(format: "Distance today: %.1f mi", miles))
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildFocusStatus() -> String? {
+        let focusStatus = INFocusStatusCenter.default.focusStatus
+        if focusStatus.isFocused == true {
+            return "Focus mode is active"
+        }
+        return nil
     }
 
     static func buildRemindersStatus() async -> String? {

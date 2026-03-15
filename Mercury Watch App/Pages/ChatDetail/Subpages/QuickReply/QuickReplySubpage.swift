@@ -137,6 +137,30 @@ struct QuickReplySubpage: View {
             messages.append(StatusMessage(icon: "checklist", label: "Reminder", message: reminder))
         }
 
+        if let wristTemp = await StatusDataService.buildWristTemperatureStatus() {
+            messages.append(StatusMessage(icon: "thermometer.medium", label: "Wrist Temp", message: wristTemp))
+        }
+
+        if let vo2 = await StatusDataService.buildVO2MaxStatus() {
+            messages.append(StatusMessage(icon: "lungs", label: "VO2 Max", message: vo2))
+        }
+
+        if let resp = await StatusDataService.buildRespiratoryRateStatus() {
+            messages.append(StatusMessage(icon: "wind", label: "Respiratory", message: resp))
+        }
+
+        if let speed = await StatusDataService.buildWalkingSpeedStatus() {
+            messages.append(StatusMessage(icon: "figure.walk", label: "Walking Speed", message: speed))
+        }
+
+        if let distance = await StatusDataService.buildDistanceStatus() {
+            messages.append(StatusMessage(icon: "point.topleft.down.to.point.bottomright.curvepath", label: "Distance", message: distance))
+        }
+
+        if let focus = StatusDataService.buildFocusStatus() {
+            messages.append(StatusMessage(icon: "moon.fill", label: "Focus", message: focus))
+        }
+
         if let battery = StatusDataService.buildBatteryStatus() {
             messages.append(StatusMessage(icon: "battery.50percent", label: "Battery", message: battery))
         }

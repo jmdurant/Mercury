@@ -59,7 +59,7 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 
 ### **Quick Replies and Smart Status**
 - Bolt icon in chat toolbar for instant canned responses (OK, On my way, Call me, BRB, etc.)
-- Smart status replies powered by 13 live watch data sources — tap any to send as a message:
+- Smart status replies powered by 19 live watch data sources — tap any to send as a message:
   - Workout status ("In a workout - Running 23min") — HealthKit
   - Calendar status ("Busy until 3pm - Team Meeting") — EventKit
   - Health stats ("Today: 8,432 steps | 340 cal | 72 bpm") — HealthKit
@@ -71,8 +71,22 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
   - Blood Oxygen ("Blood oxygen: 98%") — HealthKit
   - Noise Level ("Ambient noise: 45 dB") — HealthKit
   - Altitude ("Relative altitude: 1,200 ft") — CMAltimeter
+  - Wrist Temperature ("Wrist temp: 97.2°F") — HealthKit (Series 8+)
+  - VO2 Max ("VO2 Max: 42.5 mL/kg/min") — HealthKit
+  - Respiratory Rate ("Respiratory rate: 16 breaths/min") — HealthKit
+  - Walking Speed ("Walking speed: 3.2 mph") — HealthKit
+  - Distance ("Distance today: 4.2 mi") — HealthKit
+  - Focus Mode ("Focus mode is active") — Intents
   - Reminders ("Reminder: Buy groceries") — EventKit
   - Battery ("Watch battery: 45%") — WKInterfaceDevice
+
+### **AI Assistant Auto-Responder**
+- Designed for use with OpenClaw and other AI agent frameworks on Telegram
+- Mark any chat as an AI Assistant with the brain icon toggle
+- Incoming messages are pattern-matched against keyword categories
+- Mercury auto-replies with matching live watch sensor data
+- "Give me everything" returns a full status report from all 19 data sources
+- No interaction needed — the AI gets real-time context from your wrist
 
 ### **Search**
 - Global search from the Home page — find chats by name and messages across all conversations
