@@ -1183,7 +1183,7 @@
 			repositoryURL = "https://github.com/dagronf/QRCode";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 21.0.3;
+				minimumVersion = 28.0.2;
 			};
 		};
 		A09F310D2CC0487700F6ACC8 /* XCRemoteSwiftPackageReference "swift-ogg" */ = {
