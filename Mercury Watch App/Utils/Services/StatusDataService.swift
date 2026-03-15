@@ -602,6 +602,166 @@ enum StatusDataService {
         }
     }
 
+    // MARK: - Enhanced Context for Focus Profiles
+
+    static func buildSleepContextStatus() async -> String? {
+        // Find when sleep started
+        let sleepType = HKCategoryType(.sleepAnalysis)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        let sleepStart: Date? = await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-43200),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: sleepType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKCategorySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: sample.startDate)
+            }
+            healthStore.execute(query)
+        }
+
+        var parts: [String] = []
+        if let start = sleepStart {
+            parts.append("Went to sleep at \(start.formatted(.dateTime.hour().minute()))")
+        }
+
+        // Check for next alarm — use EventKit reminders or calendar for wake time
+        // Apple doesn't expose Clock alarms, but we can check the first morning calendar event
+        let calendar = Calendar.current
+        let tomorrow7am = calendar.date(bySettingHour: 7, minute: 0, second: 0, of: calendar.date(byAdding: .day, value: calendar.component(.hour, from: Date()) >= 12 ? 1 : 0, to: Date()) ?? Date())
+
+        if let wakeTarget = tomorrow7am {
+            let timeUntil = wakeTarget.timeIntervalSince(Date())
+            if timeUntil > 0 {
+                let hours = Int(timeUntil / 3600)
+                let mins = Int(timeUntil.truncatingRemainder(dividingBy: 3600) / 60)
+                parts.append("~\(hours)h \(mins)m until morning")
+            }
+        }
+
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: "\n")
+    }
+
+    static func buildDrivingContextStatus() async -> String? {
+        var parts: [String] = []
+
+        // Driving start: check CoreMotion for when automotive started
+        // We approximate using the current session start
+        // The auto-responder tracks this via the first detection
+
+        // ETA: check calendar for next event with a location
+        if let event = await getCurrentOrNextEvent() {
+            let now = Date()
+            if event.endTime > now {
+                let eta = event.endTime.formatted(.dateTime.hour().minute())
+                parts.append("Heading to: \(event.title)")
+                parts.append("Expected by \(eta)")
+            }
+        }
+
+        // Current location for context
+        let locationManager = CLLocationManager()
+        if let location = locationManager.location {
+            let geocoder = CLGeocoder()
+            if let placemarks = try? await geocoder.reverseGeocodeLocation(location),
+               let place = placemarks.first,
+               let locality = place.locality {
+                parts.append("Currently near \(locality)")
+            }
+        }
+
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: "\n")
+    }
+
+    static func buildWorkAvailabilityStatus() async -> String? {
+        let granted = await requestCalendarPermissions()
+        guard granted else { return nil }
+
+        let now = Date()
+        let endOfDay = Calendar.current.date(byAdding: .hour, value: 8, to: now) ?? now
+        let predicate = eventStore.predicateForEvents(
+            withStart: now,
+            end: endOfDay,
+            calendars: nil
+        )
+        let events = eventStore.events(matching: predicate)
+            .filter { !$0.isAllDay }
+            .sorted { $0.startDate < $1.startDate }
+
+        // Currently in a meeting
+        if let current = events.first(where: { $0.startDate <= now && $0.endDate > now }) {
+            let freeAt = current.endDate.formatted(.dateTime.hour().minute())
+
+            // Check if there's a gap after this meeting
+            let nextAfter = events.first(where: { $0.startDate >= current.endDate })
+            if let next = nextAfter {
+                let gapMinutes = Int(next.startDate.timeIntervalSince(current.endDate) / 60)
+                if gapMinutes >= 15 {
+                    return "Free at \(freeAt) for \(gapMinutes) min before \(next.title ?? "next meeting")"
+                } else {
+                    return "In meetings until \(next.endDate.formatted(.dateTime.hour().minute()))"
+                }
+            }
+            return "Free after \(freeAt)"
+        }
+
+        // Not in a meeting — check next one
+        if let next = events.first(where: { $0.startDate > now }) {
+            let until = next.startDate.formatted(.dateTime.hour().minute())
+            return "Free until \(until) (\(next.title ?? "meeting"))"
+        }
+
+        // Nothing on calendar
+        return nil
+    }
+
+    static func buildWorkoutContextStatus() async -> String? {
+        let workoutType = HKObjectType.workoutType()
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-7200),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: workoutType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let workout = samples?.first as? HKWorkout else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let duration = Int(workout.duration / 60)
+                let type = workout.workoutActivityType.displayName
+                let startTime = workout.startDate.formatted(.dateTime.hour().minute())
+                let calories = Int(workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0)
+
+                var parts = ["\(type) started at \(startTime) (\(duration) min so far)"]
+                if calories > 0 {
+                    parts.append("\(calories) cal burned")
+                }
+                continuation.resume(returning: parts.joined(separator: " | "))
+            }
+            healthStore.execute(query)
+        }
+    }
+
 extension HKWorkoutActivityType {
     var displayName: String {
         switch self {

@@ -50,11 +50,35 @@ class AutoResponderService: TDLibManagerProtocol {
 
             Task {
                 var context: [String] = []
-                if profile.includeCalendar,
+
+                // Profile-specific enhanced context
+                switch profile.id {
+                case "sleep":
+                    if let sleepCtx = await StatusDataService.buildSleepContextStatus() {
+                        context.append(sleepCtx)
+                    }
+                case "driving":
+                    if let driveCtx = await StatusDataService.buildDrivingContextStatus() {
+                        context.append(driveCtx)
+                    }
+                case "work":
+                    if let availability = await StatusDataService.buildWorkAvailabilityStatus() {
+                        context.append(availability)
+                    }
+                case "workout":
+                    if let workoutCtx = await StatusDataService.buildWorkoutContextStatus() {
+                        context.append(workoutCtx)
+                    }
+                default:
+                    break
+                }
+
+                // Generic context from profile toggles
+                if profile.includeCalendar, profile.id != "work",
                    let cal = await StatusDataService.buildCalendarStatus() {
                     context.append(cal)
                 }
-                if profile.includeWorkout,
+                if profile.includeWorkout, profile.id != "workout",
                    let workout = await StatusDataService.buildWorkoutStatus() {
                     context.append(workout)
                 }
@@ -62,7 +86,7 @@ class AutoResponderService: TDLibManagerProtocol {
                    let health = await StatusDataService.buildHealthStatus() {
                     context.append(health)
                 }
-                if profile.includeLocation,
+                if profile.includeLocation, profile.id != "driving",
                    let loc = await StatusDataService.buildLocationStatus() {
                     context.append(loc)
                 }
