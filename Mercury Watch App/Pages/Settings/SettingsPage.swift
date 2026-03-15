@@ -17,12 +17,92 @@ struct SettingsPage: View {
         ScrollView {
             avatarHeader()
             Spacer()
+
+            Button {
+                vm.loadAccountDetails()
+            } label: {
+                Label("Account", systemImage: "person.circle")
+            }
+
+            Button {
+                vm.loadSessions()
+            } label: {
+                Label("Devices", systemImage: "desktopcomputer")
+            }
+
             Button("Logout", role: .destructive) {
                 vm.logout()
             }
+            .padding(.top)
+
             credits()
                 .padding(.top)
         }
+        .sheet(isPresented: $vm.showAccountSettings) {
+            accountSettingsView()
+        }
+        .sheet(isPresented: $vm.showSessions) {
+            sessionsView()
+        }
+    }
+
+    @ViewBuilder
+    func accountSettingsView() -> some View {
+        ScrollView {
+            VStack(spacing: 12) {
+                TextField("First Name", text: $vm.firstName)
+                TextField("Last Name", text: $vm.lastName)
+                TextField("Bio", text: $vm.bio)
+
+                Button {
+                    vm.saveName()
+                    vm.showAccountSettings = false
+                } label: {
+                    if vm.isSaving {
+                        ProgressView()
+                    } else {
+                        Label("Save", systemImage: "checkmark.circle")
+                    }
+                }
+                .tint(.blue)
+                .disabled(vm.isSaving || vm.firstName.isEmpty)
+            }
+        }
+        .navigationTitle("Account")
+    }
+
+    @ViewBuilder
+    func sessionsView() -> some View {
+        List {
+            ForEach(vm.sessions) { session in
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(session.name)
+                            .font(.headline)
+                            .lineLimit(1)
+                        if session.isCurrent {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                                .font(.caption)
+                        }
+                    }
+                    Text(session.device)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(session.lastActive)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+                .swipeActions(edge: .trailing) {
+                    if !session.isCurrent {
+                        Button("Terminate", role: .destructive) {
+                            vm.terminateSession(session)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Devices")
     }
     
     @ViewBuilder
