@@ -234,6 +234,25 @@ enum StatusDataService {
         return nil
     }
 
+    static func lookupSongLink(query: String) async -> String? {
+        do {
+            var request = MusicCatalogSearchRequest(term: query, types: [Song.self])
+            request.limit = 1
+            let response = try await request.response()
+            if let song = response.songs.first {
+                var result = "\(song.title) - \(song.artistName)"
+                if let url = song.url {
+                    result += "\n\(url.absoluteString)"
+                }
+                return result
+            }
+            return "Couldn't find \"\(query)\" on Apple Music"
+        } catch {
+            logger.log(error, level: .error)
+            return nil
+        }
+    }
+
     static func buildNowPlayingWithLink() async -> String? {
         let info = MPNowPlayingInfoCenter.default().nowPlayingInfo
         guard let info else { return nil }

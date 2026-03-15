@@ -154,6 +154,14 @@ class AutoResponderService: TDLibManagerProtocol {
                 response = StatusDataService.buildBatteryStatus()
             } else if text == "#music" || text == "#playing" {
                 response = await StatusDataService.buildNowPlayingWithLink()
+            } else if text.hasPrefix("#music ") {
+                // Bot sent a song recommendation — look it up
+                let searchTerm = String(rawText.dropFirst(7)).trimmingCharacters(in: .whitespaces)
+                response = await StatusDataService.lookupSongLink(query: searchTerm)
+            } else if text.hasPrefix("#play ") {
+                // Same as #music but also includes a "now opening" message
+                let searchTerm = String(rawText.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                response = await StatusDataService.lookupSongLink(query: searchTerm)
             } else if text == "#rings" || text == "#activity" {
                 response = await StatusDataService.buildActivityRingsStatus()
             } else if text == "#o2" || text == "#oxygen" {
