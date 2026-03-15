@@ -7,6 +7,7 @@
 
 import Foundation
 import TDLibKit
+import Intents
 
 class AutoResponderService: TDLibManagerProtocol {
 
@@ -20,16 +21,59 @@ class AutoResponderService: TDLibManagerProtocol {
         TDLibManager.shared.unsubscribe(self)
     }
 
+    /// Tracks chats we've already DND-replied to this session to avoid spam
+    private var dndRepliedChats: Set<Int64> = []
+
     func updateHandler(update: Update) {
         guard case .updateNewMessage(let msg) = update else { return }
         let message = msg.message
         guard !message.isOutgoing else { return }
 
-        // Check if this chat is marked as AI assistant
         let chatId = message.chatId
+
+        // DND auto-reply: respond to ALL chats when Focus is active
+        if AutoResponderStore.isDndAutoReplyEnabled,
+           INFocusStatusCenter.default.focusStatus.isFocused == true,
+           !dndRepliedChats.contains(chatId) {
+
+            dndRepliedChats.insert(chatId)
+            var reply = AutoResponderStore.dndAutoReplyMessage
+
+            Task {
+                var context: [String] = []
+                if AutoResponderStore.dndIncludeCalendar,
+                   let cal = await StatusDataService.buildCalendarStatus() {
+                    context.append(cal)
+                }
+                if AutoResponderStore.dndIncludeWorkout,
+                   let workout = await StatusDataService.buildWorkoutStatus() {
+                    context.append(workout)
+                }
+                if AutoResponderStore.dndIncludeLocation,
+                   let loc = await StatusDataService.buildLocationStatus() {
+                    context.append(loc)
+                }
+                if AutoResponderStore.dndIncludeBattery,
+                   let bat = StatusDataService.buildBatteryStatus() {
+                    context.append(bat)
+                }
+                if !context.isEmpty {
+                    reply += "\n" + context.joined(separator: "\n")
+                }
+                SendMessageService.sendQuickReply(text: reply, chatId: chatId)
+                self.logger.log("DND auto-replied to chat \(chatId)")
+            }
+            return
+        }
+
+        // Reset DND tracking when Focus turns off
+        if INFocusStatusCenter.default.focusStatus.isFocused != true {
+            dndRepliedChats.removeAll()
+        }
+
+        // AI assistant auto-reply for designated chats
         guard AutoResponderStore.isAssistantChat(chatId) else { return }
 
-        // Extract text content
         guard case .messageText(let textContent) = message.content else { return }
         let text = textContent.text.text.lowercased()
 

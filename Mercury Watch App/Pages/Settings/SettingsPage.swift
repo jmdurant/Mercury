@@ -30,6 +30,12 @@ struct SettingsPage: View {
                 Label("Devices", systemImage: "desktopcomputer")
             }
 
+            Button {
+                vm.showDndSettings = true
+            } label: {
+                Label("Focus Auto-Reply", systemImage: "moon.fill")
+            }
+
             Button("Logout", role: .destructive) {
                 vm.logout()
             }
@@ -40,6 +46,9 @@ struct SettingsPage: View {
         }
         .sheet(isPresented: $vm.showAccountSettings) {
             accountSettingsView()
+        }
+        .sheet(isPresented: $vm.showDndSettings) {
+            dndSettingsView()
         }
         .sheet(isPresented: $vm.showSessions) {
             sessionsView()
@@ -69,6 +78,47 @@ struct SettingsPage: View {
             }
         }
         .navigationTitle("Account")
+    }
+
+    @ViewBuilder
+    func dndSettingsView() -> some View {
+        List {
+            Section {
+                Toggle("Enable", isOn: Binding(
+                    get: { AutoResponderStore.isDndAutoReplyEnabled },
+                    set: { AutoResponderStore.isDndAutoReplyEnabled = $0 }
+                ))
+            } footer: {
+                Text("Auto-reply to messages when Focus/DND is active")
+            }
+
+            Section("Reply Message") {
+                TextField("Message", text: Binding(
+                    get: { AutoResponderStore.dndAutoReplyMessage },
+                    set: { AutoResponderStore.dndAutoReplyMessage = $0 }
+                ))
+            }
+
+            Section("Include with reply") {
+                Toggle("Calendar", isOn: Binding(
+                    get: { AutoResponderStore.dndIncludeCalendar },
+                    set: { AutoResponderStore.dndIncludeCalendar = $0 }
+                ))
+                Toggle("Workout", isOn: Binding(
+                    get: { AutoResponderStore.dndIncludeWorkout },
+                    set: { AutoResponderStore.dndIncludeWorkout = $0 }
+                ))
+                Toggle("Location", isOn: Binding(
+                    get: { AutoResponderStore.dndIncludeLocation },
+                    set: { AutoResponderStore.dndIncludeLocation = $0 }
+                ))
+                Toggle("Battery", isOn: Binding(
+                    get: { AutoResponderStore.dndIncludeBattery },
+                    set: { AutoResponderStore.dndIncludeBattery = $0 }
+                ))
+            }
+        }
+        .navigationTitle("Focus Auto-Reply")
     }
 
     @ViewBuilder
