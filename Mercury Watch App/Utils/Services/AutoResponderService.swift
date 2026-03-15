@@ -266,9 +266,35 @@ class AutoResponderService: TDLibManagerProtocol {
             }
         }
 
-        if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in", "everything"]) {
+        if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in"]) {
             if let health = await StatusDataService.buildHealthStatus() {
                 responses.append(health)
+            }
+        }
+
+        if matches(text, keywords: ["available", "free", "when can you", "when will you", "availability", "when are you free"]) {
+            if let avail = await StatusDataService.buildWorkAvailabilityStatus() {
+                responses.append(avail)
+            } else {
+                responses.append("No meetings on my calendar — I'm free")
+            }
+        }
+
+        if matches(text, keywords: ["driving", "commute", "eta", "how long", "when will you arrive", "where are you heading"]) {
+            if let drive = await StatusDataService.buildDrivingContextStatus() {
+                responses.append(drive)
+            }
+        }
+
+        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep", "when did you go to bed", "bedtime"]) {
+            if let sleep = await StatusDataService.buildSleepContextStatus() {
+                responses.append(sleep)
+            }
+        }
+
+        if matches(text, keywords: ["workout detail", "how long have you been", "when did you start", "exercise detail"]) {
+            if let workoutCtx = await StatusDataService.buildWorkoutContextStatus() {
+                responses.append(workoutCtx)
             }
         }
 
@@ -288,10 +314,15 @@ class AutoResponderService: TDLibManagerProtocol {
     private func buildFullStatus() async -> String? {
         var parts: [String] = []
 
+        // Rich context
+        if let avail = await StatusDataService.buildWorkAvailabilityStatus() { parts.append(avail) }
+        if let workoutCtx = await StatusDataService.buildWorkoutContextStatus() { parts.append(workoutCtx) }
+        if let driveCtx = await StatusDataService.buildDrivingContextStatus() { parts.append(driveCtx) }
+        if let sleepCtx = await StatusDataService.buildSleepContextStatus() { parts.append(sleepCtx) }
+
+        // Standard data
         if let health = await StatusDataService.buildHealthStatus() { parts.append(health) }
         if let rings = await StatusDataService.buildActivityRingsStatus() { parts.append(rings) }
-        if let workout = await StatusDataService.buildWorkoutStatus() { parts.append(workout) }
-        if let sleep = await StatusDataService.buildSleepStatus() { parts.append(sleep) }
         if let spo2 = await StatusDataService.buildBloodOxygenStatus() { parts.append(spo2) }
         if let cal = await StatusDataService.buildCalendarStatus() { parts.append(cal) }
         if let rem = await StatusDataService.buildRemindersStatus() { parts.append(rem) }
