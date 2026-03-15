@@ -312,34 +312,62 @@ class AutoResponderService: TDLibManagerProtocol {
     }
 
     private func buildFullStatus() async -> String? {
-        var parts: [String] = []
+        var sections: [String] = []
 
-        // Rich context
-        if let avail = await StatusDataService.buildWorkAvailabilityStatus() { parts.append(avail) }
-        if let workoutCtx = await StatusDataService.buildWorkoutContextStatus() { parts.append(workoutCtx) }
-        if let driveCtx = await StatusDataService.buildDrivingContextStatus() { parts.append(driveCtx) }
-        if let sleepCtx = await StatusDataService.buildSleepContextStatus() { parts.append(sleepCtx) }
+        // Lead with the Focus profile summary (human-readable)
+        let profile = AutoResponderStore.autoDetectProfile(
+            isAutomotive: isAutomotive,
+            isWorkout: isWorkoutActive
+        )
+        var summary = "[\(profile.name.uppercased())] \(profile.message)"
 
-        // Standard data
-        if let health = await StatusDataService.buildHealthStatus() { parts.append(health) }
-        if let rings = await StatusDataService.buildActivityRingsStatus() { parts.append(rings) }
-        if let spo2 = await StatusDataService.buildBloodOxygenStatus() { parts.append(spo2) }
-        if let cal = await StatusDataService.buildCalendarStatus() { parts.append(cal) }
-        if let rem = await StatusDataService.buildRemindersStatus() { parts.append(rem) }
-        if let loc = await StatusDataService.buildLocationStatus() { parts.append(loc) }
-        if let weather = await StatusDataService.buildWeatherStatus() { parts.append(weather) }
-        if let np = StatusDataService.buildNowPlayingStatus() { parts.append(np) }
-        if let noise = await StatusDataService.buildNoiseLevelStatus() { parts.append(noise) }
-        if let alt = await StatusDataService.buildAltitudeStatus() { parts.append(alt) }
-        if let temp = await StatusDataService.buildWristTemperatureStatus() { parts.append(temp) }
-        if let vo2 = await StatusDataService.buildVO2MaxStatus() { parts.append(vo2) }
-        if let resp = await StatusDataService.buildRespiratoryRateStatus() { parts.append(resp) }
-        if let speed = await StatusDataService.buildWalkingSpeedStatus() { parts.append(speed) }
-        if let dist = await StatusDataService.buildDistanceStatus() { parts.append(dist) }
-        if let focus = StatusDataService.buildFocusStatus() { parts.append(focus) }
-        if let bat = StatusDataService.buildBatteryStatus() { parts.append(bat) }
+        // Add the profile-specific rich context
+        var profileContext: [String] = []
+        switch profile.id {
+        case "sleep":
+            if let ctx = await StatusDataService.buildSleepContextStatus() { profileContext.append(ctx) }
+        case "driving":
+            if let ctx = await StatusDataService.buildDrivingContextStatus() { profileContext.append(ctx) }
+        case "work":
+            if let ctx = await StatusDataService.buildWorkAvailabilityStatus() { profileContext.append(ctx) }
+        case "workout":
+            if let ctx = await StatusDataService.buildWorkoutContextStatus() { profileContext.append(ctx) }
+        default:
+            break
+        }
+        if !profileContext.isEmpty {
+            summary += "\n" + profileContext.joined(separator: "\n")
+        }
+        sections.append(summary)
 
-        guard !parts.isEmpty else { return nil }
-        return parts.joined(separator: "\n")
+        // Separator
+        sections.append("---")
+
+        // Full data dump
+        var data: [String] = []
+        if let health = await StatusDataService.buildHealthStatus() { data.append(health) }
+        if let rings = await StatusDataService.buildActivityRingsStatus() { data.append(rings) }
+        if let spo2 = await StatusDataService.buildBloodOxygenStatus() { data.append(spo2) }
+        if let cal = await StatusDataService.buildCalendarStatus() { data.append(cal) }
+        if let avail = await StatusDataService.buildWorkAvailabilityStatus() { data.append(avail) }
+        if let rem = await StatusDataService.buildRemindersStatus() { data.append(rem) }
+        if let loc = await StatusDataService.buildLocationStatus() { data.append(loc) }
+        if let weather = await StatusDataService.buildWeatherStatus() { data.append(weather) }
+        if let np = StatusDataService.buildNowPlayingStatus() { data.append(np) }
+        if let noise = await StatusDataService.buildNoiseLevelStatus() { data.append(noise) }
+        if let alt = await StatusDataService.buildAltitudeStatus() { data.append(alt) }
+        if let temp = await StatusDataService.buildWristTemperatureStatus() { data.append(temp) }
+        if let vo2 = await StatusDataService.buildVO2MaxStatus() { data.append(vo2) }
+        if let resp = await StatusDataService.buildRespiratoryRateStatus() { data.append(resp) }
+        if let speed = await StatusDataService.buildWalkingSpeedStatus() { data.append(speed) }
+        if let dist = await StatusDataService.buildDistanceStatus() { data.append(dist) }
+        if let focus = StatusDataService.buildFocusStatus() { data.append(focus) }
+        if let bat = StatusDataService.buildBatteryStatus() { data.append(bat) }
+
+        if !data.isEmpty {
+            sections.append(data.joined(separator: "\n"))
+        }
+
+        return sections.joined(separator: "\n")
     }
 }
