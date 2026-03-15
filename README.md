@@ -81,21 +81,51 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
   - Battery ("Watch battery: 45%") — WKInterfaceDevice
 
 ### **AI Assistant Auto-Responder**
-- Designed for use with OpenClaw and other AI agent frameworks on Telegram
+- Designed for use with [OpenClaw](https://github.com/openclaw/openclaw) and other AI agent frameworks on Telegram
 - Mark any chat as an AI Assistant with the brain icon toggle
-- Incoming messages are pattern-matched against keyword categories
-- Mercury auto-replies with matching live watch sensor data
-- "Give me everything" returns a full status report from all 19 data sources
-- No interaction needed — the AI gets real-time context from your wrist
+- Two query modes:
+  - **Natural language**: "What's your heart rate?" → Mercury auto-replies with matching data
+  - **Silent tags**: `#status`, `#heart`, `#location` → Mercury responds silently (no notification, no buzz)
+- Full status dumps led by a human-readable Focus profile summary, followed by the complete data payload
+- `#help` returns a list of all available tag commands
+
+**Silent Tag Commands** (no notification — perfect for background AI polling):
+| Command | Data |
+|---------|------|
+| `#status` | Full status: Focus profile + all sensor data |
+| `#health` | Steps, calories, heart rate |
+| `#heart` / `#hr` | Heart rate |
+| `#steps` | Step count |
+| `#rings` | Activity ring progress with goals |
+| `#o2` | Blood oxygen (SpO2) |
+| `#sleep` | Sleep duration, bedtime, time until morning |
+| `#workout` | Activity type, start time, duration, calories |
+| `#calendar` / `#cal` | Availability, calendar gaps, next free slot |
+| `#location` / `#loc` | Reverse-geocoded city/state |
+| `#weather` | Temperature and conditions |
+| `#music` | Now playing song and artist |
+| `#battery` | Watch battery percentage |
+| `#focus` / `#dnd` | Focus mode status |
+| `#noise` | Ambient noise level (dB) |
+| `#temp` | Wrist temperature |
+| `#vo2` | VO2 Max |
+| `#speed` | Walking speed |
+| `#distance` | Distance walked/run today |
+| `#respiratory` | Respiratory rate |
+| `#reminder` | Next incomplete reminder |
+| `#altitude` | Relative altitude |
+| `#help` | List all commands |
 
 ### **Focus Mode Auto-Reply**
 - Automatic replies when Focus/Do Not Disturb is active
-- 4 built-in profiles with customizable messages:
-  - **Workout**: "I'm working out right now..." + workout stats + health data
-  - **Work**: "I'm at work and can't chat..." + calendar status
-  - **Sleep**: "I'm sleeping..." (auto-detected between 10pm-7am)
-  - **General**: "I'm currently unavailable..." + calendar + workout
+- 5 built-in profiles with customizable messages and smart auto-detection:
+  - **Driving**: "I'm driving right now..." + destination/ETA from calendar + current location (auto-detected via CoreMotion)
+  - **Workout**: "I'm working out right now..." + activity type, start time, duration, calories (auto-detected via CoreMotion)
+  - **Work**: "I'm at work and can't chat..." + smart availability from calendar gaps ("Free at 2pm for 30 min before Design Review")
+  - **Sleep**: "I'm sleeping..." + bedtime + time until morning (auto-detected between 10pm-7am)
+  - **General**: "I'm currently unavailable..." + calendar + workout status
 - Each profile controls which context data to include (calendar, workout, health, location, battery)
+- Auto-detects the right profile: Driving > Workout > Sleep (by time) > manually selected
 - Only replies once per chat per Focus session to avoid spam
 - Configure in Settings → Focus Auto-Reply
 
