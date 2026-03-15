@@ -153,7 +153,13 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - APNs integration with Telegram’s push servers
 
 ### **Double Tap Gesture**
-- On Apple Watch Series 9, Ultra 2, and later — double tap (pinch) to send a thumbs up to the last received message in the current chat
+- On Apple Watch Series 9, Ultra 2, and later — double tap (pinch) to perform a configurable action in the current chat
+- 5 options configurable in Settings → Double Tap:
+  - 👍 Thumbs Up — react to last received message (default)
+  - ❤️ Heart — react with heart
+  - 🔥 Fire — react with fire
+  - Mark as Read — silently mark chat as read
+  - Open Quick Reply — open the quick reply + status sheet
 
 ### **Account Settings**
 - Edit your name and bio from the Watch
