@@ -34,6 +34,8 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - Share messages, photos, videos, and locations to Messages, Mail, and more via the system share sheet
 - View message info (sender, date, forward origin, view/forward counts)
 - Delete messages (for yourself or for everyone)
+- Tappable URLs, Apple Music links, and phone numbers in messages
+- Addresses in messages open in Maps when tapped
 
 ### **Secret Chats**
 - End-to-end encrypted messaging via Telegram's secret chat protocol
@@ -114,7 +116,11 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 | `#respiratory` | Respiratory rate |
 | `#reminder` | Next incomplete reminder |
 | `#altitude` | Relative altitude |
+| `#music [query]` | Look up a song and return Apple Music link |
+| `#play [query]` | Same as #music with song lookup |
 | `#help` | List all commands |
+
+Song recommendations with links: AI sends `#music Dave Matthews Band - Crush` → Mercury searches Apple Music catalog on-device via MusicKit → replies with tappable link that opens the Music app on Watch.
 
 ### **Focus Mode Auto-Reply**
 - Automatic replies when Focus/Do Not Disturb is active
@@ -150,7 +156,14 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - Reply to messages directly from notification banners
 - Mark as Read action without opening the app
 - Tap notification to jump straight to the conversation
+- Smart link detection with typed action buttons:
+  - **Call** — phone numbers detected in message
+  - **Open in Maps** — street addresses auto-converted to Maps links
+  - **Open in Music** — Apple Music links open the Music app
+  - **Open Link** — generic URLs open in Safari
+  - Up to 3 link actions per notification, dynamically labeled
 - APNs integration with Telegram’s push servers
+- Siri Announce Messages — reads incoming messages aloud via AirPods
 
 ### **Double Tap Gesture**
 - On Apple Watch Series 9, Ultra 2, and later — double tap (pinch) to perform a configurable action in the current chat
