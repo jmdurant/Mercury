@@ -1159,7 +1159,7 @@
 			repositoryURL = "https://github.com/Swiftgram/TDLibKit";
 			requirement = {
 				kind = revision;
-				revision = 9aa7ba777c6c21fd4bf0710c47c2f6f3beb9c8c9;
+				revision = 5d78f764185e4e4e11493bf4aaf7ed3708d34497;
 			};
 		};
 		A06AE8582CCAB6EE003282B2 /* XCRemoteSwiftPackageReference "DSWaveformImage" */ = {
