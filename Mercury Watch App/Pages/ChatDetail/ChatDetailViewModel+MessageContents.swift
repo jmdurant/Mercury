@@ -8,6 +8,7 @@
 import SwiftUI
 import TDLibKit
 import SDWebImageWebPCoder
+import SDWebImageLottieCoder
 
 extension ChatDetailViewModel {
     
@@ -28,13 +29,12 @@ extension ChatDetailViewModel {
             
         case .messageSticker(let message):
             switch message.sticker.format {
-                
             case .stickerFormatWebp:
                 return .stickerImage(model: message.getImageModel())
             case .stickerFormatTgs:
-                return .text(msg.description)
+                return .stickerImage(model: message.getLottieModel())
             case .stickerFormatWebm:
-                return .text(msg.description)
+                return .stickerImage(model: message.getThumbnailModel())
             }
             
         case .messageVideo(let message):
@@ -174,6 +174,38 @@ extension MessageVideoNote {
             caption: nil,
             getVideoURL: {
                 return await FileService.getFilePath(for: self.videoNote.video)
+            }
+        )
+    }
+}
+
+extension MessageSticker {
+    func getLottieModel() -> StickerImageModel {
+        return StickerImageModel(
+            emoji: sticker.emoji,
+            getImage: {
+                guard let filePath = await FileService.getFilePath(for: sticker.sticker) else {
+                    return nil
+                }
+                let url = URL(fileURLWithPath: filePath)
+                guard let lottieData = FileService.getLottieJson(for: url) else {
+                    return nil
+                }
+                return SDImageLottieCoder.shared.decodedImage(with: lottieData, options: nil)
+            }
+        )
+    }
+
+    func getThumbnailModel() -> StickerImageModel {
+        return StickerImageModel(
+            emoji: sticker.emoji,
+            getImage: {
+                guard let thumbnailFile = sticker.thumbnail?.file,
+                      let filePath = await FileService.getFilePath(for: thumbnailFile),
+                      let data = try? Data(contentsOf: URL(fileURLWithPath: filePath))
+                else { return nil }
+                return SDImageWebPCoder.shared.decodedImage(with: data, options: nil)
+                    ?? UIImage(data: data)
             }
         )
     }
