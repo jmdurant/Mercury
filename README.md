@@ -59,11 +59,20 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 
 ### **Quick Replies and Smart Status**
 - Bolt icon in chat toolbar for instant canned responses (OK, On my way, Call me, BRB, etc.)
-- Smart status replies powered by live watch sensor data:
-  - Workout status from HealthKit ("In a workout - Running 23min")
-  - Calendar status from EventKit ("Busy until 3pm - Team Meeting")
-  - Health stats ("Today: 8,432 steps | 340 cal | 72 bpm")
-- Tap any status to send it as a message
+- Smart status replies powered by 13 live watch data sources — tap any to send as a message:
+  - Workout status ("In a workout - Running 23min") — HealthKit
+  - Calendar status ("Busy until 3pm - Team Meeting") — EventKit
+  - Health stats ("Today: 8,432 steps | 340 cal | 72 bpm") — HealthKit
+  - Now Playing ("Listening to: Bohemian Rhapsody - Queen") — MediaPlayer
+  - Weather ("Weather: 72°F, Mostly Clear") — WeatherKit
+  - Location ("Currently in San Francisco, CA") — CoreLocation
+  - Sleep ("Slept 7h 23m last night") — HealthKit
+  - Activity Rings ("Move: 420/500 cal | Exercise: 22/30 min | Stand: 8/12 hr") — HealthKit
+  - Blood Oxygen ("Blood oxygen: 98%") — HealthKit
+  - Noise Level ("Ambient noise: 45 dB") — HealthKit
+  - Altitude ("Relative altitude: 1,200 ft") — CMAltimeter
+  - Reminders ("Reminder: Buy groceries") — EventKit
+  - Battery ("Watch battery: 45%") — WKInterfaceDevice
 
 ### **Search**
 - Global search from the Home page — find chats by name and messages across all conversations
