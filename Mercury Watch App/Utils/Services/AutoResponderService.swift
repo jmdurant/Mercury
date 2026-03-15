@@ -112,18 +112,131 @@ class AutoResponderService: TDLibManagerProtocol {
         guard AutoResponderStore.isAssistantChat(chatId) else { return }
 
         guard case .messageText(let textContent) = message.content else { return }
-        let text = textContent.text.text.lowercased()
+        let rawText = textContent.text.text
+        let text = rawText.lowercased().trimmingCharacters(in: .whitespaces)
+
+        // Check for silent tags — suppress notification and auto-respond
+        let isSilent = text.hasPrefix("#")
+        if isSilent {
+            suppressNotification(messageId: message.id, chatId: chatId)
+        }
 
         Task {
-            if let response = await matchAndFetch(text) {
+            let response: String?
+
+            // Handle tagged commands
+            if text == "#status" || text == "#full" || text == "#dump" {
+                response = await buildFullStatus()
+            } else if text == "#health" {
+                response = await StatusDataService.buildHealthStatus()
+            } else if text == "#location" || text == "#loc" {
+                response = await StatusDataService.buildLocationStatus()
+            } else if text == "#weather" {
+                response = await StatusDataService.buildWeatherStatus()
+            } else if text == "#calendar" || text == "#cal" {
+                response = await StatusDataService.buildWorkAvailabilityStatus()
+                    ?? (await StatusDataService.buildCalendarStatus())
+            } else if text == "#workout" {
+                response = await StatusDataService.buildWorkoutContextStatus()
+                    ?? (await StatusDataService.buildWorkoutStatus())
+            } else if text == "#sleep" {
+                response = await StatusDataService.buildSleepContextStatus()
+                    ?? (await StatusDataService.buildSleepStatus())
+            } else if text == "#heart" || text == "#hr" || text == "#heartrate" {
+                if let hr = await StatusDataService.getCurrentHeartRate() {
+                    response = "Heart rate: \(hr) bpm"
+                } else { response = nil }
+            } else if text == "#steps" {
+                if let steps = await StatusDataService.getTodaySteps() {
+                    response = "Steps today: \(steps.formatted())"
+                } else { response = nil }
+            } else if text == "#battery" || text == "#bat" {
+                response = StatusDataService.buildBatteryStatus()
+            } else if text == "#music" || text == "#playing" {
+                response = StatusDataService.buildNowPlayingStatus()
+            } else if text == "#rings" || text == "#activity" {
+                response = await StatusDataService.buildActivityRingsStatus()
+            } else if text == "#o2" || text == "#oxygen" {
+                response = await StatusDataService.buildBloodOxygenStatus()
+            } else if text == "#focus" || text == "#dnd" {
+                response = StatusDataService.buildFocusStatus() ?? "Focus mode is not active"
+            } else if text == "#noise" {
+                response = await StatusDataService.buildNoiseLevelStatus()
+            } else if text == "#temp" {
+                response = await StatusDataService.buildWristTemperatureStatus()
+            } else if text == "#vo2" {
+                response = await StatusDataService.buildVO2MaxStatus()
+            } else if text == "#distance" || text == "#dist" {
+                response = await StatusDataService.buildDistanceStatus()
+            } else if text == "#speed" {
+                response = await StatusDataService.buildWalkingSpeedStatus()
+            } else if text == "#respiratory" || text == "#breathing" {
+                response = await StatusDataService.buildRespiratoryRateStatus()
+            } else if text == "#reminder" || text == "#reminders" {
+                response = await StatusDataService.buildRemindersStatus()
+            } else if text == "#altitude" || text == "#alt" {
+                response = await StatusDataService.buildAltitudeStatus()
+            } else if text == "#help" {
+                response = """
+                Available commands:
+                #status — Full status dump
+                #health — Steps, calories, heart rate
+                #heart — Heart rate
+                #steps — Step count
+                #rings — Activity rings
+                #o2 — Blood oxygen
+                #sleep — Sleep data
+                #workout — Workout status
+                #calendar — Calendar/availability
+                #location — Current location
+                #weather — Weather conditions
+                #music — Now playing
+                #battery — Battery level
+                #focus — Focus mode status
+                #noise — Ambient noise
+                #temp — Wrist temperature
+                #vo2 — VO2 Max
+                #speed — Walking speed
+                #distance — Distance today
+                #respiratory — Respiratory rate
+                #reminder — Next reminder
+                #altitude — Altitude
+                """
+            } else if text.hasPrefix("#") {
+                // Unknown tag — ignore silently
+                response = nil
+            } else {
+                // Natural language query
+                response = await matchAndFetch(text)
+            }
+
+            if let response {
                 SendMessageService.sendQuickReply(text: response, chatId: chatId)
-                logger.log("Auto-responded to assistant chat \(chatId)")
+                logger.log("Auto-responded\(isSilent ? " (silent)" : "") to assistant chat \(chatId)")
             }
         }
     }
 
     func connectionStateUpdate(state: ConnectionState) {}
     func authorizationStateUpdate(state: AuthorizationState) {}
+
+    private func suppressNotification(messageId: Int64, chatId: Int64) {
+        // Mark message as read immediately to suppress notification
+        Task {
+            do {
+                try await TDLibManager.shared.client?.openChat(chatId: chatId)
+                try await TDLibManager.shared.client?.viewMessages(
+                    chatId: chatId,
+                    forceRead: true,
+                    messageIds: [messageId],
+                    source: nil
+                )
+                try await TDLibManager.shared.client?.closeChat(chatId: chatId)
+            } catch {
+                logger.log(error, level: .error)
+            }
+        }
+    }
 
     private func startActivityMonitoring() {
         guard CMMotionActivityManager.isActivityAvailable() else { return }
