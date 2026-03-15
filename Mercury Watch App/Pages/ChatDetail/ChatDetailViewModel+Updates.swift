@@ -193,4 +193,16 @@ extension ChatDetailViewModel {
     func updateChatBlockList(_ list: UpdateChatBlockList) {
         self.isChatBlocked = list.blockList != nil
     }
+
+    @MainActor
+    func updateSecretChatState(_ secretChat: SecretChat) {
+        switch secretChat.state {
+        case .secretChatStatePending:
+            self.secretChatState = "Waiting for key exchange..."
+        case .secretChatStateReady:
+            self.secretChatState = nil
+        case .secretChatStateClosed:
+            self.secretChatState = "Secret chat closed"
+        }
+    }
 }

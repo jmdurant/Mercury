@@ -64,8 +64,12 @@ extension ChatListViewModel {
         let date = Date(fromUnixTimestamp: chat.lastMessage?.date ?? 0)
         
         var userId: Int64? = nil
+        var isSecret = false
         if case .chatTypePrivate(let data) = chat.type {
             userId = data.userId
+        } else if case .chatTypeSecret(let data) = chat.type {
+            userId = data.userId
+            isSecret = true
         }
         
         var avatar = chat.toAvatarModel()
@@ -98,6 +102,7 @@ extension ChatListViewModel {
             avatar: avatar,
             isMuted: isMuted,
             isPinned: isPinned,
+            isSecretChat: isSecret,
             messageStyle: messageStyle,
             unreadBadgeStyle: unreadBadgeStyle
         )

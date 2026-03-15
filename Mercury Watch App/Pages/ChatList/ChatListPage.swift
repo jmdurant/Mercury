@@ -39,8 +39,15 @@ struct ChatListPage: View {
             .navigationTitle(vm.folder.title)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("New Chat", systemImage: "square.and.pencil") {
-                        vm.didPressOnNewMessage()
+                    Menu {
+                        Button("New Chat", systemImage: "square.and.pencil") {
+                            vm.didPressOnNewMessage()
+                        }
+                        Button("Secret Chat", systemImage: "lock.fill") {
+                            vm.showNewSecretChat = true
+                        }
+                    } label: {
+                        Image(systemName: "square.and.pencil")
                     }
                 }
             }
@@ -48,6 +55,15 @@ struct ChatListPage: View {
                 NewChatSubpage(isPresented: $vm.showNewMessage) { chatId in
                     AppState.shared.pendingNotificationChatId = chatId
                 }
+            }
+            .sheet(isPresented: $vm.showNewSecretChat) {
+                NewChatSubpage(
+                    isPresented: $vm.showNewSecretChat,
+                    onChatSelected: { chatId in
+                        AppState.shared.pendingNotificationChatId = chatId
+                    },
+                    secretChat: true
+                )
             }
         }
     }

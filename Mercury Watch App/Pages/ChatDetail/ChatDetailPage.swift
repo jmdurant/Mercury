@@ -65,8 +65,15 @@ struct ChatDetailPage: View {
                 background()
             }
             .navigationTitle {
-                Text(vm.chatName ?? "")
-                    .foregroundStyle(.white)
+                HStack(spacing: 4) {
+                    if vm.isSecretChat {
+                        Image(systemName: "lock.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.green)
+                    }
+                    Text(vm.chatName ?? "")
+                }
+                .foregroundStyle(.white)
             }
             .toolbarForegroundStyle(.white, for: .navigationBar)
             .onAppear(perform: vm.onOpenChat)
@@ -84,6 +91,17 @@ struct ChatDetailPage: View {
         .overlay {
             if vm.isChatBlocked {
                 blockView()
+            }
+        }
+        .overlay(alignment: .top) {
+            if let state = vm.secretChatState {
+                Text(state)
+                    .font(.caption2)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(.green.opacity(0.8), in: Capsule())
+                    .padding(.top, 4)
             }
         }
         .sheet(isPresented: $vm.showChatInfoView) {

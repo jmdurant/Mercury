@@ -12,6 +12,7 @@ struct NewChatSubpage: View {
     @State private var vm = NewChatViewModel()
     @Binding var isPresented: Bool
     let onChatSelected: (Int64) -> Void
+    var secretChat: Bool = false
 
     var body: some View {
         Group {
@@ -22,7 +23,7 @@ struct NewChatSubpage: View {
             } else {
                 List(vm.filteredContacts) { contact in
                     Button {
-                        vm.openChat(with: contact) { chatId in
+                        vm.openChat(with: contact, secret: secretChat) { chatId in
                             isPresented = false
                             onChatSelected(chatId)
                         }
@@ -45,7 +46,7 @@ struct NewChatSubpage: View {
                 .listStyle(.carousel)
             }
         }
-        .navigationTitle("New Chat")
+        .navigationTitle(secretChat ? "Secret Chat" : "New Chat")
         .searchable(text: $vm.searchQuery, prompt: "Search contacts")
         .onAppear { vm.loadContacts() }
     }

@@ -51,12 +51,19 @@ struct ChatCellView: View {
     
     @ViewBuilder
     func title() -> some View {
-        
+
         let isMutedText = model.isMuted
         ? Text(Image(systemName: "speaker.slash.fill"))
         : Text("")
-        
+
+        let lockText = model.isSecretChat
+        ? Text(Image(systemName: "lock.fill")).foregroundColor(.green)
+        : Text("")
+
         Group {
+            lockText
+                .font(.caption2)
+            +
             Text(model.title)
                 .font(.headline)
             +
@@ -170,6 +177,7 @@ struct ChatCellModel: Identifiable {
     var avatar: AvatarModel
     var isMuted: Bool
     var isPinned: Bool
+    var isSecretChat: Bool = false
     
     var messageStyle: MessageStyle?
     var unreadBadgeStyle: UnreadStyle?

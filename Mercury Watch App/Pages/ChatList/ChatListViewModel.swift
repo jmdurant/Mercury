@@ -18,6 +18,7 @@ class ChatListViewModel: TDLibViewModel {
     var senders: [Int64:String] = [:]
     var isLoading: Bool = false
     var showNewMessage: Bool = false
+    var showNewSecretChat: Bool = false
     
     init(folder: ChatFolder) {
         self.folder = folder

@@ -151,7 +151,7 @@ final class TDLibManager {
                     useChatInfoDatabase: true,
                     useFileDatabase: true,
                     useMessageDatabase: false,
-                    useSecretChats: false,
+                    useSecretChats: true,
                     useTestDc: false
                 )
                 

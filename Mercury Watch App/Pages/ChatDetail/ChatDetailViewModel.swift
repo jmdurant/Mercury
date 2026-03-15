@@ -49,6 +49,8 @@ class ChatDetailViewModel: TDLibViewModel {
     
     var chatType: ChatType?
     var isChatBlocked: Bool = false
+    var isSecretChat: Bool { if case .chatTypeSecret = chatType { return true } else { return false } }
+    var secretChatState: String?
     
     init(chatId: Int64) {
         self.chatId = chatId
@@ -135,6 +137,8 @@ class ChatDetailViewModel: TDLibViewModel {
                 self.updateMessageContentOpened(update)
             case .updateChatBlockList(let list):
                 self.updateChatBlockList(list)
+            case .updateSecretChat(let update):
+                self.updateSecretChatState(update.secretChat)
             default:
                 break
             }
@@ -175,8 +179,10 @@ class ChatDetailViewModel: TDLibViewModel {
                 chatId: self.chatId
             )
             
+        case .chatTypeSecret(let secretChat):
+            return .user(userId: secretChat.userId)
+
         default:
-            // TODO: Implement all cases (missing .chatTypeSecret)
             return nil
         }
     }

@@ -66,16 +66,28 @@ class NewChatViewModel {
         }
     }
 
-    func openChat(with contact: ContactItem, completion: @escaping (Int64) -> Void) {
+    func openChat(with contact: ContactItem, secret: Bool = false, completion: @escaping (Int64) -> Void) {
         Task.detached {
             do {
-                guard let chat = try await TDLibManager.shared.client?.createPrivateChat(
-                    userId: contact.id,
-                    force: false
-                ) else { return }
+                let chatId: Int64?
+
+                if secret {
+                    let secretChat = try await TDLibManager.shared.client?.createNewSecretChat(
+                        userId: contact.id
+                    )
+                    chatId = secretChat?.id
+                } else {
+                    let chat = try await TDLibManager.shared.client?.createPrivateChat(
+                        userId: contact.id,
+                        force: false
+                    )
+                    chatId = chat?.id
+                }
+
+                guard let chatId else { return }
 
                 await MainActor.run {
-                    completion(chat.id)
+                    completion(chatId)
                 }
             } catch {
                 self.logger.log(error, level: .error)
