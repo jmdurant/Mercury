@@ -35,6 +35,14 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - View message info (sender, date, forward origin, view/forward counts)
 - Delete messages (for yourself or for everyone)
 
+### **Secret Chats**
+- End-to-end encrypted messaging via Telegram's secret chat protocol
+- Start a secret chat from the compose menu (lock icon)
+- Green lock indicator on secret chat titles in the chat list and chat detail
+- Key exchange status banner during setup
+- All encryption handled by TDLib — messages never touch Telegram's servers
+- Note: Secret chats are device-specific (same as Telegram Desktop)
+
 ### **Location Sharing**
 - Send your current GPS location directly from the Watch
 - View received locations and venues on an interactive map
