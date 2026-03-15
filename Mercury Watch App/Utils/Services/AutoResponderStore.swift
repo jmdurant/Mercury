@@ -9,6 +9,47 @@ import Foundation
 
 enum AutoResponderStore {
 
+    // MARK: - Double Tap Action
+
+    private static let doubleTapActionKey = "doubleTapAction"
+
+    enum DoubleTapAction: String, CaseIterable {
+        case thumbsUp = "thumbsUp"
+        case heart = "heart"
+        case fire = "fire"
+        case markRead = "markRead"
+        case quickReply = "quickReply"
+
+        var displayName: String {
+            switch self {
+            case .thumbsUp: return "👍 Thumbs Up"
+            case .heart: return "❤️ Heart"
+            case .fire: return "🔥 Fire"
+            case .markRead: return "Mark as Read"
+            case .quickReply: return "Open Quick Reply"
+            }
+        }
+
+        var emoji: String? {
+            switch self {
+            case .thumbsUp: return "👍"
+            case .heart: return "❤️"
+            case .fire: return "🔥"
+            case .markRead, .quickReply: return nil
+            }
+        }
+    }
+
+    static var doubleTapAction: DoubleTapAction {
+        get {
+            let raw = UserDefaults.standard.string(forKey: doubleTapActionKey) ?? "thumbsUp"
+            return DoubleTapAction(rawValue: raw) ?? .thumbsUp
+        }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: doubleTapActionKey) }
+    }
+
+    // MARK: - Assistant Chat IDs
+
     private static let key = "assistantChatIds"
     private static let dndAutoReplyKey = "dndAutoReplyEnabled"
     private static let dndMessageKey = "dndAutoReplyMessage"

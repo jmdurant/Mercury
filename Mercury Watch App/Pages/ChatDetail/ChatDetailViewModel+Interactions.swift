@@ -76,10 +76,26 @@ extension ChatDetailViewModel {
     }
     
     func onDoubleTapReact() {
-        // Send 👍 to the last received (non-outgoing) message
-        guard let lastReceived = messages.last(where: { !$0.isOutgoing }) else { return }
-        sendService?.sendReaction("👍", chatId: chatId, messageId: lastReceived.id)
-        WKInterfaceDevice.current().play(.success)
+        let action = AutoResponderStore.doubleTapAction
+
+        switch action {
+        case .thumbsUp, .heart, .fire:
+            guard let lastReceived = messages.last(where: { !$0.isOutgoing }),
+                  let emoji = action.emoji else { return }
+            sendService?.sendReaction(emoji, chatId: chatId, messageId: lastReceived.id)
+            HapticService.reactionReceived()
+
+        case .markRead:
+            Task {
+                try? await TDLibManager.shared.client?.openChat(chatId: chatId)
+                try? await TDLibManager.shared.client?.closeChat(chatId: chatId)
+            }
+            HapticService.messageSent()
+
+        case .quickReply:
+            showQuickReply = true
+            HapticService.messageSent()
+        }
     }
 
     func onDublePressOf(_ message: MessageModel) {

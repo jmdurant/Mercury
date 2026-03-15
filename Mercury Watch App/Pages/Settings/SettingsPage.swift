@@ -30,6 +30,17 @@ struct SettingsPage: View {
                 Label("Devices", systemImage: "desktopcomputer")
             }
 
+            Picker(selection: Binding(
+                get: { AutoResponderStore.doubleTapAction },
+                set: { AutoResponderStore.doubleTapAction = $0 }
+            )) {
+                ForEach(AutoResponderStore.DoubleTapAction.allCases, id: \.self) { action in
+                    Text(action.displayName).tag(action)
+                }
+            } label: {
+                Label("Double Tap", systemImage: "hand.tap.fill")
+            }
+
             Button {
                 vm.showDndSettings = true
             } label: {
