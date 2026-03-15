@@ -13,7 +13,9 @@ enum NotificationService {
 
     static let replyActionIdentifier = "REPLY_ACTION"
     static let markReadActionIdentifier = "MARK_READ_ACTION"
+    static let openLinkActionIdentifier = "OPEN_LINK_ACTION"
     static let messageCategoryIdentifier = "MESSAGE_CATEGORY"
+    static let linkMessageCategoryIdentifier = "LINK_MESSAGE_CATEGORY"
 
     private static let logger = LoggerService(NotificationService.self)
 
@@ -32,6 +34,12 @@ enum NotificationService {
             options: []
         )
 
+        let openLinkAction = UNNotificationAction(
+            identifier: openLinkActionIdentifier,
+            title: "Open Link",
+            options: [.foreground]
+        )
+
         let messageCategory = UNNotificationCategory(
             identifier: messageCategoryIdentifier,
             actions: [replyAction, markReadAction],
@@ -39,7 +47,14 @@ enum NotificationService {
             options: []
         )
 
-        UNUserNotificationCenter.current().setNotificationCategories([messageCategory])
+        let linkMessageCategory = UNNotificationCategory(
+            identifier: linkMessageCategoryIdentifier,
+            actions: [openLinkAction, replyAction, markReadAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        UNUserNotificationCenter.current().setNotificationCategories([messageCategory, linkMessageCategory])
     }
 
     static func requestAuthorization() {
@@ -95,6 +110,16 @@ enum NotificationService {
                 logger.log("Failed to donate communication intent: \(error)", level: .error)
             }
         }
+    }
+
+    static func extractFirstURL(from text: String) -> URL? {
+        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let range = NSRange(text.startIndex..., in: text)
+        if let match = detector?.firstMatch(in: text, options: [], range: range),
+           let url = match.url {
+            return url
+        }
+        return nil
     }
 
     static func extractChatId(from userInfo: [AnyHashable: Any]) -> Int64? {

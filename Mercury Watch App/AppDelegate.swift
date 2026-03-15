@@ -104,7 +104,22 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             from: notification.request.content,
             userInfo: userInfo
         )
-        completionHandler([.banner, .sound])
+
+        // If body contains a URL, re-post with link category for "Open Link" action
+        let body = notification.request.content.body
+        if NotificationService.extractFirstURL(from: body) != nil {
+            let newContent = notification.request.content.mutableCopy() as! UNMutableNotificationContent
+            newContent.categoryIdentifier = NotificationService.linkMessageCategoryIdentifier
+            let request = UNNotificationRequest(
+                identifier: notification.request.identifier + ".link",
+                content: newContent,
+                trigger: nil
+            )
+            UNUserNotificationCenter.current().add(request)
+            completionHandler([])
+        } else {
+            completionHandler([.banner, .sound])
+        }
     }
 
     func userNotificationCenter(
@@ -120,6 +135,14 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         }
 
         switch response.actionIdentifier {
+        case NotificationService.openLinkActionIdentifier:
+            let body = response.notification.request.content.body
+            if let url = NotificationService.extractFirstURL(from: body) {
+                DispatchQueue.main.async {
+                    WKExtension.shared().openSystemURL(url)
+                }
+            }
+
         case NotificationService.replyActionIdentifier:
             if let textResponse = response as? UNTextInputNotificationResponse {
                 SendMessageService.sendQuickReply(
