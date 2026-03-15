@@ -109,6 +109,10 @@ struct QuickReplySubpage: View {
             messages.append(StatusMessage(icon: "cloud.sun.fill", label: "Weather", message: weather))
         }
 
+        if let location = await StatusDataService.buildLocationStatus() {
+            messages.append(StatusMessage(icon: "location.fill", label: "Location", message: location))
+        }
+
         if let battery = StatusDataService.buildBatteryStatus() {
             messages.append(StatusMessage(icon: "battery.50percent", label: "Battery", message: battery))
         }

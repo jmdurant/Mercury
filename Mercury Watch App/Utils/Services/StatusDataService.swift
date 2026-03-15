@@ -239,6 +239,28 @@ enum StatusDataService {
         }
     }
 
+    static func buildLocationStatus() async -> String? {
+        let locationManager = CLLocationManager()
+        guard let location = locationManager.location else { return nil }
+
+        let geocoder = CLGeocoder()
+        do {
+            let placemarks = try await geocoder.reverseGeocodeLocation(location)
+            if let place = placemarks.first {
+                let parts = [place.locality, place.administrativeArea].compactMap { $0 }
+                if !parts.isEmpty {
+                    return "Currently in \(parts.joined(separator: ", "))"
+                }
+            }
+        } catch {
+            logger.log(error, level: .error)
+        }
+
+        let lat = String(format: "%.4f", location.coordinate.latitude)
+        let lon = String(format: "%.4f", location.coordinate.longitude)
+        return "Location: \(lat), \(lon)"
+    }
+
     static func buildBatteryStatus() -> String? {
         let device = WKInterfaceDevice.current()
         device.isBatteryMonitoringEnabled = true
