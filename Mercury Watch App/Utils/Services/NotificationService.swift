@@ -7,6 +7,7 @@
 
 import Foundation
 import UserNotifications
+import Intents
 
 enum NotificationService {
 
@@ -53,6 +54,45 @@ enum NotificationService {
                 DispatchQueue.main.async {
                     WKExtension.shared().registerForRemoteNotifications()
                 }
+            }
+        }
+    }
+
+    static func donateCommunicationIntent(
+        from content: UNNotificationContent,
+        userInfo: [AnyHashable: Any]
+    ) {
+        let senderName = content.title.isEmpty ? "Someone" : content.title
+        let messageBody = content.body
+
+        let chatId = extractChatId(from: userInfo)
+        let conversationId = chatId.map { String($0) } ?? UUID().uuidString
+
+        let sender = INPerson(
+            personHandle: INPersonHandle(value: senderName, type: .unknown),
+            nameComponents: nil,
+            displayName: senderName,
+            image: nil,
+            contactIdentifier: nil,
+            customIdentifier: conversationId
+        )
+
+        let intent = INSendMessageIntent(
+            recipients: nil,
+            outgoingMessageType: .outgoingMessageText,
+            content: messageBody,
+            speakableGroupName: nil,
+            conversationIdentifier: conversationId,
+            serviceName: "Mercury",
+            sender: sender,
+            attachments: nil
+        )
+
+        let interaction = INInteraction(intent: intent, response: nil)
+        interaction.direction = .incoming
+        interaction.donate { error in
+            if let error {
+                logger.log("Failed to donate communication intent: \(error)", level: .error)
             }
         }
     }

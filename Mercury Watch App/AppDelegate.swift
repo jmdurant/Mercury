@@ -95,6 +95,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
+        // Donate communication intent so Siri can announce messages
+        let userInfo = notification.request.content.userInfo
+        NotificationService.donateCommunicationIntent(
+            from: notification.request.content,
+            userInfo: userInfo
+        )
         completionHandler([.banner, .sound])
     }
 
