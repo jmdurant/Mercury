@@ -19,6 +19,10 @@ class MessageOptionsViewModel {
     var canDeleteForEveryone: Bool = false
     var onReply: (() -> Void)?
     var messageInfo: MessageInfoData?
+    var shareText: String?
+    var shareImage: UIImage?
+    var shareFileURL: URL?
+    var showShareSheet: Bool = false
     
     var shouldDisplayReportButton: Bool {
         if case .chatTypeBasicGroup(_) = model.chatType { return true }
@@ -139,6 +143,78 @@ class MessageOptionsViewModel {
 
     func replyToMessage() {
         onReply?()
+    }
+
+    func loadShareContent() {
+        Task {
+            do {
+                guard let message = try await TDLibManager.shared.client?.getMessage(
+                    chatId: model.chatId,
+                    messageId: model.messageId
+                ) else { return }
+
+                await MainActor.run {
+                    switch message.content {
+                    case .messageText(let msg):
+                        self.shareText = msg.text.text
+                        self.showShareSheet = true
+
+                    case .messagePhoto(let msg):
+                        self.shareText = msg.caption.text.isEmpty ? nil : msg.caption.text
+                        Task {
+                            if let photo = msg.photo.lowRes,
+                               let image = await FileService.getImage(for: photo) {
+                                await MainActor.run {
+                                    self.shareImage = image
+                                    self.showShareSheet = true
+                                }
+                            }
+                        }
+
+                    case .messageVideo(let msg):
+                        self.shareText = msg.caption.text.isEmpty ? nil : msg.caption.text
+                        Task {
+                            if let url = await FileService.getFilePath(for: msg.video.video) {
+                                await MainActor.run {
+                                    self.shareFileURL = url
+                                    self.showShareSheet = true
+                                }
+                            }
+                        }
+
+                    case .messageAnimation(let msg):
+                        Task {
+                            if let url = await FileService.getFilePath(for: msg.animation.animation) {
+                                await MainActor.run {
+                                    self.shareFileURL = url
+                                    self.showShareSheet = true
+                                }
+                            }
+                        }
+
+                    case .messageVoiceNote(let msg):
+                        Task {
+                            if let url = await FileService.getFilePath(for: msg.voiceNote.voice) {
+                                await MainActor.run {
+                                    self.shareFileURL = url
+                                    self.showShareSheet = true
+                                }
+                            }
+                        }
+
+                    case .messageLocation(let msg):
+                        self.shareText = "https://maps.apple.com/?ll=\(msg.location.latitude),\(msg.location.longitude)"
+                        self.showShareSheet = true
+
+                    default:
+                        self.shareText = message.description
+                        self.showShareSheet = true
+                    }
+                }
+            } catch {
+                logger.log(error, level: .error)
+            }
+        }
     }
 
     func loadMessageInfo() {

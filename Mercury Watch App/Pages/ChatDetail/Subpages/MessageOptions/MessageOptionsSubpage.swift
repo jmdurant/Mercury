@@ -67,6 +67,12 @@ struct MessageOptionsSubpage: View {
             }
 
             Button {
+                vm.loadShareContent()
+            } label: {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+
+            Button {
                 vm.loadMessageInfo()
             } label: {
                 Label("Info", systemImage: "info.circle")
@@ -86,6 +92,26 @@ struct MessageOptionsSubpage: View {
                 })
                 .tint(.red)
             }
+        }
+        .sheet(isPresented: $vm.showShareSheet) {
+            VStack(spacing: 12) {
+                if let image = vm.shareImage {
+                    ShareLink(item: Image(uiImage: image), preview: SharePreview("Photo", image: Image(uiImage: image))) {
+                        Label("Share Photo", systemImage: "square.and.arrow.up")
+                    }
+                }
+                if let text = vm.shareText {
+                    ShareLink(item: text) {
+                        Label("Share Text", systemImage: "square.and.arrow.up")
+                    }
+                }
+                if let url = vm.shareFileURL {
+                    ShareLink(item: url) {
+                        Label("Share File", systemImage: "square.and.arrow.up")
+                    }
+                }
+            }
+            .navigationTitle("Share")
         }
         .sheet(isPresented: $vm.showMessageInfo) {
             if let info = vm.messageInfo {
