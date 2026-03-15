@@ -26,6 +26,9 @@ class AppDelegate: NSObject, WKApplicationDelegate {
 
         // Background refresh
         BackgroundSyncService.scheduleNextRefresh()
+
+        // Health data permissions (for status replies)
+        StatusDataService.requestHealthPermissions()
     }
 
     func applicationDidBecomeActive() {

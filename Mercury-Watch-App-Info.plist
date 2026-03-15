@@ -4,5 +4,9 @@
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Mercury needs your location to share it in chats.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Mercury can share your workout, steps, and heart rate as quick status replies.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Mercury can share your calendar status as a quick reply.</string>
 </dict>
 </plist>

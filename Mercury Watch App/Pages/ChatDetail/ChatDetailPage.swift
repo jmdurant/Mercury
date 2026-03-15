@@ -131,6 +131,14 @@ struct ChatDetailPage: View {
                 )
             }
         }
+        .sheet(isPresented: $vm.showQuickReply) {
+            if let sendService = vm.sendService {
+                QuickReplySubpage(
+                    isPresented: $vm.showQuickReply,
+                    sendService: sendService
+                )
+            }
+        }
         .sheet(isPresented: $vm.showSearchView) {
             ChatSearchSubpage(vm: ChatSearchViewModel(chatId: vm.chatId))
         }
@@ -184,7 +192,13 @@ struct ChatDetailPage: View {
     @ViewBuilder
     func toolbarActions() -> some View {
         if vm.canSendText ?? false {
-            Button("Stickers", systemImage: "keyboard.fill") {
+            Button("Quick", systemImage: "bolt.fill") {
+                vm.showQuickReply = true
+            }
+        }
+
+        if vm.canSendText ?? false {
+            Button("Text", systemImage: "keyboard.fill") {
                 vm.onPressTextInsert()
             }
         }

@@ -112,6 +112,8 @@
 		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00BKG002D10000000000001 /* BackgroundSyncService.swift */; };
 		H00HAP012D10000000000002 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00HAP002D10000000000002 /* HapticService.swift */; };
+		J00QRE012D12000000000001 /* QuickReplySubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE002D12000000000001 /* QuickReplySubpage.swift */; };
+		J00QRE032D12000000000002 /* StatusDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE022D12000000000002 /* StatusDataService.swift */; };
 		I00SCH012D11000000000001 /* SearchPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH002D11000000000001 /* SearchPage.swift */; };
 		I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH022D11000000000002 /* SearchViewModel.swift */; };
 		I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH042D11000000000003 /* ChatSearchSubpage.swift */; };
@@ -250,6 +252,8 @@
 		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
 		H00BKG002D10000000000001 /* BackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundSyncService.swift; sourceTree = "<group>"; };
 		H00HAP002D10000000000002 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+		J00QRE002D12000000000001 /* QuickReplySubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySubpage.swift; sourceTree = "<group>"; };
+		J00QRE022D12000000000002 /* StatusDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDataService.swift; sourceTree = "<group>"; };
 		I00SCH002D11000000000001 /* SearchPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPage.swift; sourceTree = "<group>"; };
 		I00SCH022D11000000000002 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		I00SCH042D11000000000003 /* ChatSearchSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchSubpage.swift; sourceTree = "<group>"; };
@@ -353,6 +357,7 @@
 				A04ABE522CE00F1600641BC1 /* MessageOptions */,
 				D00LOC042D0C000000000003 /* SendLocation */,
 				I00SCH092D11000000000006 /* ChatSearch */,
+				J00QRE042D12000000000003 /* QuickReply */,
 			);
 			path = Subpages;
 			sourceTree = "<group>";
@@ -373,6 +378,14 @@
 				A04ABE582CE015F800641BC1 /* VoiceNoteRecordViewModel.swift */,
 			);
 			path = VoiceNoteRecord;
+			sourceTree = "<group>";
+		};
+		J00QRE042D12000000000003 /* QuickReply */ = {
+			isa = PBXGroup;
+			children = (
+				J00QRE002D12000000000001 /* QuickReplySubpage.swift */,
+			);
+			path = QuickReply;
 			sourceTree = "<group>";
 		};
 		I00SCH082D11000000000005 /* Search */ = {
@@ -490,6 +503,7 @@
 				C00WID042D0B000000000003 /* NotificationService.swift */,
 				H00BKG002D10000000000001 /* BackgroundSyncService.swift */,
 				H00HAP002D10000000000002 /* HapticService.swift */,
+				J00QRE022D12000000000002 /* StatusDataService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -818,6 +832,8 @@
 				G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */,
 				H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */,
 				H00HAP012D10000000000002 /* HapticService.swift in Sources */,
+				J00QRE012D12000000000001 /* QuickReplySubpage.swift in Sources */,
+				J00QRE032D12000000000002 /* StatusDataService.swift in Sources */,
 				I00SCH012D11000000000001 /* SearchPage.swift in Sources */,
 				I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */,
 				I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */,
