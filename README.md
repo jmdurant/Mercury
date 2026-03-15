@@ -57,9 +57,23 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - Read receipts and typing/recording indicators
 - Unread message badges with mention and reaction indicators
 
+### **Quick Replies and Smart Status**
+- Bolt icon in chat toolbar for instant canned responses (OK, On my way, Call me, BRB, etc.)
+- Smart status replies powered by live watch sensor data:
+  - Workout status from HealthKit ("In a workout - Running 23min")
+  - Calendar status from EventKit ("Busy until 3pm - Team Meeting")
+  - Health stats ("Today: 8,432 steps | 340 cal | 72 bpm")
+- Tap any status to send it as a message
+
+### **Search**
+- Global search from the Home page — find chats by name and messages across all conversations
+- In-chat search — search messages within the current conversation
+- Results show sender, preview text, and date
+
 ### **Siri and Shortcuts**
 - "Hey Siri, send a message on Mercury" — voice-driven messaging
 - "Hey Siri, check my Mercury messages" — check unread count hands-free
+- Siri Announce Messages — Siri reads incoming messages aloud via AirPods
 - Full Shortcuts app integration for custom automations
 
 ### **Watch Face Complications**
