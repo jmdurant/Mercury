@@ -113,11 +113,30 @@ enum NotificationService {
     }
 
     static func extractFirstURL(from text: String) -> URL? {
-        let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
+        let types: NSTextCheckingResult.CheckingType = [.link, .address]
+        guard let detector = try? NSDataDetector(types: types.rawValue) else { return nil }
         let range = NSRange(text.startIndex..., in: text)
-        if let match = detector?.firstMatch(in: text, options: [], range: range),
-           let url = match.url {
-            return url
+        let matches = detector.matches(in: text, options: [], range: range)
+
+        for match in matches {
+            // Direct URL
+            if match.resultType == .link, let url = match.url {
+                return url
+            }
+            // Street address → convert to Maps URL
+            if match.resultType == .address,
+               let components = match.addressComponents {
+                let parts = [
+                    components[.street],
+                    components[.city],
+                    components[.state],
+                    components[.zip],
+                    components[.country]
+                ].compactMap { $0 }
+                let query = parts.joined(separator: ", ")
+                    .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                return URL(string: "https://maps.apple.com/?q=\(query)")
+            }
         }
         return nil
     }

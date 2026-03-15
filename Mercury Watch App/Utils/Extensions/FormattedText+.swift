@@ -44,6 +44,12 @@ extension FormattedText {
                     resultString[range].link = url
                     resultString[range].foregroundColor = .blue
                 }
+            case .textEntityTypePhoneNumber:
+                let phone = String(text[Range(nsRange, in: text)!])
+                if let url = URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))") {
+                    resultString[range].link = url
+                    resultString[range].foregroundColor = .blue
+                }
             case .textEntityTypeSpoiler:
                 resultString.characters.replaceSubrange(range, with: getRandomBraille(length: entity.length))
             case .textEntityTypeBlockQuote:
