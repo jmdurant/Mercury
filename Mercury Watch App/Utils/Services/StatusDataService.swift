@@ -11,6 +11,7 @@ import EventKit
 import MediaPlayer
 import WeatherKit
 import CoreLocation
+import CoreMotion
 import WatchKit
 
 enum StatusDataService {
@@ -26,10 +27,15 @@ enum StatusDataService {
             HKQuantityType(.heartRate),
             HKQuantityType(.stepCount),
             HKQuantityType(.activeEnergyBurned),
+            HKQuantityType(.oxygenSaturation),
+            HKQuantityType(.environmentalAudioExposure),
+            HKCategoryType(.sleepAnalysis),
         ]
         let workoutType = HKObjectType.workoutType()
+        let activityType = HKObjectType.activitySummaryType()
         var allTypes = types as Set<HKObjectType>
         allTypes.insert(workoutType)
+        allTypes.insert(activityType)
 
         healthStore.requestAuthorization(toShare: nil, read: allTypes) { _, error in
             if let error { logger.log(error, level: .error) }
@@ -285,6 +291,171 @@ enum StatusDataService {
         return "Today: " + parts.joined(separator: " | ")
     }
 }
+
+    static func buildSleepStatus() async -> String? {
+        let sleepType = HKCategoryType(.sleepAnalysis)
+        let calendar = Calendar.current
+        let startOfYesterday = calendar.date(byAdding: .day, value: -1, to: calendar.startOfDay(for: Date())) ?? Date()
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: startOfYesterday,
+                end: Date(),
+                options: .strictEndDate
+            )
+            let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+            let query = HKSampleQuery(
+                sampleType: sleepType,
+                predicate: predicate,
+                limit: HKObjectQueryNoLimit,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let samples = samples as? [HKCategorySample] else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let asleepSamples = samples.filter { $0.value != HKCategoryValueSleepAnalysis.inBed.rawValue }
+                let totalSleep = asleepSamples.reduce(0.0) { $0 + $1.endDate.timeIntervalSince($1.startDate) }
+                guard totalSleep > 0 else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let hours = Int(totalSleep / 3600)
+                let minutes = Int(totalSleep.truncatingRemainder(dividingBy: 3600) / 60)
+                continuation.resume(returning: "Slept \(hours)h \(minutes)m last night")
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildActivityRingsStatus() async -> String? {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfDay = calendar.startOfDay(for: now)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
+
+        let datePredicate = HKQuery.predicateForActivitySummary(
+            with: calendar.dateComponents([.year, .month, .day], from: now)
+        )
+
+        return await withCheckedContinuation { continuation in
+            let query = HKActivitySummaryQuery(predicate: datePredicate) { _, summaries, _ in
+                guard let summary = summaries?.first else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let move = Int(summary.activeEnergyBurned.doubleValue(for: .kilocalorie()))
+                let moveGoal = Int(summary.activeEnergyBurnedGoal.doubleValue(for: .kilocalorie()))
+                let exercise = Int(summary.appleExerciseTime.doubleValue(for: .minute()))
+                let exerciseGoal = Int(summary.appleExerciseTimeGoal.doubleValue(for: .minute()))
+                let stand = Int(summary.appleStandHours.doubleValue(for: .count()))
+                let standGoal = Int(summary.appleStandHoursGoal.doubleValue(for: .count()))
+
+                continuation.resume(returning: "Move: \(move)/\(moveGoal) cal | Exercise: \(exercise)/\(exerciseGoal) min | Stand: \(stand)/\(standGoal) hr")
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildBloodOxygenStatus() async -> String? {
+        let oxygenType = HKQuantityType(.oxygenSaturation)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-3600),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: oxygenType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let spo2 = Int(sample.quantity.doubleValue(for: .percent()) * 100)
+                continuation.resume(returning: "Blood oxygen: \(spo2)%")
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildNoiseLevelStatus() async -> String? {
+        let noiseType = HKQuantityType(.environmentalAudioExposure)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
+
+        return await withCheckedContinuation { continuation in
+            let predicate = HKQuery.predicateForSamples(
+                withStart: Date().addingTimeInterval(-1800),
+                end: Date(),
+                options: .strictEndDate
+            )
+            let query = HKSampleQuery(
+                sampleType: noiseType,
+                predicate: predicate,
+                limit: 1,
+                sortDescriptors: [sortDescriptor]
+            ) { _, samples, _ in
+                guard let sample = samples?.first as? HKQuantitySample else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let db = Int(sample.quantity.doubleValue(for: .decibelAWeightedSoundPressureLevel()))
+                continuation.resume(returning: "Ambient noise: \(db) dB")
+            }
+            healthStore.execute(query)
+        }
+    }
+
+    static func buildAltitudeStatus() async -> String? {
+        let altimeter = CMAltimeter()
+        guard CMAltimeter.isRelativeAltitudeAvailable() else { return nil }
+
+        return await withCheckedContinuation { continuation in
+            altimeter.startRelativeAltitudeUpdates(to: .main) { data, error in
+                altimeter.stopRelativeAltitudeUpdates()
+                guard let data else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                let meters = data.relativeAltitude.doubleValue
+                let feet = Int(meters * 3.281)
+                continuation.resume(returning: "Relative altitude: \(feet) ft")
+            }
+        }
+    }
+
+    static func buildRemindersStatus() async -> String? {
+        let granted = await requestCalendarPermissions()
+        guard granted else { return nil }
+
+        do {
+            let granted = try await eventStore.requestFullAccessToReminders()
+            guard granted else { return nil }
+        } catch {
+            return nil
+        }
+
+        let predicate = eventStore.predicateForIncompleteReminders(
+            withDueDateStarting: nil,
+            ending: Calendar.current.date(byAdding: .day, value: 1, to: Date()),
+            calendars: nil
+        )
+
+        return await withCheckedContinuation { continuation in
+            eventStore.fetchReminders(matching: predicate) { reminders in
+                guard let reminders, let next = reminders.first else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                continuation.resume(returning: "Reminder: \(next.title ?? "Untitled")")
+            }
+        }
+    }
 
 extension HKWorkoutActivityType {
     var displayName: String {

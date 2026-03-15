@@ -8,5 +8,7 @@
 	<string>Mercury can share your workout, steps, and heart rate as quick status replies.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Mercury can share your calendar status as a quick reply.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Mercury can share your next reminder as a quick reply.</string>
 </dict>
 </plist>

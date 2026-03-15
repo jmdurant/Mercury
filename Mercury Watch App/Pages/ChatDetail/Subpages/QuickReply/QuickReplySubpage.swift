@@ -113,6 +113,30 @@ struct QuickReplySubpage: View {
             messages.append(StatusMessage(icon: "location.fill", label: "Location", message: location))
         }
 
+        if let sleep = await StatusDataService.buildSleepStatus() {
+            messages.append(StatusMessage(icon: "bed.double.fill", label: "Sleep", message: sleep))
+        }
+
+        if let rings = await StatusDataService.buildActivityRingsStatus() {
+            messages.append(StatusMessage(icon: "circle.circle", label: "Activity Rings", message: rings))
+        }
+
+        if let spo2 = await StatusDataService.buildBloodOxygenStatus() {
+            messages.append(StatusMessage(icon: "lungs.fill", label: "Blood Oxygen", message: spo2))
+        }
+
+        if let noise = await StatusDataService.buildNoiseLevelStatus() {
+            messages.append(StatusMessage(icon: "ear.fill", label: "Noise", message: noise))
+        }
+
+        if let altitude = await StatusDataService.buildAltitudeStatus() {
+            messages.append(StatusMessage(icon: "mountain.2.fill", label: "Altitude", message: altitude))
+        }
+
+        if let reminder = await StatusDataService.buildRemindersStatus() {
+            messages.append(StatusMessage(icon: "checklist", label: "Reminder", message: reminder))
+        }
+
         if let battery = StatusDataService.buildBatteryStatus() {
             messages.append(StatusMessage(icon: "battery.50percent", label: "Battery", message: battery))
         }
