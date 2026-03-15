@@ -107,6 +107,9 @@
 		E00NEW012D0D000000000001 /* NewChatSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00NEW002D0D000000000001 /* NewChatSubpage.swift */; };
 		E00NEW032D0D000000000002 /* NewChatViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E00NEW022D0D000000000002 /* NewChatViewModel.swift */; };
 		F00VID012D0E000000000001 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00VID002D0E000000000001 /* VideoPlayerView.swift */; };
+		G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT002D0F000000000001 /* SendMessageAppIntent.swift */; };
+		G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */; };
+		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		C00WID072D0B000000000004 /* MercuryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID062D0B000000000004 /* MercuryWidget.swift */; };
 		C00WID092D0B000000000005 /* MercuryWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID082D0B000000000005 /* MercuryWidgetViews.swift */; };
 		C00WID0B2D0B000000000006 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
@@ -236,6 +239,9 @@
 		E00NEW002D0D000000000001 /* NewChatSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChatSubpage.swift; sourceTree = "<group>"; };
 		E00NEW022D0D000000000002 /* NewChatViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChatViewModel.swift; sourceTree = "<group>"; };
 		F00VID002D0E000000000001 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
+		G00INT002D0F000000000001 /* SendMessageAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageAppIntent.swift; sourceTree = "<group>"; };
+		G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckUnreadAppIntent.swift; sourceTree = "<group>"; };
+		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
 		C00WID062D0B000000000004 /* MercuryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidget.swift; sourceTree = "<group>"; };
 		C00WID082D0B000000000005 /* MercuryWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidgetViews.swift; sourceTree = "<group>"; };
 		C00WID0A2D0B000000000006 /* Mercury Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Mercury Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -356,6 +362,16 @@
 			path = VoiceNoteRecord;
 			sourceTree = "<group>";
 		};
+		G00INT062D0F000000000004 /* Intents */ = {
+			isa = PBXGroup;
+			children = (
+				G00INT002D0F000000000001 /* SendMessageAppIntent.swift */,
+				G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */,
+				G00INT042D0F000000000003 /* MercuryShortcuts.swift */,
+			);
+			path = Intents;
+			sourceTree = "<group>";
+		};
 		E00NEW042D0D000000000003 /* Subpages */ = {
 			isa = PBXGroup;
 			children = (
@@ -411,6 +427,7 @@
 				A080D8A12CD64B1700920564 /* Pages */,
 				A080D88E2CD64A7C00920564 /* Utils */,
 				A080D8B92CD78C5900920564 /* Shared */,
+				G00INT062D0F000000000004 /* Intents */,
 				A0CF53252BDFD77D00BA394B /* TDLib */,
 				A07438F72BD10D2F00945CB5 /* Preview Content */,
 				A07438F52BD10D2F00945CB5 /* Assets.xcassets */,
@@ -762,6 +779,9 @@
 				E00NEW012D0D000000000001 /* NewChatSubpage.swift in Sources */,
 				E00NEW032D0D000000000002 /* NewChatViewModel.swift in Sources */,
 				F00VID012D0E000000000001 /* VideoPlayerView.swift in Sources */,
+				G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */,
+				G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */,
+				G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */,
 				9B5EBE622CE5F16F00EDCCE3 /* FitStack.swift in Sources */,
 				A04ABE8C2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift in Sources */,
 				4AF90D692BEE65BA00435355 /* Date+.swift in Sources */,

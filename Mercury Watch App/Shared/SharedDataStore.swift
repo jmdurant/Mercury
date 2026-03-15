@@ -26,4 +26,23 @@ enum SharedDataStore {
     static func getTotalUnreadCount() -> Int {
         sharedDefaults?.integer(forKey: unreadCountKey) ?? 0
     }
+
+    // MARK: - Last Sender
+
+    private static let lastSenderNameKey = "lastSenderName"
+    private static let lastChatIdKey = "lastChatId"
+
+    static func saveLastMessage(senderName: String, chatId: Int64) {
+        sharedDefaults?.set(senderName, forKey: lastSenderNameKey)
+        sharedDefaults?.set(chatId, forKey: lastChatIdKey)
+    }
+
+    static func getLastSenderName() -> String? {
+        sharedDefaults?.string(forKey: lastSenderNameKey)
+    }
+
+    static func getLastChatId() -> Int64? {
+        let value = sharedDefaults?.object(forKey: lastChatIdKey) as? Int64
+        return value
+    }
 }

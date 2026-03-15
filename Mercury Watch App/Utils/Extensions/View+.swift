@@ -29,4 +29,13 @@ extension View {
     func loadable(isLoading: Bool) -> some View {
         modifier(LoadableModifier(isLoading: isLoading))
     }
+
+    /// Applies Liquid Glass effect on watchOS 26+, falls back to the given style on older versions
+    @ViewBuilder func liquidGlass(fallback: some ShapeStyle = .clear) -> some View {
+        if #available(watchOS 26, *) {
+            self.glassEffect()
+        } else {
+            self.background(fallback)
+        }
+    }
 }

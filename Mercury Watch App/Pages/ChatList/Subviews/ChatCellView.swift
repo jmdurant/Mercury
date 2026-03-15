@@ -91,10 +91,18 @@ struct ChatCellView: View {
                     .fontWeight(.medium)
                     .padding(.horizontal, 5)
                     .background {
-                        RoundedRectangle(cornerRadius: size)
-                            .frame(height: size)
-                            .frame(minWidth: size)
-                            .foregroundStyle(.blue)
+                        if #available(watchOS 26, *) {
+                            RoundedRectangle(cornerRadius: size)
+                                .frame(height: size)
+                                .frame(minWidth: size)
+                                .fill(.blue.opacity(0.5))
+                                .glassEffect()
+                        } else {
+                            RoundedRectangle(cornerRadius: size)
+                                .frame(height: size)
+                                .frame(minWidth: size)
+                                .foregroundStyle(.blue)
+                        }
                     }
                 
             default:

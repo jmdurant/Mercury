@@ -139,8 +139,14 @@ struct MessageBubbleView<Content> : View where Content : View {
         }
         .background {
             if style != .clearBackground {
-                MessageBubbleShape(isOutgoing: model.isOutgoing)
-                    .foregroundStyle(bubbleColor)
+                if #available(watchOS 26, *) {
+                    MessageBubbleShape(isOutgoing: model.isOutgoing)
+                        .fill(bubbleColor.opacity(0.3))
+                        .glassEffect()
+                } else {
+                    MessageBubbleShape(isOutgoing: model.isOutgoing)
+                        .foregroundStyle(bubbleColor)
+                }
             }
         }
         .frame(

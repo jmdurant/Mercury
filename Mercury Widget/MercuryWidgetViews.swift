@@ -72,10 +72,13 @@ struct MercuryWidgetEntryView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if entry.totalUnreadCount > 0 {
-                    Text("\(entry.totalUnreadCount)")
-                        .font(.system(.title2, design: .rounded))
-                        .fontWeight(.semibold)
-                    Text(entry.totalUnreadCount == 1 ? "unread message" : "unread messages")
+                    if let sender = entry.lastSenderName {
+                        Text(sender)
+                            .font(.system(.headline, design: .rounded))
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                    }
+                    Text("\(entry.totalUnreadCount) unread")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 } else {
@@ -85,6 +88,13 @@ struct MercuryWidgetEntryView: View {
                 }
             }
             Spacer()
+            if entry.totalUnreadCount > 0 {
+                // Deep link to open the app
+                Link(destination: URL(string: "mercury://open")!) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.title3)
+                }
+            }
         }
     }
 
@@ -110,14 +120,14 @@ struct MercuryWidgetEntryView: View {
 #Preview(as: .accessoryCircular) {
     MercuryWidget()
 } timeline: {
-    MercuryWidgetEntry(date: .now, totalUnreadCount: 0)
-    MercuryWidgetEntry(date: .now, totalUnreadCount: 5)
-    MercuryWidgetEntry(date: .now, totalUnreadCount: 42)
+    MercuryWidgetEntry(date: .now, totalUnreadCount: 0, lastSenderName: nil)
+    MercuryWidgetEntry(date: .now, totalUnreadCount: 5, lastSenderName: "Alex")
+    MercuryWidgetEntry(date: .now, totalUnreadCount: 42, lastSenderName: "Marco")
 }
 
 #Preview(as: .accessoryRectangular) {
     MercuryWidget()
 } timeline: {
-    MercuryWidgetEntry(date: .now, totalUnreadCount: 0)
-    MercuryWidgetEntry(date: .now, totalUnreadCount: 12)
+    MercuryWidgetEntry(date: .now, totalUnreadCount: 0, lastSenderName: nil)
+    MercuryWidgetEntry(date: .now, totalUnreadCount: 12, lastSenderName: "Alessandro")
 }

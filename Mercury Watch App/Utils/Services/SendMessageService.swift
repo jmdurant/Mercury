@@ -199,6 +199,45 @@ class SendMessageService {
         }
     }
 
+    static func sendToContact(name: String, text: String) async throws {
+        guard let users = try await TDLibManager.shared.client?.searchContacts(
+            query: name,
+            limit: 1
+        ), let userId = users.userIds.first else {
+            throw MercurySendError.contactNotFound
+        }
+
+        guard let chat = try await TDLibManager.shared.client?.createPrivateChat(
+            userId: userId,
+            force: false
+        ) else {
+            throw MercurySendError.chatCreationFailed
+        }
+
+        let formattedText = FormattedText(entities: [], text: text)
+        let message = InputMessageText(clearDraft: true, linkPreviewOptions: nil, text: formattedText)
+        let _ = try await TDLibManager.shared.client?.sendMessage(
+            chatId: chat.id,
+            inputMessageContent: .inputMessageText(message),
+            messageThreadId: nil,
+            options: nil,
+            replyMarkup: nil,
+            replyTo: nil
+        )
+    }
+
+    enum MercurySendError: Error, LocalizedError {
+        case contactNotFound
+        case chatCreationFailed
+
+        var errorDescription: String? {
+            switch self {
+            case .contactNotFound: return "Contact not found"
+            case .chatCreationFailed: return "Could not open chat"
+            }
+        }
+    }
+
     static func sendQuickReply(text: String, chatId: Int64) {
         let logger = LoggerService(SendMessageService.self)
         let formattedText = FormattedText(entities: [], text: text)

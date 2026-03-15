@@ -29,8 +29,27 @@ class UnreadCountBridge: TDLibManagerProtocol {
              .updateChatUnreadReactionCount,
              .updateMessageUnreadReactions:
             scheduleUnreadCountUpdate()
+        case .updateNewMessage(let msg):
+            if !msg.message.isOutgoing {
+                trackLastSender(message: msg.message)
+            }
         default:
             break
+        }
+    }
+
+    private func trackLastSender(message: Message) {
+        Task {
+            let senderName: String
+            switch message.senderId {
+            case .messageSenderUser(let user):
+                let u = try? await TDLibManager.shared.client?.getUser(userId: user.userId)
+                senderName = u?.fullName ?? "Someone"
+            case .messageSenderChat(let chat):
+                let c = try? await TDLibManager.shared.client?.getChat(chatId: chat.chatId)
+                senderName = c?.title ?? "Chat"
+            }
+            SharedDataStore.saveLastMessage(senderName: senderName, chatId: message.chatId)
         }
     }
 

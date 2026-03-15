@@ -114,6 +114,7 @@ struct SettingsPage: View {
             .clipShape(Ellipse())
             .blur(radius: 30)
             .opacity(0.8)
+            .liquidGlass()
             
             VStack {
                 
