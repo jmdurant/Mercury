@@ -8,12 +8,17 @@
 import Foundation
 import TDLibKit
 import Intents
+import CoreMotion
 
 class AutoResponderService: TDLibManagerProtocol {
 
     private let logger = LoggerService(AutoResponderService.self)
+    private let motionManager = CMMotionActivityManager()
+    private var isAutomotive: Bool = false
+    private var isWorkoutActive: Bool = false
 
     init() {
+        startActivityMonitoring()
         TDLibManager.shared.subscribe(self)
     }
 
@@ -37,7 +42,10 @@ class AutoResponderService: TDLibManagerProtocol {
            !dndRepliedChats.contains(chatId) {
 
             dndRepliedChats.insert(chatId)
-            let profile = AutoResponderStore.autoDetectProfile()
+            let profile = AutoResponderStore.autoDetectProfile(
+                isAutomotive: isAutomotive,
+                isWorkout: isWorkoutActive
+            )
             var reply = profile.message
 
             Task {
@@ -92,6 +100,15 @@ class AutoResponderService: TDLibManagerProtocol {
 
     func connectionStateUpdate(state: ConnectionState) {}
     func authorizationStateUpdate(state: AuthorizationState) {}
+
+    private func startActivityMonitoring() {
+        guard CMMotionActivityManager.isActivityAvailable() else { return }
+        motionManager.startActivityUpdates(to: .main) { [weak self] activity in
+            guard let activity else { return }
+            self?.isAutomotive = activity.automotive
+            self?.isWorkoutActive = activity.running || activity.cycling
+        }
+    }
 
     // MARK: - Query Matching
 

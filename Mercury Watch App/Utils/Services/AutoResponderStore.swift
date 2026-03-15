@@ -33,6 +33,13 @@ enum AutoResponderStore {
 
     static let defaultProfiles: [FocusProfile] = [
         FocusProfile(
+            id: "driving",
+            name: "Driving",
+            message: "I'm driving right now. I'll reply when I arrive.",
+            includeCalendar: true, includeWorkout: false,
+            includeLocation: false, includeBattery: false, includeHealth: false
+        ),
+        FocusProfile(
             id: "workout",
             name: "Workout",
             message: "I'm working out right now. I'll reply when I'm done.",
@@ -88,22 +95,24 @@ enum AutoResponderStore {
         return profiles.first { $0.id == activeProfileId } ?? defaultProfiles.last!
     }
 
-    static func autoDetectProfile() -> FocusProfile {
+    static func autoDetectProfile(isAutomotive: Bool = false, isWorkout: Bool = false) -> FocusProfile {
         let profiles = getProfiles()
 
-        // Auto-detect based on context
-        if let _ = StatusDataService.buildNowPlayingStatus() {
-            // Could be relaxing, use general
+        // Auto-detect driving
+        if isAutomotive {
+            return profiles.first { $0.id == "driving" } ?? getActiveProfile()
         }
 
-        // Check time of day for sleep
+        // Auto-detect workout
+        if isWorkout {
+            return profiles.first { $0.id == "workout" } ?? getActiveProfile()
+        }
+
+        // Auto-detect sleep by time of day
         let hour = Calendar.current.component(.hour, from: Date())
         if hour >= 22 || hour < 7 {
             return profiles.first { $0.id == "sleep" } ?? getActiveProfile()
         }
-
-        // Check for active workout
-        // (buildWorkoutStatus is async, so we'll use the manually selected profile as primary)
 
         return getActiveProfile()
     }
