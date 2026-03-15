@@ -39,6 +39,17 @@ struct HomePage: View {
                 
             }
             .navigationTitle("Mercury")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        SearchPage { chatId in
+                            AppState.shared.pendingNotificationChatId = chatId
+                        }
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                }
+            }
             .navigationDestination(for: ChatFolder.self) { folder in
                 return ChatListPage(folder: folder)
             }

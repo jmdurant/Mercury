@@ -57,6 +57,13 @@ struct ChatDetailPage: View {
                     }
                 }
                 
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Search", systemImage: "magnifyingglass") {
+                        vm.showSearchView = true
+                    }
+                    .font(.caption2)
+                }
+
                 ToolbarItemGroup(placement: .bottomBar) {
                     if !vm.isChatBlocked { toolbarActions() }
                 }
@@ -123,6 +130,9 @@ struct ChatDetailPage: View {
                     sendService: sendService
                 )
             }
+        }
+        .sheet(isPresented: $vm.showSearchView) {
+            ChatSearchSubpage(vm: ChatSearchViewModel(chatId: vm.chatId))
         }
         .sheet(isPresented: $vm.showLocationView) {
             if let sendService = vm.sendService {

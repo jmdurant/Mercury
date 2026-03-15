@@ -31,6 +31,7 @@ class ChatDetailViewModel: TDLibViewModel {
     var showOptionsView: Bool = false
     var showChatInfoView: Bool = false
     var showLocationView: Bool = false
+    var showSearchView: Bool = false
 
     var canSendVoiceNotes: Bool?
     var canSendText: Bool?

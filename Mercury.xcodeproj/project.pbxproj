@@ -112,6 +112,10 @@
 		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00BKG002D10000000000001 /* BackgroundSyncService.swift */; };
 		H00HAP012D10000000000002 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00HAP002D10000000000002 /* HapticService.swift */; };
+		I00SCH012D11000000000001 /* SearchPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH002D11000000000001 /* SearchPage.swift */; };
+		I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH022D11000000000002 /* SearchViewModel.swift */; };
+		I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH042D11000000000003 /* ChatSearchSubpage.swift */; };
+		I00SCH072D11000000000004 /* ChatSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH062D11000000000004 /* ChatSearchViewModel.swift */; };
 		C00WID072D0B000000000004 /* MercuryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID062D0B000000000004 /* MercuryWidget.swift */; };
 		C00WID092D0B000000000005 /* MercuryWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID082D0B000000000005 /* MercuryWidgetViews.swift */; };
 		C00WID0B2D0B000000000006 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
@@ -246,6 +250,10 @@
 		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
 		H00BKG002D10000000000001 /* BackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundSyncService.swift; sourceTree = "<group>"; };
 		H00HAP002D10000000000002 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+		I00SCH002D11000000000001 /* SearchPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPage.swift; sourceTree = "<group>"; };
+		I00SCH022D11000000000002 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		I00SCH042D11000000000003 /* ChatSearchSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchSubpage.swift; sourceTree = "<group>"; };
+		I00SCH062D11000000000004 /* ChatSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchViewModel.swift; sourceTree = "<group>"; };
 		C00WID062D0B000000000004 /* MercuryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidget.swift; sourceTree = "<group>"; };
 		C00WID082D0B000000000005 /* MercuryWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidgetViews.swift; sourceTree = "<group>"; };
 		C00WID0A2D0B000000000006 /* Mercury Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Mercury Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -344,6 +352,7 @@
 				A04ABE592CE015F800641BC1 /* VoiceNoteRecord */,
 				A04ABE522CE00F1600641BC1 /* MessageOptions */,
 				D00LOC042D0C000000000003 /* SendLocation */,
+				I00SCH092D11000000000006 /* ChatSearch */,
 			);
 			path = Subpages;
 			sourceTree = "<group>";
@@ -364,6 +373,24 @@
 				A04ABE582CE015F800641BC1 /* VoiceNoteRecordViewModel.swift */,
 			);
 			path = VoiceNoteRecord;
+			sourceTree = "<group>";
+		};
+		I00SCH082D11000000000005 /* Search */ = {
+			isa = PBXGroup;
+			children = (
+				I00SCH002D11000000000001 /* SearchPage.swift */,
+				I00SCH022D11000000000002 /* SearchViewModel.swift */,
+			);
+			path = Search;
+			sourceTree = "<group>";
+		};
+		I00SCH092D11000000000006 /* ChatSearch */ = {
+			isa = PBXGroup;
+			children = (
+				I00SCH042D11000000000003 /* ChatSearchSubpage.swift */,
+				I00SCH062D11000000000004 /* ChatSearchViewModel.swift */,
+			);
+			path = ChatSearch;
 			sourceTree = "<group>";
 		};
 		G00INT062D0F000000000004 /* Intents */ = {
@@ -544,6 +571,7 @@
 				A080D8972CD64B1700920564 /* ChatList */,
 				A080D8942CD64B1700920564 /* ChatDetail */,
 				A9EF323E2F38D9AC00BD8A8B /* ProfileDetail */,
+				I00SCH082D11000000000005 /* Search */,
 			);
 			path = Pages;
 			sourceTree = "<group>";
@@ -790,6 +818,10 @@
 				G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */,
 				H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */,
 				H00HAP012D10000000000002 /* HapticService.swift in Sources */,
+				I00SCH012D11000000000001 /* SearchPage.swift in Sources */,
+				I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */,
+				I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */,
+				I00SCH072D11000000000004 /* ChatSearchViewModel.swift in Sources */,
 				9B5EBE622CE5F16F00EDCCE3 /* FitStack.swift in Sources */,
 				A04ABE8C2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift in Sources */,
 				4AF90D692BEE65BA00435355 /* Date+.swift in Sources */,
