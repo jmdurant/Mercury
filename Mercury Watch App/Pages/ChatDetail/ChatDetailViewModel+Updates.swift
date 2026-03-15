@@ -24,9 +24,12 @@ extension ChatDetailViewModel {
         
         Task.detached {
             let message = await self.messageModelFrom(messageData)
-            
+
             await MainActor.run {
                 self.insertMessage(at: .last, message: message)
+                if !message.isOutgoing {
+                    HapticService.messageReceived()
+                }
             }
         }
     }
@@ -138,6 +141,7 @@ extension ChatDetailViewModel {
         withAnimation {
             if let reactions = update.interactionInfo?.reactions?.reactions {
                 self.messages[index].reactions = self.reactionsModelFrom(reactions)
+                HapticService.reactionReceived()
             } else {
                 self.messages[index].reactions = []
             }

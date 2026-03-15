@@ -23,6 +23,9 @@ class AppDelegate: NSObject, WKApplicationDelegate {
         UNUserNotificationCenter.current().delegate = self
         NotificationService.registerCategories()
         NotificationService.requestAuthorization()
+
+        // Background refresh
+        BackgroundSyncService.scheduleNextRefresh()
     }
 
     func applicationDidBecomeActive() {

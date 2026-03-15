@@ -71,6 +71,15 @@ struct ChatDetailPage: View {
             .toolbarForegroundStyle(.white, for: .navigationBar)
             .onAppear(perform: vm.onOpenChat)
             .onDisappear(perform: vm.onCloseChat)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("React", systemImage: "hand.thumbsup.fill") {
+                        vm.onDoubleTapReact()
+                    }
+                    .handGestureShortcut(.primaryAction)
+                    .hidden()
+                }
+            }
         }
         .overlay {
             if vm.isChatBlocked {

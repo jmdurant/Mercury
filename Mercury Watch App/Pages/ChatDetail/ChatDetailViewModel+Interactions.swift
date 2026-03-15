@@ -75,6 +75,13 @@ extension ChatDetailViewModel {
         self.showLocationView = true
     }
     
+    func onDoubleTapReact() {
+        // Send 👍 to the last received (non-outgoing) message
+        guard let lastReceived = messages.last(where: { !$0.isOutgoing }) else { return }
+        sendService?.sendReaction("👍", chatId: chatId, messageId: lastReceived.id)
+        WKInterfaceDevice.current().play(.success)
+    }
+
     func onDublePressOf(_ message: MessageModel) {
         selectedMessage = message
         showOptionsView = true

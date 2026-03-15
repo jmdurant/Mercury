@@ -110,6 +110,8 @@
 		G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT002D0F000000000001 /* SendMessageAppIntent.swift */; };
 		G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */; };
 		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
+		H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00BKG002D10000000000001 /* BackgroundSyncService.swift */; };
+		H00HAP012D10000000000002 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00HAP002D10000000000002 /* HapticService.swift */; };
 		C00WID072D0B000000000004 /* MercuryWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID062D0B000000000004 /* MercuryWidget.swift */; };
 		C00WID092D0B000000000005 /* MercuryWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID082D0B000000000005 /* MercuryWidgetViews.swift */; };
 		C00WID0B2D0B000000000006 /* SharedDataStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00WID002D0B000000000001 /* SharedDataStore.swift */; };
@@ -242,6 +244,8 @@
 		G00INT002D0F000000000001 /* SendMessageAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageAppIntent.swift; sourceTree = "<group>"; };
 		G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckUnreadAppIntent.swift; sourceTree = "<group>"; };
 		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
+		H00BKG002D10000000000001 /* BackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundSyncService.swift; sourceTree = "<group>"; };
+		H00HAP002D10000000000002 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
 		C00WID062D0B000000000004 /* MercuryWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidget.swift; sourceTree = "<group>"; };
 		C00WID082D0B000000000005 /* MercuryWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryWidgetViews.swift; sourceTree = "<group>"; };
 		C00WID0A2D0B000000000006 /* Mercury Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Mercury Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -457,6 +461,8 @@
 				A0CDF8C52CE7D4D70015E20E /* SendMessageService.swift */,
 				B00SEC002D0A000000000001 /* KeychainService.swift */,
 				C00WID042D0B000000000003 /* NotificationService.swift */,
+				H00BKG002D10000000000001 /* BackgroundSyncService.swift */,
+				H00HAP002D10000000000002 /* HapticService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -782,6 +788,8 @@
 				G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */,
 				G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */,
 				G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */,
+				H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */,
+				H00HAP012D10000000000002 /* HapticService.swift in Sources */,
 				9B5EBE622CE5F16F00EDCCE3 /* FitStack.swift in Sources */,
 				A04ABE8C2CE0BA1D00641BC1 /* ChatListViewModel+Chats.swift in Sources */,
 				4AF90D692BEE65BA00435355 /* Date+.swift in Sources */,
