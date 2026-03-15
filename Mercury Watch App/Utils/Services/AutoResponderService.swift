@@ -1,0 +1,182 @@
+//
+//  AutoResponderService.swift
+//  Mercury Watch App
+//
+//  Created on 14/03/26.
+//
+
+import Foundation
+import TDLibKit
+
+class AutoResponderService: TDLibManagerProtocol {
+
+    private let logger = LoggerService(AutoResponderService.self)
+
+    init() {
+        TDLibManager.shared.subscribe(self)
+    }
+
+    deinit {
+        TDLibManager.shared.unsubscribe(self)
+    }
+
+    func updateHandler(update: Update) {
+        guard case .updateNewMessage(let msg) = update else { return }
+        let message = msg.message
+        guard !message.isOutgoing else { return }
+
+        // Check if this chat is marked as AI assistant
+        let chatId = message.chatId
+        guard AutoResponderStore.isAssistantChat(chatId) else { return }
+
+        // Extract text content
+        guard case .messageText(let textContent) = message.content else { return }
+        let text = textContent.text.text.lowercased()
+
+        Task {
+            if let response = await matchAndFetch(text) {
+                SendMessageService.sendQuickReply(text: response, chatId: chatId)
+                logger.log("Auto-responded to assistant chat \(chatId)")
+            }
+        }
+    }
+
+    func connectionStateUpdate(state: ConnectionState) {}
+    func authorizationStateUpdate(state: AuthorizationState) {}
+
+    // MARK: - Query Matching
+
+    private func matchAndFetch(_ text: String) async -> String? {
+        // Match multiple queries and combine responses
+        var responses: [String] = []
+
+        if matches(text, keywords: ["heart rate", "heart", "bpm", "pulse"]) {
+            if let hr = await StatusDataService.getCurrentHeartRate() {
+                responses.append("Heart rate: \(hr) bpm")
+            }
+        }
+
+        if matches(text, keywords: ["steps", "step count", "walking"]) {
+            if let steps = await StatusDataService.getTodaySteps() {
+                responses.append("Steps today: \(steps.formatted())")
+            }
+        }
+
+        if matches(text, keywords: ["calories", "energy", "active energy"]) {
+            if let cal = await StatusDataService.getActiveCalories() {
+                responses.append("Active calories: \(cal) cal")
+            }
+        }
+
+        if matches(text, keywords: ["location", "where are you", "where r u", "position", "gps"]) {
+            if let loc = await StatusDataService.buildLocationStatus() {
+                responses.append(loc)
+            }
+        }
+
+        if matches(text, keywords: ["weather", "temperature", "forecast", "outside"]) {
+            if let weather = await StatusDataService.buildWeatherStatus() {
+                responses.append(weather)
+            }
+        }
+
+        if matches(text, keywords: ["workout", "exercise", "training", "running", "gym"]) {
+            if let workout = await StatusDataService.buildWorkoutStatus() {
+                responses.append(workout)
+            }
+        }
+
+        if matches(text, keywords: ["busy", "calendar", "schedule", "meeting", "free", "available"]) {
+            if let cal = await StatusDataService.buildCalendarStatus() {
+                responses.append(cal)
+            }
+        }
+
+        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep"]) {
+            if let sleep = await StatusDataService.buildSleepStatus() {
+                responses.append(sleep)
+            }
+        }
+
+        if matches(text, keywords: ["activity", "rings", "move ring", "stand"]) {
+            if let rings = await StatusDataService.buildActivityRingsStatus() {
+                responses.append(rings)
+            }
+        }
+
+        if matches(text, keywords: ["oxygen", "spo2", "blood oxygen", "o2"]) {
+            if let spo2 = await StatusDataService.buildBloodOxygenStatus() {
+                responses.append(spo2)
+            }
+        }
+
+        if matches(text, keywords: ["noise", "loud", "sound", "decibel", "db"]) {
+            if let noise = await StatusDataService.buildNoiseLevelStatus() {
+                responses.append(noise)
+            }
+        }
+
+        if matches(text, keywords: ["altitude", "elevation", "height"]) {
+            if let alt = await StatusDataService.buildAltitudeStatus() {
+                responses.append(alt)
+            }
+        }
+
+        if matches(text, keywords: ["listening", "music", "playing", "song", "what are you listening"]) {
+            if let np = StatusDataService.buildNowPlayingStatus() {
+                responses.append(np)
+            }
+        }
+
+        if matches(text, keywords: ["battery", "charge", "power"]) {
+            if let bat = StatusDataService.buildBatteryStatus() {
+                responses.append(bat)
+            }
+        }
+
+        if matches(text, keywords: ["reminder", "task", "todo", "to do", "to-do"]) {
+            if let rem = await StatusDataService.buildRemindersStatus() {
+                responses.append(rem)
+            }
+        }
+
+        if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in", "everything"]) {
+            if let health = await StatusDataService.buildHealthStatus() {
+                responses.append(health)
+            }
+        }
+
+        // "Give me everything" / "full status" returns all available data
+        if matches(text, keywords: ["full status", "all data", "everything", "full report", "all sensors", "all stats"]) {
+            return await buildFullStatus()
+        }
+
+        guard !responses.isEmpty else { return nil }
+        return responses.joined(separator: "\n")
+    }
+
+    private func matches(_ text: String, keywords: [String]) -> Bool {
+        keywords.contains { text.contains($0) }
+    }
+
+    private func buildFullStatus() async -> String? {
+        var parts: [String] = []
+
+        if let health = await StatusDataService.buildHealthStatus() { parts.append(health) }
+        if let rings = await StatusDataService.buildActivityRingsStatus() { parts.append(rings) }
+        if let workout = await StatusDataService.buildWorkoutStatus() { parts.append(workout) }
+        if let sleep = await StatusDataService.buildSleepStatus() { parts.append(sleep) }
+        if let spo2 = await StatusDataService.buildBloodOxygenStatus() { parts.append(spo2) }
+        if let cal = await StatusDataService.buildCalendarStatus() { parts.append(cal) }
+        if let rem = await StatusDataService.buildRemindersStatus() { parts.append(rem) }
+        if let loc = await StatusDataService.buildLocationStatus() { parts.append(loc) }
+        if let weather = await StatusDataService.buildWeatherStatus() { parts.append(weather) }
+        if let np = StatusDataService.buildNowPlayingStatus() { parts.append(np) }
+        if let noise = await StatusDataService.buildNoiseLevelStatus() { parts.append(noise) }
+        if let alt = await StatusDataService.buildAltitudeStatus() { parts.append(alt) }
+        if let bat = StatusDataService.buildBatteryStatus() { parts.append(bat) }
+
+        guard !parts.isEmpty else { return nil }
+        return parts.joined(separator: "\n")
+    }
+}

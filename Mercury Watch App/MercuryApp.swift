@@ -13,6 +13,7 @@ struct MercuryApp: App {
     @Environment(\.isLuminanceReduced) var isLuminanceReduced
     @WKApplicationDelegateAdaptor var appDelegate: AppDelegate
     private let unreadCountBridge = UnreadCountBridge()
+    private let autoResponder = AutoResponderService()
 
     var body: some Scene {
         WindowGroup {

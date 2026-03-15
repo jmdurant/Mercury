@@ -53,6 +53,7 @@ class ChatDetailViewModel: TDLibViewModel {
     var isChatBlocked: Bool = false
     var isSecretChat: Bool { if case .chatTypeSecret = chatType { return true } else { return false } }
     var secretChatState: String?
+    var isAssistantChat: Bool = false
     
     init(chatId: Int64) {
         self.chatId = chatId
@@ -95,6 +96,7 @@ class ChatDetailViewModel: TDLibViewModel {
                     self.avatar = chat.toAvatarModel()
                     self.chatType = chat.type
                     self.isChatBlocked = chat.blockList != nil
+                    self.isAssistantChat = AutoResponderStore.isAssistantChat(chat.id)
                 }
                 
                 let newMessages = await self.requestMessages(firstBatch: true)

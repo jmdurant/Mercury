@@ -112,6 +112,8 @@
 		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00BKG002D10000000000001 /* BackgroundSyncService.swift */; };
 		H00HAP012D10000000000002 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00HAP002D10000000000002 /* HapticService.swift */; };
+		K00AUT012D13000000000001 /* AutoResponderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = K00AUT002D13000000000001 /* AutoResponderService.swift */; };
+		K00AUT032D13000000000002 /* AutoResponderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = K00AUT022D13000000000002 /* AutoResponderStore.swift */; };
 		J00QRE012D12000000000001 /* QuickReplySubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE002D12000000000001 /* QuickReplySubpage.swift */; };
 		J00QRE032D12000000000002 /* StatusDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE022D12000000000002 /* StatusDataService.swift */; };
 		I00SCH012D11000000000001 /* SearchPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH002D11000000000001 /* SearchPage.swift */; };
@@ -252,6 +254,8 @@
 		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
 		H00BKG002D10000000000001 /* BackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundSyncService.swift; sourceTree = "<group>"; };
 		H00HAP002D10000000000002 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+		K00AUT002D13000000000001 /* AutoResponderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoResponderService.swift; sourceTree = "<group>"; };
+		K00AUT022D13000000000002 /* AutoResponderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoResponderStore.swift; sourceTree = "<group>"; };
 		J00QRE002D12000000000001 /* QuickReplySubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySubpage.swift; sourceTree = "<group>"; };
 		J00QRE022D12000000000002 /* StatusDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDataService.swift; sourceTree = "<group>"; };
 		I00SCH002D11000000000001 /* SearchPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPage.swift; sourceTree = "<group>"; };
@@ -504,6 +508,8 @@
 				H00BKG002D10000000000001 /* BackgroundSyncService.swift */,
 				H00HAP002D10000000000002 /* HapticService.swift */,
 				J00QRE022D12000000000002 /* StatusDataService.swift */,
+				K00AUT002D13000000000001 /* AutoResponderService.swift */,
+				K00AUT022D13000000000002 /* AutoResponderStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -834,6 +840,8 @@
 				H00HAP012D10000000000002 /* HapticService.swift in Sources */,
 				J00QRE012D12000000000001 /* QuickReplySubpage.swift in Sources */,
 				J00QRE032D12000000000002 /* StatusDataService.swift in Sources */,
+				K00AUT012D13000000000001 /* AutoResponderService.swift in Sources */,
+				K00AUT032D13000000000002 /* AutoResponderStore.swift in Sources */,
 				I00SCH012D11000000000001 /* SearchPage.swift in Sources */,
 				I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */,
 				I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */,

@@ -58,8 +58,18 @@ struct ChatDetailPage: View {
                 }
                 
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Search", systemImage: "magnifyingglass") {
-                        vm.showSearchView = true
+                    HStack(spacing: 8) {
+                        Button("Search", systemImage: "magnifyingglass") {
+                            vm.showSearchView = true
+                        }
+                        Button {
+                            vm.isAssistantChat.toggle()
+                            AutoResponderStore.toggleAssistantChat(vm.chatId)
+                            HapticService.messageSent()
+                        } label: {
+                            Image(systemName: vm.isAssistantChat ? "brain.fill" : "brain")
+                                .foregroundStyle(vm.isAssistantChat ? .green : .white)
+                        }
                     }
                     .font(.caption2)
                 }
