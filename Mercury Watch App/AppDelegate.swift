@@ -105,11 +105,22 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             userInfo: userInfo
         )
 
-        // If body contains a URL, re-post with link category for "Open Link" action
+        // If body contains URLs, re-post with link category for "Open Link" actions
         let body = notification.request.content.body
-        if NotificationService.extractFirstURL(from: body) != nil {
+        let urls = NotificationService.extractAllURLs(from: body)
+        if !urls.isEmpty {
             let newContent = notification.request.content.mutableCopy() as! UNMutableNotificationContent
-            newContent.categoryIdentifier = NotificationService.linkMessageCategoryIdentifier
+            let count = min(urls.count, 3)
+            newContent.categoryIdentifier = NotificationService.linkMessageCategoryIdentifier + "_\(count)"
+
+            // Store URLs in userInfo for retrieval on action
+            var updatedInfo = newContent.userInfo
+            for (i, url) in urls.prefix(3).enumerated() {
+                updatedInfo["mercury_link_\(i)"] = url.absoluteString
+                // Update action titles with smart labels
+            }
+            newContent.userInfo = updatedInfo
+
             let request = UNNotificationRequest(
                 identifier: notification.request.identifier + ".link",
                 content: newContent,
@@ -135,9 +146,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         }
 
         switch response.actionIdentifier {
-        case NotificationService.openLinkActionIdentifier:
-            let body = response.notification.request.content.body
-            if let url = NotificationService.extractFirstURL(from: body) {
+        case let action where action.hasPrefix(NotificationService.openLinkActionIdentifier):
+            let indexStr = action.replacingOccurrences(of: NotificationService.openLinkActionIdentifier + "_", with: "")
+            let index = Int(indexStr) ?? 0
+            let urlKey = "mercury_link_\(index)"
+            if let urlString = response.notification.request.content.userInfo[urlKey] as? String,
+               let url = URL(string: urlString) {
                 DispatchQueue.main.async {
                     WKExtension.shared().openSystemURL(url)
                 }
