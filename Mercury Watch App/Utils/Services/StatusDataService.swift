@@ -8,6 +8,10 @@
 import Foundation
 import HealthKit
 import EventKit
+import MediaPlayer
+import WeatherKit
+import CoreLocation
+import WatchKit
 
 enum StatusDataService {
 
@@ -200,6 +204,48 @@ enum StatusDataService {
             let at = event.endTime.formatted(.dateTime.hour().minute())
             return "Next: \(event.title) at \(at)"
         }
+    }
+
+    static func buildNowPlayingStatus() -> String? {
+        let info = MPNowPlayingInfoCenter.default().nowPlayingInfo
+        guard let info else { return nil }
+
+        let title = info[MPMediaItemPropertyTitle] as? String
+        let artist = info[MPMediaItemPropertyArtist] as? String
+
+        if let title, let artist {
+            return "Listening to: \(title) - \(artist)"
+        } else if let title {
+            return "Listening to: \(title)"
+        }
+        return nil
+    }
+
+    static func buildWeatherStatus() async -> String? {
+        let locationManager = CLLocationManager()
+        guard let location = locationManager.location else { return nil }
+
+        do {
+            let weather = try await WeatherService.shared.weather(
+                for: location,
+                including: .current
+            )
+            let temp = weather.temperature.formatted(.measurement(width: .abbreviated))
+            let condition = weather.condition.description
+            return "Weather: \(temp), \(condition)"
+        } catch {
+            logger.log(error, level: .error)
+            return nil
+        }
+    }
+
+    static func buildBatteryStatus() -> String? {
+        let device = WKInterfaceDevice.current()
+        device.isBatteryMonitoringEnabled = true
+        let level = device.batteryLevel
+        guard level >= 0 else { return nil }
+        let percent = Int(level * 100)
+        return "Watch battery: \(percent)%"
     }
 
     static func buildHealthStatus() async -> String? {

@@ -101,6 +101,18 @@ struct QuickReplySubpage: View {
             messages.append(StatusMessage(icon: "heart.fill", label: "Health", message: health))
         }
 
+        if let nowPlaying = StatusDataService.buildNowPlayingStatus() {
+            messages.append(StatusMessage(icon: "music.note", label: "Now Playing", message: nowPlaying))
+        }
+
+        if let weather = await StatusDataService.buildWeatherStatus() {
+            messages.append(StatusMessage(icon: "cloud.sun.fill", label: "Weather", message: weather))
+        }
+
+        if let battery = StatusDataService.buildBatteryStatus() {
+            messages.append(StatusMessage(icon: "battery.50percent", label: "Battery", message: battery))
+        }
+
         await MainActor.run {
             statusMessages = messages
             isLoadingStatus = false
