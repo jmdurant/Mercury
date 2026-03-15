@@ -88,6 +88,17 @@ Built with the latest Apple technologies and APIs, including Liquid Glass on wat
 - "Give me everything" returns a full status report from all 19 data sources
 - No interaction needed — the AI gets real-time context from your wrist
 
+### **Focus Mode Auto-Reply**
+- Automatic replies when Focus/Do Not Disturb is active
+- 4 built-in profiles with customizable messages:
+  - **Workout**: "I'm working out right now..." + workout stats + health data
+  - **Work**: "I'm at work and can't chat..." + calendar status
+  - **Sleep**: "I'm sleeping..." (auto-detected between 10pm-7am)
+  - **General**: "I'm currently unavailable..." + calendar + workout
+- Each profile controls which context data to include (calendar, workout, health, location, battery)
+- Only replies once per chat per Focus session to avoid spam
+- Configure in Settings → Focus Auto-Reply
+
 ### **Search**
 - Global search from the Home page — find chats by name and messages across all conversations
 - In-chat search — search messages within the current conversation

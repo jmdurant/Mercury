@@ -82,40 +82,46 @@ struct SettingsPage: View {
 
     @ViewBuilder
     func dndSettingsView() -> some View {
+        @State var profiles = AutoResponderStore.getProfiles()
+        @State var activeId = AutoResponderStore.activeProfileId
+
         List {
             Section {
                 Toggle("Enable", isOn: Binding(
-                    get: { AutoResponderStore.isDndAutoReplyEnabled },
-                    set: { AutoResponderStore.isDndAutoReplyEnabled = $0 }
+                    get: { AutoResponderStore.isFocusAutoReplyEnabled },
+                    set: { AutoResponderStore.isFocusAutoReplyEnabled = $0 }
                 ))
             } footer: {
-                Text("Auto-reply to messages when Focus/DND is active")
+                Text("Auto-reply when Focus/DND is active")
             }
 
-            Section("Reply Message") {
-                TextField("Message", text: Binding(
-                    get: { AutoResponderStore.dndAutoReplyMessage },
-                    set: { AutoResponderStore.dndAutoReplyMessage = $0 }
-                ))
+            Section("Active Profile") {
+                Picker("Profile", selection: Binding(
+                    get: { AutoResponderStore.activeProfileId },
+                    set: { AutoResponderStore.activeProfileId = $0 }
+                )) {
+                    ForEach(profiles) { profile in
+                        Text(profile.name).tag(profile.id)
+                    }
+                }
+            } footer: {
+                Text("Auto-detects Sleep mode at night")
             }
 
-            Section("Include with reply") {
-                Toggle("Calendar", isOn: Binding(
-                    get: { AutoResponderStore.dndIncludeCalendar },
-                    set: { AutoResponderStore.dndIncludeCalendar = $0 }
-                ))
-                Toggle("Workout", isOn: Binding(
-                    get: { AutoResponderStore.dndIncludeWorkout },
-                    set: { AutoResponderStore.dndIncludeWorkout = $0 }
-                ))
-                Toggle("Location", isOn: Binding(
-                    get: { AutoResponderStore.dndIncludeLocation },
-                    set: { AutoResponderStore.dndIncludeLocation = $0 }
-                ))
-                Toggle("Battery", isOn: Binding(
-                    get: { AutoResponderStore.dndIncludeBattery },
-                    set: { AutoResponderStore.dndIncludeBattery = $0 }
-                ))
+            ForEach(profiles) { profile in
+                Section(profile.name) {
+                    Text(profile.message)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        if profile.includeCalendar { Label("Cal", systemImage: "calendar").font(.caption2) }
+                        if profile.includeWorkout { Label("Workout", systemImage: "figure.run").font(.caption2) }
+                        if profile.includeHealth { Label("Health", systemImage: "heart").font(.caption2) }
+                        if profile.includeLocation { Label("Loc", systemImage: "location").font(.caption2) }
+                        if profile.includeBattery { Label("Bat", systemImage: "battery.50percent").font(.caption2) }
+                    }
+                    .foregroundStyle(.secondary)
+                }
             }
         }
         .navigationTitle("Focus Auto-Reply")

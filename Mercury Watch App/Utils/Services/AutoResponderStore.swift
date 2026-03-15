@@ -13,43 +13,99 @@ enum AutoResponderStore {
     private static let dndAutoReplyKey = "dndAutoReplyEnabled"
     private static let dndMessageKey = "dndAutoReplyMessage"
 
-    // MARK: - DND Auto-Reply
+    // MARK: - Focus Auto-Reply
 
-    static var isDndAutoReplyEnabled: Bool {
+    static var isFocusAutoReplyEnabled: Bool {
         get { UserDefaults.standard.bool(forKey: dndAutoReplyKey) }
         set { UserDefaults.standard.set(newValue, forKey: dndAutoReplyKey) }
     }
 
-    static var dndAutoReplyMessage: String {
-        get { UserDefaults.standard.string(forKey: dndMessageKey) ?? "I'm currently unavailable. I'll get back to you soon." }
-        set { UserDefaults.standard.set(newValue, forKey: dndMessageKey) }
+    struct FocusProfile: Codable, Identifiable {
+        var id: String  // "workout", "sleep", "work", "general"
+        var name: String
+        var message: String
+        var includeCalendar: Bool
+        var includeWorkout: Bool
+        var includeLocation: Bool
+        var includeBattery: Bool
+        var includeHealth: Bool
     }
 
-    // MARK: - DND Context Options
+    static let defaultProfiles: [FocusProfile] = [
+        FocusProfile(
+            id: "workout",
+            name: "Workout",
+            message: "I'm working out right now. I'll reply when I'm done.",
+            includeCalendar: false, includeWorkout: true,
+            includeLocation: false, includeBattery: false, includeHealth: true
+        ),
+        FocusProfile(
+            id: "work",
+            name: "Work",
+            message: "I'm at work and can't chat right now.",
+            includeCalendar: true, includeWorkout: false,
+            includeLocation: false, includeBattery: false, includeHealth: false
+        ),
+        FocusProfile(
+            id: "sleep",
+            name: "Sleep",
+            message: "I'm sleeping. I'll get back to you in the morning.",
+            includeCalendar: false, includeWorkout: false,
+            includeLocation: false, includeBattery: false, includeHealth: false
+        ),
+        FocusProfile(
+            id: "general",
+            name: "General",
+            message: "I'm currently unavailable. I'll get back to you soon.",
+            includeCalendar: true, includeWorkout: true,
+            includeLocation: false, includeBattery: false, includeHealth: false
+        ),
+    ]
 
-    private static let dndIncludeCalendarKey = "dndIncludeCalendar"
-    private static let dndIncludeLocationKey = "dndIncludeLocation"
-    private static let dndIncludeWorkoutKey = "dndIncludeWorkout"
-    private static let dndIncludeBatteryKey = "dndIncludeBattery"
+    private static let profilesKey = "focusProfiles"
+    private static let activeProfileKey = "activeFocusProfile"
 
-    static var dndIncludeCalendar: Bool {
-        get { UserDefaults.standard.object(forKey: dndIncludeCalendarKey) as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: dndIncludeCalendarKey) }
+    static func getProfiles() -> [FocusProfile] {
+        guard let data = UserDefaults.standard.data(forKey: profilesKey),
+              let profiles = try? JSONDecoder().decode([FocusProfile].self, from: data)
+        else { return defaultProfiles }
+        return profiles
     }
 
-    static var dndIncludeLocation: Bool {
-        get { UserDefaults.standard.object(forKey: dndIncludeLocationKey) as? Bool ?? false }
-        set { UserDefaults.standard.set(newValue, forKey: dndIncludeLocationKey) }
+    static func saveProfiles(_ profiles: [FocusProfile]) {
+        if let data = try? JSONEncoder().encode(profiles) {
+            UserDefaults.standard.set(data, forKey: profilesKey)
+        }
     }
 
-    static var dndIncludeWorkout: Bool {
-        get { UserDefaults.standard.object(forKey: dndIncludeWorkoutKey) as? Bool ?? true }
-        set { UserDefaults.standard.set(newValue, forKey: dndIncludeWorkoutKey) }
+    static var activeProfileId: String {
+        get { UserDefaults.standard.string(forKey: activeProfileKey) ?? "general" }
+        set { UserDefaults.standard.set(newValue, forKey: activeProfileKey) }
     }
 
-    static var dndIncludeBattery: Bool {
-        get { UserDefaults.standard.object(forKey: dndIncludeBatteryKey) as? Bool ?? false }
-        set { UserDefaults.standard.set(newValue, forKey: dndIncludeBatteryKey) }
+    static func getActiveProfile() -> FocusProfile {
+        let profiles = getProfiles()
+        return profiles.first { $0.id == activeProfileId } ?? defaultProfiles.last!
+    }
+
+    static func autoDetectProfile() -> FocusProfile {
+        let profiles = getProfiles()
+
+        // Auto-detect based on context
+        if let _ = StatusDataService.buildNowPlayingStatus() {
+            // Could be relaxing, use general
+        }
+
+        // Check time of day for sleep
+        let hour = Calendar.current.component(.hour, from: Date())
+        if hour >= 22 || hour < 7 {
+            return profiles.first { $0.id == "sleep" } ?? getActiveProfile()
+        }
+
+        // Check for active workout
+        // (buildWorkoutStatus is async, so we'll use the manually selected profile as primary)
+
+        return getActiveProfile()
     }
 
     static func isAssistantChat(_ chatId: Int64) -> Bool {

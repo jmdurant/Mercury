@@ -31,29 +31,34 @@ class AutoResponderService: TDLibManagerProtocol {
 
         let chatId = message.chatId
 
-        // DND auto-reply: respond to ALL chats when Focus is active
-        if AutoResponderStore.isDndAutoReplyEnabled,
+        // Focus auto-reply: respond to ALL chats when Focus is active
+        if AutoResponderStore.isFocusAutoReplyEnabled,
            INFocusStatusCenter.default.focusStatus.isFocused == true,
            !dndRepliedChats.contains(chatId) {
 
             dndRepliedChats.insert(chatId)
-            var reply = AutoResponderStore.dndAutoReplyMessage
+            let profile = AutoResponderStore.autoDetectProfile()
+            var reply = profile.message
 
             Task {
                 var context: [String] = []
-                if AutoResponderStore.dndIncludeCalendar,
+                if profile.includeCalendar,
                    let cal = await StatusDataService.buildCalendarStatus() {
                     context.append(cal)
                 }
-                if AutoResponderStore.dndIncludeWorkout,
+                if profile.includeWorkout,
                    let workout = await StatusDataService.buildWorkoutStatus() {
                     context.append(workout)
                 }
-                if AutoResponderStore.dndIncludeLocation,
+                if profile.includeHealth,
+                   let health = await StatusDataService.buildHealthStatus() {
+                    context.append(health)
+                }
+                if profile.includeLocation,
                    let loc = await StatusDataService.buildLocationStatus() {
                     context.append(loc)
                 }
-                if AutoResponderStore.dndIncludeBattery,
+                if profile.includeBattery,
                    let bat = StatusDataService.buildBatteryStatus() {
                     context.append(bat)
                 }
@@ -61,7 +66,7 @@ class AutoResponderService: TDLibManagerProtocol {
                     reply += "\n" + context.joined(separator: "\n")
                 }
                 SendMessageService.sendQuickReply(text: reply, chatId: chatId)
-                self.logger.log("DND auto-replied to chat \(chatId)")
+                self.logger.log("Focus auto-replied [\(profile.name)] to chat \(chatId)")
             }
             return
         }
