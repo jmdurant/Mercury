@@ -9,6 +9,7 @@ import Foundation
 import HealthKit
 import EventKit
 import MediaPlayer
+import MusicKit
 import WeatherKit
 import CoreLocation
 import CoreMotion
@@ -231,6 +232,34 @@ enum StatusDataService {
             return "Listening to: \(title)"
         }
         return nil
+    }
+
+    static func buildNowPlayingWithLink() async -> String? {
+        let info = MPNowPlayingInfoCenter.default().nowPlayingInfo
+        guard let info else { return nil }
+
+        let title = info[MPMediaItemPropertyTitle] as? String
+        let artist = info[MPMediaItemPropertyArtist] as? String
+
+        guard let title else { return nil }
+
+        var result = "Listening to: \(title)"
+        if let artist { result += " - \(artist)" }
+
+        // Look up Apple Music link
+        do {
+            let searchTerm = [title, artist].compactMap { $0 }.joined(separator: " ")
+            var request = MusicCatalogSearchRequest(term: searchTerm, types: [Song.self])
+            request.limit = 1
+            let response = try await request.response()
+            if let song = response.songs.first, let url = song.url {
+                result += "\n\(url.absoluteString)"
+            }
+        } catch {
+            logger.log(error, level: .error)
+        }
+
+        return result
     }
 
     static func buildWeatherStatus() async -> String? {

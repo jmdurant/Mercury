@@ -33,6 +33,17 @@ extension FormattedText {
                 resultString[range].strikethroughStyle = .single
             case .textEntityTypeMention:
                 resultString[range].foregroundColor = .blue
+            case .textEntityTypeUrl:
+                let urlString = String(text[Range(nsRange, in: text)!])
+                if let url = URL(string: urlString) {
+                    resultString[range].link = url
+                    resultString[range].foregroundColor = .blue
+                }
+            case .textEntityTypeTextUrl(let textUrl):
+                if let url = URL(string: textUrl.url) {
+                    resultString[range].link = url
+                    resultString[range].foregroundColor = .blue
+                }
             case .textEntityTypeSpoiler:
                 resultString.characters.replaceSubrange(range, with: getRandomBraille(length: entity.length))
             case .textEntityTypeBlockQuote:

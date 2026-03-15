@@ -153,7 +153,7 @@ class AutoResponderService: TDLibManagerProtocol {
             } else if text == "#battery" || text == "#bat" {
                 response = StatusDataService.buildBatteryStatus()
             } else if text == "#music" || text == "#playing" {
-                response = StatusDataService.buildNowPlayingStatus()
+                response = await StatusDataService.buildNowPlayingWithLink()
             } else if text == "#rings" || text == "#activity" {
                 response = await StatusDataService.buildActivityRingsStatus()
             } else if text == "#o2" || text == "#oxygen" {
@@ -326,7 +326,7 @@ class AutoResponderService: TDLibManagerProtocol {
         }
 
         if matches(text, keywords: ["listening", "music", "playing", "song", "what are you listening"]) {
-            if let np = StatusDataService.buildNowPlayingStatus() {
+            if let np = await StatusDataService.buildNowPlayingWithLink() {
                 responses.append(np)
             }
         }
