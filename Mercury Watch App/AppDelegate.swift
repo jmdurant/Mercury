@@ -105,19 +105,18 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             userInfo: userInfo
         )
 
-        // If body contains URLs, re-post with link category for "Open Link" actions
+        // If body contains URLs, re-post with typed link actions
         let body = notification.request.content.body
         let urls = NotificationService.extractAllURLs(from: body)
         if !urls.isEmpty {
-            let newContent = notification.request.content.mutableCopy() as! UNMutableNotificationContent
-            let count = min(urls.count, 3)
-            newContent.categoryIdentifier = NotificationService.linkMessageCategoryIdentifier + "_\(count)"
+            let categoryId = NotificationService.registerLinkCategory(for: Array(urls.prefix(3)))
 
-            // Store URLs in userInfo for retrieval on action
+            let newContent = notification.request.content.mutableCopy() as! UNMutableNotificationContent
+            newContent.categoryIdentifier = categoryId
+
             var updatedInfo = newContent.userInfo
             for (i, url) in urls.prefix(3).enumerated() {
                 updatedInfo["mercury_link_\(i)"] = url.absoluteString
-                // Update action titles with smart labels
             }
             newContent.userInfo = updatedInfo
 

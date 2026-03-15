@@ -34,22 +34,6 @@ enum NotificationService {
             options: []
         )
 
-        let openLink1Action = UNNotificationAction(
-            identifier: openLinkActionIdentifier + "_0",
-            title: "Open Link",
-            options: [.foreground]
-        )
-        let openLink2Action = UNNotificationAction(
-            identifier: openLinkActionIdentifier + "_1",
-            title: "Open Link 2",
-            options: [.foreground]
-        )
-        let openLink3Action = UNNotificationAction(
-            identifier: openLinkActionIdentifier + "_2",
-            title: "Open Link 3",
-            options: [.foreground]
-        )
-
         let messageCategory = UNNotificationCategory(
             identifier: messageCategoryIdentifier,
             actions: [replyAction, markReadAction],
@@ -57,28 +41,56 @@ enum NotificationService {
             options: []
         )
 
-        let linkMessageCategory1 = UNNotificationCategory(
-            identifier: linkMessageCategoryIdentifier + "_1",
-            actions: [openLink1Action, replyAction, markReadAction],
-            intentIdentifiers: [],
+        // We'll register link categories dynamically per notification
+        // Start with just the base message category
+        UNUserNotificationCenter.current().setNotificationCategories([messageCategory])
+    }
+
+    /// Creates a dynamic notification category with typed action labels
+    static func registerLinkCategory(for urls: [URL]) -> String {
+        let categoryId = "LINK_\(urls.count)_\(urls.hashValue)"
+
+        var actions: [UNNotificationAction] = []
+        for (i, url) in urls.prefix(3).enumerated() {
+            let action = UNNotificationAction(
+                identifier: openLinkActionIdentifier + "_\(i)",
+                title: labelForURL(url),
+                options: [.foreground]
+            )
+            actions.append(action)
+        }
+
+        // Add reply and mark read
+        let replyAction = UNTextInputNotificationAction(
+            identifier: replyActionIdentifier,
+            title: "Reply",
+            options: [],
+            textInputButtonTitle: "Send",
+            textInputPlaceholder: "Message"
+        )
+        let markReadAction = UNNotificationAction(
+            identifier: markReadActionIdentifier,
+            title: "Mark as Read",
             options: []
         )
-        let linkMessageCategory2 = UNNotificationCategory(
-            identifier: linkMessageCategoryIdentifier + "_2",
-            actions: [openLink1Action, openLink2Action, replyAction, markReadAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        let linkMessageCategory3 = UNNotificationCategory(
-            identifier: linkMessageCategoryIdentifier + "_3",
-            actions: [openLink1Action, openLink2Action, openLink3Action, replyAction, markReadAction],
+        actions.append(replyAction)
+        actions.append(markReadAction)
+
+        let category = UNNotificationCategory(
+            identifier: categoryId,
+            actions: actions,
             intentIdentifiers: [],
             options: []
         )
 
-        UNUserNotificationCenter.current().setNotificationCategories([
-            messageCategory, linkMessageCategory1, linkMessageCategory2, linkMessageCategory3
-        ])
+        // Merge with existing categories
+        UNUserNotificationCenter.current().getNotificationCategories { existing in
+            var categories = existing
+            categories.insert(category)
+            UNUserNotificationCenter.current().setNotificationCategories(categories)
+        }
+
+        return categoryId
     }
 
     static func requestAuthorization() {
