@@ -28,17 +28,9 @@ enum BackgroundSyncService {
     static func performSync() async {
         logger.log("Background sync started")
 
-        // Update unread count for widget
-        do {
-            if let result = try await TDLibManager.shared.client?.getUnreadChatCount(
-                chatList: .chatListMain
-            ) {
-                SharedDataStore.saveTotalUnreadCount(result.unreadCount)
-                WidgetCenter.shared.reloadAllTimelines()
-            }
-        } catch {
-            logger.log(error, level: .error)
-        }
+        // Unread counts arrive via updateUnreadChatCount and are cached in
+        // SharedDataStore by UnreadCountBridge; just refresh the widget
+        WidgetCenter.shared.reloadAllTimelines()
 
         // Schedule next refresh
         scheduleNextRefresh()

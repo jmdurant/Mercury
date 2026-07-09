@@ -31,10 +31,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: messageContent,
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: nil
+                    replyTo: nil,
+                    topicId: nil
                 )
                 self.logger.log(result)
             } catch {
@@ -49,7 +49,7 @@ class SendMessageService {
         let message: InputMessageText = .init(clearDraft: true, linkPreviewOptions: nil, text: formattedText)
         let messageContent: InputMessageContent = .inputMessageText(message)
         let replyTo: InputMessageReplyTo = .inputMessageReplyToMessage(
-            .init(chatId: 0, messageId: messageId, quote: nil)
+            .init(checklistTaskId: 0, messageId: messageId, quote: nil)
         )
 
         Task.detached {
@@ -57,10 +57,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: messageContent,
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: replyTo
+                    replyTo: replyTo,
+                    topicId: nil
                 )
                 self.logger.log(result)
             } catch {
@@ -104,10 +104,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: .inputMessageVoiceNote(audio),
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: nil
+                    replyTo: nil,
+                    topicId: nil
                 )
 
                 self.logger.log(result)
@@ -131,10 +131,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: .from(sticker: sticker),
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: nil
+                    replyTo: nil,
+                    topicId: nil
                 )
     
                 self.logger.log(result)
@@ -163,10 +163,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: self.chat?.id,
                     inputMessageContent: messageContent,
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: nil
+                    replyTo: nil,
+                    topicId: nil
                 )
                 self.logger.log(result)
             } catch {
@@ -201,15 +201,15 @@ class SendMessageService {
 
     static func sendToContact(name: String, text: String) async throws {
         guard let users = try await TDLibManager.shared.client?.searchContacts(
-            query: name,
-            limit: 1
+            limit: 1,
+            query: name
         ), let userId = users.userIds.first else {
             throw MercurySendError.contactNotFound
         }
 
         guard let chat = try await TDLibManager.shared.client?.createPrivateChat(
-            userId: userId,
-            force: false
+            force: false,
+            userId: userId
         ) else {
             throw MercurySendError.chatCreationFailed
         }
@@ -219,14 +219,16 @@ class SendMessageService {
         let _ = try await TDLibManager.shared.client?.sendMessage(
             chatId: chat.id,
             inputMessageContent: .inputMessageText(message),
-            messageThreadId: nil,
             options: nil,
             replyMarkup: nil,
-            replyTo: nil
+            replyTo: nil,
+            topicId: nil
         )
     }
 
-    enum MercurySendError: Error, LocalizedError {
+    // Swift.Error explicitly: TDLibKit declares its own `Error` type,
+    // which would otherwise be picked up as a raw type here
+    enum MercurySendError: Swift.Error, LocalizedError {
         case contactNotFound
         case chatCreationFailed
 
@@ -249,10 +251,10 @@ class SendMessageService {
                 let result = try await TDLibManager.shared.client?.sendMessage(
                     chatId: chatId,
                     inputMessageContent: messageContent,
-                    messageThreadId: nil,
                     options: nil,
                     replyMarkup: nil,
-                    replyTo: nil
+                    replyTo: nil,
+                    topicId: nil
                 )
                 logger.log(result)
             } catch {

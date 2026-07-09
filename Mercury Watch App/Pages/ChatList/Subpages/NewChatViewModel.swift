@@ -29,8 +29,8 @@ class NewChatViewModel {
         Task.detached(priority: .high) {
             do {
                 guard let result = try await TDLibManager.shared.client?.searchContacts(
-                    query: "",
-                    limit: 200
+                    limit: 200,
+                    query: ""
                 ) else { return }
 
                 var items: [ContactItem] = []
@@ -78,8 +78,8 @@ class NewChatViewModel {
                     chatId = secretChat?.id
                 } else {
                     let chat = try await TDLibManager.shared.client?.createPrivateChat(
-                        userId: contact.id,
-                        force: false
+                        force: false,
+                        userId: contact.id
                     )
                     chatId = chat?.id
                 }

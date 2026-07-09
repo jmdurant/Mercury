@@ -158,7 +158,7 @@ class ChatDetailViewModel: TDLibViewModel {
                     action: action,
                     businessConnectionId: nil,
                     chatId: self.chatId,
-                    messageThreadId: 0
+                    topicId: nil
                 )
             } catch {
                 self.logger.log(error, level: .error)

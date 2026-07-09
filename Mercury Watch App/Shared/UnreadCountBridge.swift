@@ -12,7 +12,6 @@ import WidgetKit
 class UnreadCountBridge: TDLibManagerProtocol {
 
     private let logger = LoggerService(UnreadCountBridge.self)
-    private var debounceWorkItem: DispatchWorkItem?
 
     init() {
         TDLibManager.shared.subscribe(self)
@@ -24,11 +23,14 @@ class UnreadCountBridge: TDLibManagerProtocol {
 
     func updateHandler(update: Update) {
         switch update {
-        case .updateChatReadInbox,
-             .updateChatUnreadMentionCount,
-             .updateChatUnreadReactionCount,
-             .updateMessageUnreadReactions:
-            scheduleUnreadCountUpdate()
+        case .updateUnreadChatCount(let update):
+            // TDLib pushes this whenever the count changes; there is no
+            // request-based getter in current TDLib
+            if case .chatListMain = update.chatList {
+                SharedDataStore.saveTotalUnreadCount(update.unreadCount)
+                WidgetCenter.shared.reloadAllTimelines()
+                logger.log("Updated widget unread count: \(update.unreadCount)")
+            }
         case .updateNewMessage(let msg):
             if !msg.message.isOutgoing {
                 trackLastSender(message: msg.message)
@@ -57,39 +59,11 @@ class UnreadCountBridge: TDLibManagerProtocol {
 
     func authorizationStateUpdate(state: AuthorizationState) {
         switch state {
-        case .authorizationStateReady:
-            scheduleUnreadCountUpdate()
         case .authorizationStateLoggingOut, .authorizationStateClosed:
             SharedDataStore.saveTotalUnreadCount(0)
             WidgetCenter.shared.reloadAllTimelines()
         default:
             break
-        }
-    }
-
-    private func scheduleUnreadCountUpdate() {
-        debounceWorkItem?.cancel()
-        let workItem = DispatchWorkItem { [weak self] in
-            self?.fetchAndUpdateUnreadCount()
-        }
-        debounceWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: workItem)
-    }
-
-    private func fetchAndUpdateUnreadCount() {
-        Task {
-            do {
-                guard let result = try await TDLibManager.shared.client?.getUnreadChatCount(
-                    chatList: .chatListMain
-                ) else { return }
-
-                let count = result.unreadCount
-                SharedDataStore.saveTotalUnreadCount(count)
-                WidgetCenter.shared.reloadAllTimelines()
-                logger.log("Updated widget unread count: \(count)")
-            } catch {
-                logger.log(error, level: .error)
-            }
         }
     }
 }

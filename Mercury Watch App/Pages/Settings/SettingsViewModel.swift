@@ -94,7 +94,7 @@ class SettingsViewModel: TDLibViewModel {
                         id: session.id.rawValue,
                         name: "\(session.applicationName) \(session.applicationVersion)",
                         device: session.deviceModel,
-                        location: "\(session.country), \(session.region)".trimmingCharacters(in: CharacterSet(charactersIn: ", ")),
+                        location: session.location,
                         lastActive: session.isCurrent ? "Current session" : lastActive.formatted(.dateTime.month().day().hour().minute()),
                         isCurrent: session.isCurrent
                     )

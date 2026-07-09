@@ -114,13 +114,13 @@ class MessageOptionsViewModel {
     
     fileprivate func checkCanDelete() async {
         do {
-            guard let message = try await TDLibManager.shared.client?.getMessage(
+            guard let properties = try await TDLibManager.shared.client?.getMessageProperties(
                 chatId: model.chatId,
                 messageId: model.messageId
             ) else { return }
 
             await MainActor.run {
-                self.canDeleteForEveryone = message.canBeDeletedForAllUsers
+                self.canDeleteForEveryone = properties.canBeDeletedForAllUsers
             }
         } catch {
             logger.log(error, level: .error)
@@ -207,7 +207,7 @@ class MessageOptionsViewModel {
                         self.showShareSheet = true
 
                     default:
-                        self.shareText = message.description
+                        self.shareText = String(message.description.characters)
                         self.showShareSheet = true
                     }
                 }
@@ -274,7 +274,30 @@ class MessageOptionsViewModel {
         
         Task {
             do {
-                try await TDLibManager.shared.client?.reportChat(chatId: chatId, messageIds: [messageId], reason: reason, text: nil)
+                // New TDLib report flow: the initial request (empty optionId)
+                // returns the server's report options; pick the one matching
+                // the selected reason, falling back to the first
+                let result = try await TDLibManager.shared.client?.reportChat(
+                    chatId: chatId,
+                    messageIds: [messageId],
+                    optionId: Data(),
+                    text: nil
+                )
+
+                if case .reportChatResultOptionRequired(let required) = result {
+                    let option = required.options.first {
+                        $0.text.localizedCaseInsensitiveContains(reason.description)
+                    } ?? required.options.first
+
+                    if let option {
+                        _ = try await TDLibManager.shared.client?.reportChat(
+                            chatId: chatId,
+                            messageIds: [messageId],
+                            optionId: option.id,
+                            text: nil
+                        )
+                    }
+                }
             } catch {
                 logger.log(error)
             }
@@ -288,7 +311,8 @@ class MessageOptionsViewModel {
 
 struct MessageInfoData {
     let senderName: String
-    let date: Date
+    // Foundation.Date explicitly: TDLibKit also declares a `Date` type
+    let date: Foundation.Date
     let messageId: Int64
     let forwardedFrom: String?
     let viewCount: Int?
