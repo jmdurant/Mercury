@@ -33,10 +33,21 @@ struct PTTTalkSubpage: View {
                 Label("Auto-play", systemImage: "speaker.wave.2.fill")
                     .font(.caption2)
             }
+
+            Toggle(isOn: Binding(
+                get: { vm.isLiftToSpeakOn },
+                set: { vm.toggleLiftToSpeak($0) }
+            )) {
+                Label("Lift to Speak", systemImage: "hand.wave.fill")
+                    .font(.caption2)
+            }
         }
         .navigationTitle("Walkie-Talkie")
         .task {
             await vm.onAppear()
+        }
+        .onDisappear {
+            vm.onDisappear()
         }
     }
 
@@ -88,8 +99,8 @@ struct PTTTalkSubpage: View {
 
     private var buttonLabel: String {
         switch vm.state {
-        case .idle: "HOLD TO TALK"
-        case .recording: "RELEASE TO SEND"
+        case .idle: vm.isLiftToSpeakOn ? "LIFT OR HOLD" : "HOLD TO TALK"
+        case .recording: vm.isWristRecording ? "LOWER TO SEND" : "RELEASE TO SEND"
         case .sending: "SENDING"
         }
     }

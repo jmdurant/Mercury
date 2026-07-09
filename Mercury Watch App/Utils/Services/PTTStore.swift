@@ -13,11 +13,19 @@ enum PTTStore {
 
     private static let chatIdsKey = "pttChatIds"
     private static let autoPlayKey = "pttAutoPlayEnabled"
+    private static let liftToSpeakKey = "pttLiftToSpeakEnabled"
 
     /// Master switch for auto-playing incoming voice notes (default on)
     static var isAutoPlayEnabled: Bool {
         get { UserDefaults.standard.object(forKey: autoPlayKey) as? Bool ?? true }
         set { UserDefaults.standard.set(newValue, forKey: autoPlayKey) }
+    }
+
+    /// Lift to Speak: wrist raise records, wrist lower sends.
+    /// Off by default — starting the mic on a gesture should be opt-in.
+    static var isLiftToSpeakEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: liftToSpeakKey) }
+        set { UserDefaults.standard.set(newValue, forKey: liftToSpeakKey) }
     }
 
     static func isPTTChat(_ chatId: Int64) -> Bool {
