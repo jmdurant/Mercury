@@ -63,16 +63,6 @@ enum StatusDataService {
     static func getCurrentHeartRate() async -> Int? {
         let heartRateType = HKQuantityType(.heartRate)
         let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierStartDate, ascending: false)
-        let query = HKSampleQuery(
-            sampleType: heartRateType,
-            predicate: HKQuery.predicateForSamples(
-                withStart: Date().addingTimeInterval(-300),
-                end: Date(),
-                options: .strictEndDate
-            ),
-            limit: 1,
-            sortDescriptors: [sortDescriptor]
-        ) { _, _, _ in }
 
         return await withCheckedContinuation { continuation in
             let query = HKSampleQuery(
@@ -344,7 +334,6 @@ enum StatusDataService {
         guard !parts.isEmpty else { return nil }
         return "Today: " + parts.joined(separator: " | ")
     }
-}
 
     static func buildSleepStatus() async -> String? {
         let sleepType = HKCategoryType(.sleepAnalysis)
@@ -470,7 +459,12 @@ enum StatusDataService {
         guard CMAltimeter.isRelativeAltitudeAvailable() else { return nil }
 
         return await withCheckedContinuation { continuation in
+            // Callbacks already enqueued on .main can still fire after
+            // stopRelativeAltitudeUpdates(); resuming twice would crash
+            var resumed = false
             altimeter.startRelativeAltitudeUpdates(to: .main) { data, error in
+                guard !resumed else { return }
+                resumed = true
                 altimeter.stopRelativeAltitudeUpdates()
                 guard let data else {
                     continuation.resume(returning: nil)
@@ -809,6 +803,7 @@ enum StatusDataService {
             healthStore.execute(query)
         }
     }
+}
 
 extension HKWorkoutActivityType {
     var displayName: String {
