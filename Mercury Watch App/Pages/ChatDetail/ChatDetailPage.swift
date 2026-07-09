@@ -97,11 +97,13 @@ struct ChatDetailPage: View {
             .onDisappear(perform: vm.onCloseChat)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("React", systemImage: "hand.thumbsup.fill") {
-                        vm.onDoubleTapReact()
+                    if #available(watchOS 11, *) {
+                        Button("React", systemImage: "hand.thumbsup.fill") {
+                            vm.onDoubleTapReact()
+                        }
+                        .handGestureShortcut(.primaryAction)
+                        .hidden()
                     }
-                    .handGestureShortcut(.primaryAction)
-                    .hidden()
                 }
             }
         }

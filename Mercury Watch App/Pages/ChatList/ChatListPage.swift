@@ -12,7 +12,9 @@ struct ChatListPage: View {
     @State
     @Mockable
     var vm: ChatListViewModel
-    
+
+    @State private var showComposeOptions = false
+
     init(folder: ChatFolder) {
         _vm = Mockable.state(
             value: { ChatListViewModel(folder: folder) },
@@ -39,15 +41,17 @@ struct ChatListPage: View {
             .navigationTitle(vm.folder.title)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
+                    // Menu is unavailable on watchOS; use a confirmation dialog
+                    Button("New", systemImage: "square.and.pencil") {
+                        showComposeOptions = true
+                    }
+                    .confirmationDialog("New", isPresented: $showComposeOptions) {
                         Button("New Chat", systemImage: "square.and.pencil") {
                             vm.didPressOnNewMessage()
                         }
                         Button("Secret Chat", systemImage: "lock.fill") {
                             vm.showNewSecretChat = true
                         }
-                    } label: {
-                        Image(systemName: "square.and.pencil")
                     }
                 }
             }

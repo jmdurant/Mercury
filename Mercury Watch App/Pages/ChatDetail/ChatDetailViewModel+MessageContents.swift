@@ -184,10 +184,9 @@ extension MessageSticker {
         return StickerImageModel(
             emoji: sticker.emoji,
             getImage: {
-                guard let filePath = await FileService.getFilePath(for: sticker.sticker) else {
+                guard let url = await FileService.getFilePath(for: sticker.sticker) else {
                     return nil
                 }
-                let url = URL(fileURLWithPath: filePath)
                 guard let lottieData = FileService.getLottieJson(for: url) else {
                     return nil
                 }
@@ -202,7 +201,7 @@ extension MessageSticker {
             getImage: {
                 guard let thumbnailFile = sticker.thumbnail?.file,
                       let filePath = await FileService.getFilePath(for: thumbnailFile),
-                      let data = try? Data(contentsOf: URL(fileURLWithPath: filePath))
+                      let data = try? Data(contentsOf: filePath)
                 else { return nil }
                 return SDImageWebPCoder.shared.decodedImage(with: data, options: nil)
                     ?? UIImage(data: data)

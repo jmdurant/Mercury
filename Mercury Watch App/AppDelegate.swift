@@ -70,7 +70,10 @@ class AppDelegate: NSObject, WKApplicationDelegate {
         }
     }
 
-    func didFailToRegisterForRemoteNotificationsWithError(_ error: Error) {
+    // Swift.Error explicitly: TDLibKit's `Error` type would otherwise win
+    // the lookup and this would no longer match the WKApplicationDelegate
+    // requirement, so WatchKit would never call it
+    func didFailToRegisterForRemoteNotificationsWithError(_ error: Swift.Error) {
         logger.log("APNs registration failed: \(error)", level: .error)
     }
 
@@ -187,7 +190,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 }
             }
 
-        case UNNotificationResponse.defaultActionIdentifier:
+        case UNNotificationDefaultActionIdentifier:
             DispatchQueue.main.async {
                 AppState.shared.pendingNotificationChatId = chatId
             }

@@ -100,9 +100,9 @@ struct ChatCellView: View {
                     .background {
                         if #available(watchOS 26, *) {
                             RoundedRectangle(cornerRadius: size)
+                                .fill(.blue.opacity(0.5))
                                 .frame(height: size)
                                 .frame(minWidth: size)
-                                .fill(.blue.opacity(0.5))
                                 .glassEffect()
                         } else {
                             RoundedRectangle(cornerRadius: size)

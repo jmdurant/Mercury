@@ -128,8 +128,7 @@ struct SettingsPage: View {
 
     @ViewBuilder
     func dndSettingsView() -> some View {
-        @State var profiles = AutoResponderStore.getProfiles()
-        @State var activeId = AutoResponderStore.activeProfileId
+        let profiles = AutoResponderStore.getProfiles()
 
         List {
             Section {
@@ -141,7 +140,7 @@ struct SettingsPage: View {
                 Text("Auto-reply when Focus/DND is active")
             }
 
-            Section("Active Profile") {
+            Section {
                 Picker("Profile", selection: Binding(
                     get: { AutoResponderStore.activeProfileId },
                     set: { AutoResponderStore.activeProfileId = $0 }
@@ -150,6 +149,8 @@ struct SettingsPage: View {
                         Text(profile.name).tag(profile.id)
                     }
                 }
+            } header: {
+                Text("Active Profile")
             } footer: {
                 Text("Auto-detects Sleep mode at night")
             }

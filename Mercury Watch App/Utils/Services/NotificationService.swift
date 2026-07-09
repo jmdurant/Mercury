@@ -8,6 +8,7 @@
 import Foundation
 import UserNotifications
 import Intents
+import WatchKit
 
 enum NotificationService {
 
