@@ -116,6 +116,10 @@
 		K00AUT032D13000000000002 /* AutoResponderStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = K00AUT022D13000000000002 /* AutoResponderStore.swift */; };
 		J00QRE012D12000000000001 /* QuickReplySubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE002D12000000000001 /* QuickReplySubpage.swift */; };
 		J00QRE032D12000000000002 /* StatusDataService.swift in Sources */ = {isa = PBXBuildFile; fileRef = J00QRE022D12000000000002 /* StatusDataService.swift */; };
+		P00PTT012D14000000000001 /* PTTStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = P00PTT002D14000000000001 /* PTTStore.swift */; };
+		P00PTT032D14000000000002 /* PTTService.swift in Sources */ = {isa = PBXBuildFile; fileRef = P00PTT022D14000000000002 /* PTTService.swift */; };
+		P00PTT052D14000000000003 /* PTTTalkViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = P00PTT042D14000000000003 /* PTTTalkViewModel.swift */; };
+		P00PTT072D14000000000004 /* PTTTalkSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = P00PTT062D14000000000004 /* PTTTalkSubpage.swift */; };
 		I00SCH012D11000000000001 /* SearchPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH002D11000000000001 /* SearchPage.swift */; };
 		I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH022D11000000000002 /* SearchViewModel.swift */; };
 		I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */ = {isa = PBXBuildFile; fileRef = I00SCH042D11000000000003 /* ChatSearchSubpage.swift */; };
@@ -258,6 +262,10 @@
 		K00AUT022D13000000000002 /* AutoResponderStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoResponderStore.swift; sourceTree = "<group>"; };
 		J00QRE002D12000000000001 /* QuickReplySubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReplySubpage.swift; sourceTree = "<group>"; };
 		J00QRE022D12000000000002 /* StatusDataService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusDataService.swift; sourceTree = "<group>"; };
+		P00PTT002D14000000000001 /* PTTStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTStore.swift; sourceTree = "<group>"; };
+		P00PTT022D14000000000002 /* PTTService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTService.swift; sourceTree = "<group>"; };
+		P00PTT042D14000000000003 /* PTTTalkViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTTalkViewModel.swift; sourceTree = "<group>"; };
+		P00PTT062D14000000000004 /* PTTTalkSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTTalkSubpage.swift; sourceTree = "<group>"; };
 		I00SCH002D11000000000001 /* SearchPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchPage.swift; sourceTree = "<group>"; };
 		I00SCH022D11000000000002 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
 		I00SCH042D11000000000003 /* ChatSearchSubpage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatSearchSubpage.swift; sourceTree = "<group>"; };
@@ -362,6 +370,7 @@
 				D00LOC042D0C000000000003 /* SendLocation */,
 				I00SCH092D11000000000006 /* ChatSearch */,
 				J00QRE042D12000000000003 /* QuickReply */,
+				P00PTT082D14000000000005 /* PTT */,
 			);
 			path = Subpages;
 			sourceTree = "<group>";
@@ -390,6 +399,15 @@
 				J00QRE002D12000000000001 /* QuickReplySubpage.swift */,
 			);
 			path = QuickReply;
+			sourceTree = "<group>";
+		};
+		P00PTT082D14000000000005 /* PTT */ = {
+			isa = PBXGroup;
+			children = (
+				P00PTT062D14000000000004 /* PTTTalkSubpage.swift */,
+				P00PTT042D14000000000003 /* PTTTalkViewModel.swift */,
+			);
+			path = PTT;
 			sourceTree = "<group>";
 		};
 		I00SCH082D11000000000005 /* Search */ = {
@@ -510,6 +528,8 @@
 				J00QRE022D12000000000002 /* StatusDataService.swift */,
 				K00AUT002D13000000000001 /* AutoResponderService.swift */,
 				K00AUT022D13000000000002 /* AutoResponderStore.swift */,
+				P00PTT002D14000000000001 /* PTTStore.swift */,
+				P00PTT022D14000000000002 /* PTTService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -842,6 +862,10 @@
 				J00QRE032D12000000000002 /* StatusDataService.swift in Sources */,
 				K00AUT012D13000000000001 /* AutoResponderService.swift in Sources */,
 				K00AUT032D13000000000002 /* AutoResponderStore.swift in Sources */,
+				P00PTT012D14000000000001 /* PTTStore.swift in Sources */,
+				P00PTT032D14000000000002 /* PTTService.swift in Sources */,
+				P00PTT052D14000000000003 /* PTTTalkViewModel.swift in Sources */,
+				P00PTT072D14000000000004 /* PTTTalkSubpage.swift in Sources */,
 				I00SCH012D11000000000001 /* SearchPage.swift in Sources */,
 				I00SCH032D11000000000002 /* SearchViewModel.swift in Sources */,
 				I00SCH052D11000000000003 /* ChatSearchSubpage.swift in Sources */,

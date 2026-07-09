@@ -149,6 +149,14 @@ struct ChatDetailPage: View {
                 )
             }
         }
+        .sheet(isPresented: $vm.showPTTView) {
+            if let sendService = vm.sendService {
+                PTTTalkSubpage(
+                    vm: PTTTalkViewModel(chatId: vm.chatId, sendService: sendService),
+                    isPresented: $vm.showPTTView
+                )
+            }
+        }
         .sheet(isPresented: $vm.showSearchView) {
             ChatSearchSubpage(vm: ChatSearchViewModel(chatId: vm.chatId))
         }
@@ -220,6 +228,12 @@ struct ChatDetailPage: View {
             .controlSize(.large)
             .background {
                 Circle().foregroundStyle(.ultraThinMaterial)
+            }
+        }
+
+        if vm.canSendVoiceNotes ?? false {
+            Button("Walkie", systemImage: "antenna.radiowaves.left.and.right") {
+                vm.showPTTView = true
             }
         }
         

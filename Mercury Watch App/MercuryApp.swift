@@ -14,6 +14,7 @@ struct MercuryApp: App {
     @WKApplicationDelegateAdaptor var appDelegate: AppDelegate
     private let unreadCountBridge = UnreadCountBridge()
     private let autoResponder = AutoResponderService()
+    private let pttService = PTTService()
 
     var body: some Scene {
         WindowGroup {

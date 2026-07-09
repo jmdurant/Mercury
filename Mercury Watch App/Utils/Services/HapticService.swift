@@ -38,4 +38,14 @@ enum HapticService {
     static func messageDeleted() {
         WKInterfaceDevice.current().play(.retry)
     }
+
+    /// Incoming walkie-talkie voice note about to auto-play
+    static func pttReceived() {
+        WKInterfaceDevice.current().play(.directionDown)
+    }
+
+    /// Walkie-talkie recording started
+    static func pttTalkStarted() {
+        WKInterfaceDevice.current().play(.start)
+    }
 }

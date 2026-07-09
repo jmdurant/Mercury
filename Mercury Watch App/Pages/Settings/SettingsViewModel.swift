@@ -20,6 +20,7 @@ class SettingsViewModel: TDLibViewModel {
     var showAccountSettings: Bool = false
     var showSessions: Bool = false
     var showDndSettings: Bool = false
+    var showPTTSettings: Bool = false
     var isSaving: Bool = false
 
     struct SessionItem: Identifiable {

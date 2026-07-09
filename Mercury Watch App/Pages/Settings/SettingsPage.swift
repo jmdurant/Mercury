@@ -47,6 +47,12 @@ struct SettingsPage: View {
                 Label("Focus Auto-Reply", systemImage: "moon.fill")
             }
 
+            Button {
+                vm.showPTTSettings = true
+            } label: {
+                Label("Walkie-Talkie", systemImage: "antenna.radiowaves.left.and.right")
+            }
+
             Button("Logout", role: .destructive) {
                 vm.logout()
             }
@@ -64,6 +70,35 @@ struct SettingsPage: View {
         .sheet(isPresented: $vm.showSessions) {
             sessionsView()
         }
+        .sheet(isPresented: $vm.showPTTSettings) {
+            pttSettingsView()
+        }
+    }
+
+    @ViewBuilder
+    func pttSettingsView() -> some View {
+        List {
+            Section {
+                Toggle("Auto-play voice notes", isOn: Binding(
+                    get: { PTTStore.isAutoPlayEnabled },
+                    set: { PTTStore.isAutoPlayEnabled = $0 }
+                ))
+            } footer: {
+                Text("Incoming voice notes in walkie-talkie chats play automatically")
+            }
+
+            Section {
+                Text("\(PTTStore.chatCount) walkie-talkie \(PTTStore.chatCount == 1 ? "chat" : "chats")")
+                    .foregroundStyle(.secondary)
+                Button("Remove All", role: .destructive) {
+                    PTTStore.clearAll()
+                    vm.showPTTSettings = false
+                }
+            } footer: {
+                Text("Enable walkie-talkie per chat from the antenna button in the chat toolbar")
+            }
+        }
+        .navigationTitle("Walkie-Talkie")
     }
 
     @ViewBuilder
