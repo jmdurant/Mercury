@@ -125,10 +125,12 @@ final class TDLibManager {
         
         Task {
             do {
-                // Apply file protection to the TDLib database directory
+                // Apply file protection to the TDLib database directory.
+                // Not .complete: background sync and message receipt need
+                // database access while the watch is locked
                 if let tdlibPath {
                     try? FileManager.default.setAttributes(
-                        [.protectionKey: FileProtectionType.complete],
+                        [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
                         ofItemAtPath: tdlibPath
                     )
                 }

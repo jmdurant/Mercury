@@ -71,7 +71,11 @@ enum KeychainService {
         }
 
         let key = Data(bytes)
-        _ = save(key: dbEncryptionKeyName, data: key)
+        if !save(key: dbEncryptionKeyName, data: key) {
+            // If the key is not persisted, next launch generates a different
+            // one and the encrypted TDLib database becomes unreadable
+            logger.log("Failed to persist database encryption key — TDLib data will be lost on next launch", level: .fatal)
+        }
         return key
     }
 
