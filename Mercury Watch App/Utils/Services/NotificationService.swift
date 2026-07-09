@@ -83,9 +83,14 @@ enum NotificationService {
             options: []
         )
 
-        // Merge with existing categories
+        // Merge with existing categories, pruning old dynamic link
+        // categories so the registry doesn't grow without bound
         UNUserNotificationCenter.current().getNotificationCategories { existing in
             var categories = existing
+            let linkCategories = categories.filter { $0.identifier.hasPrefix("LINK_") }
+            if linkCategories.count > 20 {
+                categories.subtract(linkCategories)
+            }
             categories.insert(category)
             UNUserNotificationCenter.current().setNotificationCategories(categories)
         }

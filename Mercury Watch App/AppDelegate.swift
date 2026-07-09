@@ -105,10 +105,12 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             userInfo: userInfo
         )
 
-        // If body contains URLs, re-post with typed link actions
+        // If body contains URLs, re-post with typed link actions.
+        // Re-posted notifications land back here — the ".link" suffix
+        // marks them as already processed so they don't loop forever.
         let body = notification.request.content.body
         let urls = NotificationService.extractAllURLs(from: body)
-        if !urls.isEmpty {
+        if !urls.isEmpty, !notification.request.identifier.hasSuffix(".link") {
             let categoryId = NotificationService.registerLinkCategory(for: Array(urls.prefix(3)))
 
             let newContent = notification.request.content.mutableCopy() as! UNMutableNotificationContent
@@ -168,6 +170,17 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             Task {
                 do {
                     try await TDLibManager.shared.client?.openChat(chatId: chatId)
+                    // openChat alone does not mark messages read; viewMessages
+                    // with forceRead on the latest message does
+                    if let chat = try await TDLibManager.shared.client?.getChat(chatId: chatId),
+                       let lastMessageId = chat.lastMessage?.id {
+                        try await TDLibManager.shared.client?.viewMessages(
+                            chatId: chatId,
+                            forceRead: true,
+                            messageIds: [lastMessageId],
+                            source: nil
+                        )
+                    }
                     try await TDLibManager.shared.client?.closeChat(chatId: chatId)
                 } catch {
                     logger.log(error, level: .error)
