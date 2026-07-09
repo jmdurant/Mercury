@@ -49,6 +49,12 @@ class AutoResponderService: TDLibManagerProtocol {
             var reply = profile.message
 
             Task {
+                // Only auto-reply in one-on-one chats: replies can carry
+                // location/health/calendar context that must not leak into
+                // groups, channels, or bot chats
+                let chat = try? await TDLibManager.shared.client?.getChat(chatId: chatId)
+                guard case .chatTypePrivate = chat?.type else { return }
+
                 var context: [String] = []
 
                 // Profile-specific enhanced context
