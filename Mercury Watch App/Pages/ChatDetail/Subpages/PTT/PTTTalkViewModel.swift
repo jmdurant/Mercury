@@ -37,6 +37,7 @@ class PTTTalkViewModel {
     private var filePath: URL?
     private let logger = LoggerService(PTTTalkViewModel.self)
 
+    private let runtimeSession = PTTRuntimeSession()
     private let motionManager = CMMotionManager()
     // Starts true so opening the screen wrist-up doesn't immediately
     // record; the first lower→raise transition arms it
@@ -52,8 +53,13 @@ class PTTTalkViewModel {
 
     func onAppear() async {
         hasPermission = await AVAudioApplication.requestRecordPermission()
-        if isLiftToSpeakOn {
-            await MainActor.run { startWristMonitoring() }
+        await MainActor.run {
+            // Keep the app running through wrist-lowered sends and
+            // incoming auto-play for the whole conversation
+            runtimeSession.start()
+            if isLiftToSpeakOn {
+                startWristMonitoring()
+            }
         }
     }
 
@@ -62,6 +68,7 @@ class PTTTalkViewModel {
         if state == .recording {
             stopTalking()
         }
+        runtimeSession.stop()
     }
 
     func toggleAutoPlay(_ enabled: Bool) {

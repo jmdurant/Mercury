@@ -10,5 +10,14 @@
 	<string>Mercury can share your calendar status as a quick reply.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
 	<string>Mercury can share your next reminder as a quick reply.</string>
+	<!-- Extended runtime session type for walkie-talkie conversations.
+	     Per WKExtendedRuntimeSession.h the session type comes from
+	     WKBackgroundModes; "self-care" is a foreground session type that
+	     keeps the app running while frontmost, so a wrist-lowered send
+	     completes instead of waiting for the next wrist raise. -->
+	<key>WKBackgroundModes</key>
+	<array>
+		<string>self-care</string>
+	</array>
 </dict>
 </plist>
