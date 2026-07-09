@@ -15,12 +15,9 @@ enum BackgroundSyncService {
     private static let taskIdentifier = "mercury.sync"
 
     static func scheduleNextRefresh() {
-        let request = WKApplication.SharedRefreshBackgroundTask(
-            preferredDate: Date(timeIntervalSinceNow: 15 * 60)
-        )
         WKApplication.shared().scheduleBackgroundRefresh(
             withPreferredDate: Date(timeIntervalSinceNow: 15 * 60),
-            userInfo: taskIdentifier as NSSecureCoding & NSObjectProtocol
+            userInfo: taskIdentifier as NSString
         ) { error in
             if let error {
                 logger.log("Background refresh scheduling failed: \(error)", level: .error)
