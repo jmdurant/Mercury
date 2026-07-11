@@ -1096,7 +1096,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = 6MWN6EWBL2;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Mercury-Watch-App-Info.plist";
@@ -1109,7 +1109,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.alessandroalberti.mercury.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1129,7 +1129,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
-				DEVELOPMENT_TEAM = 6MWN6EWBL2;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Mercury-Watch-App-Info.plist";
@@ -1142,7 +1142,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.alessandroalberti.mercury.watchkitapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch.watchkitapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -1160,11 +1160,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
-				DEVELOPMENT_TEAM = 6MWN6EWBL2;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				INFOPLIST_KEY_CFBundleDisplayName = Mercury;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.alessandroalberti.mercury;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -1177,11 +1177,11 @@
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 15;
-				DEVELOPMENT_TEAM = 6MWN6EWBL2;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				INFOPLIST_KEY_CFBundleDisplayName = Mercury;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.alessandroalberti.mercury;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;

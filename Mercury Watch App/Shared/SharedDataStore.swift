@@ -9,7 +9,7 @@ import Foundation
 
 enum SharedDataStore {
 
-    static let appGroupId = "group.com.alessandroalberti.mercury"
+    static let appGroupId = "group.com.doctordurant.clawwatch"
 
     private static var sharedDefaults: UserDefaults? = {
         UserDefaults(suiteName: appGroupId)
