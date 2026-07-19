@@ -43,6 +43,21 @@ struct AgentSettingsScreen: View {
                     Text("When set, commands must be sent as \"#\(token.isEmpty ? "token" : token) status\". Prevents a hijacked chat from querying you.")
                 }
 
+                Section {
+                    Toggle("Push arrival/departure", isOn: Binding(
+                        get: { AutoResponderStore.isContextPushEnabled },
+                        set: {
+                            AutoResponderStore.isContextPushEnabled = $0
+                            if $0 { ContextPushService.shared.start() }
+                            else { ContextPushService.shared.stop() }
+                        }
+                    ))
+                } header: {
+                    Text("Proactive context")
+                } footer: {
+                    Text("Sends a note to assistant chats when you arrive at or leave a place, so the agent has context without polling.")
+                }
+
                 Section("Recent agent activity") {
                     if log.isEmpty {
                         Text("No activity yet").foregroundStyle(.secondary)

@@ -34,6 +34,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // CallKit + VoIP push
         CallService.shared.start()
 
+        // Proactive location-context push to the agent
+        ContextPushService.shared.start()
+
         return true
     }
 

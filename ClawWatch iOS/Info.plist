@@ -12,6 +12,8 @@
 	<string>ClawWatch uses the microphone for voice messages.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ClawWatch can share your location in chats.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>ClawWatch can push arrival/departure context to your AI agent.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>ClawWatch can share health status as quick replies.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
@@ -24,6 +26,7 @@
 		<string>fetch</string>
 		<string>voip</string>
 		<string>audio</string>
+		<string>location</string>
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>

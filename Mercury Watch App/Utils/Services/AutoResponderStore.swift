@@ -177,6 +177,17 @@ enum AutoResponderStore {
         getAssistantChatIds().contains(chatId)
     }
 
+    /// All chats designated as assistant chats (for proactive pushes).
+    static func assistantChatIds() -> [Int64] {
+        Array(getAssistantChatIds())
+    }
+
+    private static let contextPushKey = "agentContextPushEnabled"
+    static var isContextPushEnabled: Bool {
+        get { UserDefaults.standard.bool(forKey: contextPushKey) }
+        set { UserDefaults.standard.set(newValue, forKey: contextPushKey) }
+    }
+
     static func toggleAssistantChat(_ chatId: Int64) {
         var ids = getAssistantChatIds()
         if ids.contains(chatId) {

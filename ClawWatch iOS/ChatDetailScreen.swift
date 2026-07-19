@@ -14,6 +14,7 @@ struct MessageRow: Identifiable {
     let id: Int64
     let text: String
     let isOutgoing: Bool
+    let buttonRows: [[InlineKeyboardButton]]
 }
 
 @Observable
@@ -39,10 +40,24 @@ final class ChatDetailStore: TDLibManagerProtocol {
     func authorizationStateUpdate(state: AuthorizationState) {}
 
     @MainActor private func append(_ m: Message) {
-        messages.append(MessageRow(
+        messages.append(row(from: m))
+    }
+
+    private func row(from m: Message) -> MessageRow {
+        MessageRow(
             id: m.id,
             text: String(m.content.description.characters),
-            isOutgoing: m.isOutgoing))
+            isOutgoing: m.isOutgoing,
+            buttonRows: InlineButtonService.buttons(for: m))
+    }
+
+    @MainActor func tap(_ button: InlineKeyboardButton, messageId: Int64) async {
+        if let toast = await InlineButtonService.tap(button, chatId: chatId, messageId: messageId),
+           !toast.isEmpty {
+            // Surface the bot's callback answer as a transient system row
+            messages.append(MessageRow(id: Int64.random(in: Int64.min ... -1),
+                                       text: toast, isOutgoing: false, buttonRows: []))
+        }
     }
 
     @MainActor func load() async {
@@ -53,11 +68,7 @@ final class ChatDetailStore: TDLibManagerProtocol {
             }
             let history = try await TDLibManager.shared.client?.getChatHistory(
                 chatId: chatId, fromMessageId: 0, limit: 40, offset: 0, onlyLocal: false)
-            messages = (history?.messages ?? []).reversed().map {
-                MessageRow(id: $0.id,
-                           text: String($0.content.description.characters),
-                           isOutgoing: $0.isOutgoing)
-            }
+            messages = (history?.messages ?? []).reversed().map { row(from: $0) }
         } catch {
             LoggerService(ChatDetailStore.self).log(error, level: .error)
         }
@@ -83,14 +94,17 @@ struct ChatDetailScreen: View {
             ScrollView {
                 LazyVStack(spacing: 6) {
                     ForEach(store.messages) { row in
-                        HStack {
-                            if row.isOutgoing { Spacer(minLength: 40) }
-                            Text(row.text)
-                                .padding(8)
-                                .background(row.isOutgoing ? Color.blue : Color(.secondarySystemBackground),
-                                            in: RoundedRectangle(cornerRadius: 14))
-                                .foregroundStyle(row.isOutgoing ? .white : .primary)
-                            if !row.isOutgoing { Spacer(minLength: 40) }
+                        VStack(alignment: row.isOutgoing ? .trailing : .leading, spacing: 4) {
+                            HStack {
+                                if row.isOutgoing { Spacer(minLength: 40) }
+                                Text(row.text)
+                                    .padding(8)
+                                    .background(row.isOutgoing ? Color.blue : Color(.secondarySystemBackground),
+                                                in: RoundedRectangle(cornerRadius: 14))
+                                    .foregroundStyle(row.isOutgoing ? .white : .primary)
+                                if !row.isOutgoing { Spacer(minLength: 40) }
+                            }
+                            inlineButtons(for: row)
                         }
                     }
                 }
@@ -124,6 +138,21 @@ struct ChatDetailScreen: View {
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
             Task { await sendPickedPhoto(item) }
+        }
+    }
+
+    @ViewBuilder
+    private func inlineButtons(for row: MessageRow) -> some View {
+        ForEach(Array(row.buttonRows.enumerated()), id: \.offset) { _, buttons in
+            HStack {
+                ForEach(Array(buttons.enumerated()), id: \.offset) { _, button in
+                    Button(button.text) {
+                        Task { await store.tap(button, messageId: row.id) }
+                    }
+                    .buttonStyle(.bordered)
+                    .font(.caption)
+                }
+            }
         }
     }
 

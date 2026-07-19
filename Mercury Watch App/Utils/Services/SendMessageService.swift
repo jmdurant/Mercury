@@ -10,6 +10,46 @@ import TDLibKit
 import SwiftOGG
 import UIKit
 
+/// Handles taps on inline-keyboard buttons the agent/bot attaches to a
+/// message, turning the chat into an interactive agent UI.
+enum InlineButtonService {
+
+    private static let logger = LoggerService(String(describing: InlineButtonService.self))
+
+    /// Rows of buttons on a message, if any.
+    static func buttons(for message: Message) -> [[InlineKeyboardButton]] {
+        guard case .replyMarkupInlineKeyboard(let kb) = message.replyMarkup else { return [] }
+        return kb.rows
+    }
+
+    /// Perform a button tap. Returns the bot's answer text (a toast) for
+    /// callback buttons, nil for URL buttons (which just open).
+    @discardableResult
+    static func tap(_ button: InlineKeyboardButton, chatId: Int64, messageId: Int64) async -> String? {
+        switch button.type {
+        case .inlineKeyboardButtonTypeCallback(let cb):
+            do {
+                let answer = try await TDLibManager.shared.client?.getCallbackQueryAnswer(
+                    chatId: chatId,
+                    messageId: messageId,
+                    payload: .callbackQueryPayloadData(.init(data: cb.data))
+                )
+                return answer?.text
+            } catch {
+                logger.log(error, level: .error)
+                return nil
+            }
+        case .inlineKeyboardButtonTypeUrl(let u):
+            if let url = URL(string: u.url) {
+                await SystemActionService.open(url)
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+}
+
 /// Disappearing-messages presets (chat auto-delete timer), matching
 /// Telegram's standard options. Value is seconds; 0 = off.
 enum AutoDeleteOption: Int, CaseIterable, Identifiable {

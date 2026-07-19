@@ -10,11 +10,35 @@ import TDLibKit
 import Intents
 import CoreMotion
 import EventKit
+import UserNotifications
 #if os(watchOS)
 import WatchKit
 #else
 import UIKit
 #endif
+
+/// Lets the agent interrupt the user with appropriate urgency: a critical
+/// alert bypasses silent mode / Focus (requires the critical-alerts
+/// entitlement); otherwise it lands as a time-sensitive notification.
+enum AgentAlertService {
+
+    private static let logger = LoggerService(String(describing: AgentAlertService.self))
+
+    static func raise(_ text: String, critical: Bool = true) {
+        let content = UNMutableNotificationContent()
+        content.title = "Agent"
+        content.body = text
+        if #available(iOS 15.0, watchOS 8.0, *) {
+            content.interruptionLevel = critical ? .critical : .timeSensitive
+        }
+        content.sound = critical ? .defaultCritical : .default
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error { logger.log("Agent alert failed: \(error)", level: .error) }
+        }
+    }
+}
 
 /// Actuator layer: lets the agent make the device *do* things, not just
 /// report. Cross-platform; URL opening is bridged per platform.
@@ -303,6 +327,14 @@ class AutoResponderService: TDLibManagerProtocol {
                     await SystemActionService.open(url)
                     response = "Opening \(raw)"
                 } else { response = "Invalid URL" }
+            } else if text.hasPrefix("#alert ") {
+                let msg = String(rawText.dropFirst(7)).trimmingCharacters(in: .whitespaces)
+                AgentAlertService.raise(msg, critical: true)
+                response = nil
+            } else if text.hasPrefix("#notify ") {
+                let msg = String(rawText.dropFirst(8)).trimmingCharacters(in: .whitespaces)
+                AgentAlertService.raise(msg, critical: false)
+                response = nil
             } else if text == "#rings" || text == "#activity" {
                 response = await StatusDataService.buildActivityRingsStatus()
             } else if text == "#o2" || text == "#oxygen" {
