@@ -70,6 +70,12 @@ struct ChatDetailPage: View {
                             Image(systemName: vm.isAssistantChat ? "brain.fill" : "brain")
                                 .foregroundStyle(vm.isAssistantChat ? .green : .white)
                         }
+                        Button {
+                            vm.showAutoDeleteDialog = true
+                        } label: {
+                            Image(systemName: vm.autoDelete == .off ? "timer" : "timer.circle.fill")
+                                .foregroundStyle(vm.autoDelete == .off ? .white : .green)
+                        }
                     }
                     .font(.caption2)
                 }
@@ -161,6 +167,13 @@ struct ChatDetailPage: View {
         }
         .sheet(isPresented: $vm.showSearchView) {
             ChatSearchSubpage(vm: ChatSearchViewModel(chatId: vm.chatId))
+        }
+        .confirmationDialog("Disappearing Messages", isPresented: $vm.showAutoDeleteDialog) {
+            ForEach(AutoDeleteOption.allCases) { option in
+                Button(option.label) { vm.setAutoDelete(option) }
+            }
+        } message: {
+            Text("Auto-delete messages in this chat")
         }
         .sheet(isPresented: $vm.showLocationView) {
             if let sendService = vm.sendService {

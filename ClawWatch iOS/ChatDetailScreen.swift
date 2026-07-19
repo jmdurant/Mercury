@@ -22,6 +22,7 @@ final class ChatDetailStore: TDLibManagerProtocol {
     let chatId: Int64
     var messages: [MessageRow] = []
     var sendService: SendMessageService?
+    var autoDelete: AutoDeleteOption = .off
 
     init(chatId: Int64) {
         self.chatId = chatId
@@ -46,9 +47,9 @@ final class ChatDetailStore: TDLibManagerProtocol {
 
     @MainActor func load() async {
         do {
-            if sendService == nil,
-               let chat = try await TDLibManager.shared.client?.getChat(chatId: chatId) {
-                sendService = SendMessageService(chat: chat)
+            if let chat = try await TDLibManager.shared.client?.getChat(chatId: chatId) {
+                if sendService == nil { sendService = SendMessageService(chat: chat) }
+                autoDelete = AutoDeleteOption.from(seconds: chat.messageAutoDeleteTime)
             }
             let history = try await TDLibManager.shared.client?.getChatHistory(
                 chatId: chatId, fromMessageId: 0, limit: 40, offset: 0, onlyLocal: false)
@@ -99,6 +100,26 @@ struct ChatDetailScreen: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Disappearing Messages", selection: Binding(
+                        get: { store.autoDelete },
+                        set: { option in
+                            store.autoDelete = option
+                            store.sendService?.setAutoDeleteTime(option.rawValue)
+                        }
+                    )) {
+                        ForEach(AutoDeleteOption.allCases) { option in
+                            Text(option.label).tag(option)
+                        }
+                    }
+                } label: {
+                    Image(systemName: store.autoDelete == .off ? "timer" : "timer.circle.fill")
+                        .foregroundStyle(store.autoDelete == .off ? Color.secondary : Color.blue)
+                }
+            }
+        }
         .task { await store.load() }
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }

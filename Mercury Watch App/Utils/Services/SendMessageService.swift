@@ -10,16 +10,57 @@ import TDLibKit
 import SwiftOGG
 import UIKit
 
+/// Disappearing-messages presets (chat auto-delete timer), matching
+/// Telegram's standard options. Value is seconds; 0 = off.
+enum AutoDeleteOption: Int, CaseIterable, Identifiable {
+    case off = 0
+    case oneDay = 86400
+    case oneWeek = 604800
+    case oneMonth = 2678400
+
+    var id: Int { rawValue }
+
+    var label: String {
+        switch self {
+        case .off: return "Off"
+        case .oneDay: return "1 Day"
+        case .oneWeek: return "1 Week"
+        case .oneMonth: return "1 Month"
+        }
+    }
+
+    /// Nearest preset for an arbitrary server value (custom timers round down)
+    static func from(seconds: Int) -> AutoDeleteOption {
+        allCases.last { $0.rawValue <= seconds } ?? .off
+    }
+}
+
 class SendMessageService {
-    
+
     let chat: Chat?
     let logger: LoggerService
-    
+
     init(chat: Chat?) {
         self.chat = chat
         self.logger = LoggerService(SendMessageService.self)
     }
-    
+
+    /// Sets the chat's disappearing-messages timer (auto-delete). 0 turns it off.
+    func setAutoDeleteTime(_ seconds: Int) {
+        guard let chatId = chat?.id else { return }
+        Task.detached {
+            do {
+                let result = try await TDLibManager.shared.client?.setChatMessageAutoDeleteTime(
+                    chatId: chatId,
+                    messageAutoDeleteTime: seconds
+                )
+                self.logger.log(result)
+            } catch {
+                self.logger.log(error, level: .error)
+            }
+        }
+    }
+
     func sendTextMessage(_ text: String) {
         
         let formattedText: FormattedText = .init(entities: [], text: text)

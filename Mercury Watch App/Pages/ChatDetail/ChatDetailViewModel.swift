@@ -55,6 +55,8 @@ class ChatDetailViewModel: TDLibViewModel {
     var isSecretChat: Bool { if case .chatTypeSecret = chatType { return true } else { return false } }
     var secretChatState: String?
     var isAssistantChat: Bool = false
+    var autoDelete: AutoDeleteOption = .off
+    var showAutoDeleteDialog: Bool = false
     
     init(chatId: Int64) {
         self.chatId = chatId
@@ -98,6 +100,7 @@ class ChatDetailViewModel: TDLibViewModel {
                     self.chatType = chat.type
                     self.isChatBlocked = chat.blockList != nil
                     self.isAssistantChat = AutoResponderStore.isAssistantChat(chat.id)
+                    self.autoDelete = AutoDeleteOption.from(seconds: chat.messageAutoDeleteTime)
                 }
                 
                 let newMessages = await self.requestMessages(firstBatch: true)
@@ -192,6 +195,11 @@ class ChatDetailViewModel: TDLibViewModel {
         }
     }
     
+    func setAutoDelete(_ option: AutoDeleteOption) {
+        autoDelete = option
+        sendService?.setAutoDeleteTime(option.rawValue)
+    }
+
     public func unblockUser() {
         if case .chatTypePrivate(let chatTypePrivate) = self.chatType {
             let userId = chatTypePrivate.userId
