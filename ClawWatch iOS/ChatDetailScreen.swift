@@ -8,6 +8,7 @@
 
 import SwiftUI
 import PhotosUI
+import AVFoundation
 import TDLibKit
 
 struct MessageRow: Identifiable {
@@ -25,8 +26,15 @@ final class ChatDetailStore: TDLibManagerProtocol {
     var sendService: SendMessageService?
     var autoDelete: AutoDeleteOption = .off
 
+    // Push-to-talk (walkie-talkie)
+    var isRecording = false
+    var isPTTChat = false
+    private var recorder: RecorderService?
+    private var recURL: URL?
+
     init(chatId: Int64) {
         self.chatId = chatId
+        self.isPTTChat = PTTStore.isPTTChat(chatId)
         TDLibManager.shared.subscribe(self)
     }
     deinit { TDLibManager.shared.unsubscribe(self) }
@@ -57,6 +65,39 @@ final class ChatDetailStore: TDLibManagerProtocol {
             // Surface the bot's callback answer as a transient system row
             messages.append(MessageRow(id: Int64.random(in: Int64.min ... -1),
                                        text: toast, isOutgoing: false, buttonRows: []))
+        }
+    }
+
+    func togglePTT() {
+        isPTTChat.toggle()
+        PTTStore.setPTTChat(chatId, enabled: isPTTChat)
+    }
+
+    /// Press-and-hold to talk: start recording a voice note.
+    @MainActor func startTalking() async {
+        guard !isRecording, await AVAudioApplication.requestRecordPermission() else { return }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".m4a")
+        let rec = RecorderService(recFilePath: url)
+        rec.initAudioRecorder()
+        rec.startRecordingAudio()
+        recorder = rec; recURL = url; isRecording = true
+        HapticService.pttTalkStarted()
+    }
+
+    /// Release to send. Sub-half-second holds are discarded as accidental taps.
+    @MainActor func stopTalkingAndSend() {
+        guard isRecording, let rec = recorder, let url = recURL else { return }
+        rec.stopRecordingAudio()
+        let duration = rec.elapsedTime
+        isRecording = false; recorder = nil; recURL = nil
+        guard duration >= 0.5 else {
+            try? FileManager.default.removeItem(at: url)
+            HapticService.actionFailed()
+            return
+        }
+        sendService?.sendVoiceNote(url, Int(duration)) {
+            DispatchQueue.main.async { HapticService.messageSent() }
         }
     }
 
@@ -116,6 +157,16 @@ struct ChatDetailScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    store.togglePTT()
+                } label: {
+                    Image(systemName: store.isPTTChat
+                          ? "antenna.radiowaves.left.and.right.circle.fill"
+                          : "antenna.radiowaves.left.and.right")
+                        .foregroundStyle(store.isPTTChat ? Color.green : Color.secondary)
+                }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Picker("Disappearing Messages", selection: Binding(
                         get: { store.autoDelete },
@@ -170,13 +221,29 @@ struct ChatDetailScreen: View {
             }
             TextField("Message", text: $draft)
                 .textFieldStyle(.roundedBorder)
-            Button {
-                let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !text.isEmpty else { return }
-                store.sendService?.sendTextMessage(text)
-                draft = ""
-            } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.title2)
+            if draft.trimmingCharacters(in: .whitespaces).isEmpty {
+                // Hold to talk (walkie-talkie)
+                Image(systemName: store.isRecording ? "waveform.circle.fill" : "mic.fill")
+                    .font(.title2)
+                    .foregroundStyle(store.isRecording ? .red : .blue)
+                    .scaleEffect(store.isRecording ? 1.25 : 1)
+                    .animation(.spring(duration: 0.25), value: store.isRecording)
+                    .gesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                if !store.isRecording { Task { await store.startTalking() } }
+                            }
+                            .onEnded { _ in store.stopTalkingAndSend() }
+                    )
+            } else {
+                Button {
+                    let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !text.isEmpty else { return }
+                    store.sendService?.sendTextMessage(text)
+                    draft = ""
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill").font(.title2)
+                }
             }
         }
         .padding(8)

@@ -202,6 +202,8 @@
 		DDC1B0000000000000000016 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
 		DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
 		DDC1C0000000000000000092 /* LiveVoiceService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000F /* LiveVoiceService.swift */; };
+		DDC1C0000000000000000093 /* PTTStore.swift in Sources (ios) */ = {isa = PBXBuildFile; fileRef = P00PTT002D14000000000001 /* PTTStore.swift */; };
+		DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */ = {isa = PBXBuildFile; fileRef = P00PTT022D14000000000002 /* PTTService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1306,6 +1308,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1C0000000000000000093 /* PTTStore.swift in Sources (ios) */,
+				DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */,
 				DDC1B0000000000000000016 /* WatchBridge.swift in Sources */,
 				DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */,
 				DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */,

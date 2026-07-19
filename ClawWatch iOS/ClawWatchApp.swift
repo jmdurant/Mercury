@@ -12,6 +12,9 @@ struct ClawWatchApp: App {
 
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    // Auto-plays incoming voice notes in walkie-talkie chats
+    private let pttService = PTTService()
+
     init() {
         // Touch the singleton so the TDLib client is created at launch and
         // starts driving AppState.isAuthenticated
