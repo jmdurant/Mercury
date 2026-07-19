@@ -81,6 +81,7 @@ struct ChatListScreen: View {
 
     @State private var store = ChatListStore()
     @State private var showAgentSettings = false
+    @State private var showLiveVoice = false
 
     var body: some View {
         NavigationStack {
@@ -110,6 +111,13 @@ struct ChatListScreen: View {
             .listStyle(.plain)
             .navigationTitle("Chats")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        showLiveVoice = true
+                    } label: {
+                        Image(systemName: "waveform")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showAgentSettings = true
@@ -120,6 +128,9 @@ struct ChatListScreen: View {
             }
             .sheet(isPresented: $showAgentSettings) {
                 AgentSettingsScreen(isPresented: $showAgentSettings)
+            }
+            .sheet(isPresented: $showLiveVoice) {
+                LiveVoiceView(isPresented: $showLiveVoice)
             }
             .overlay {
                 if store.rows.isEmpty {

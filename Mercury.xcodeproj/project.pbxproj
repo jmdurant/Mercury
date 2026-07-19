@@ -195,6 +195,8 @@
 		DDC1F0000000000000000020 /* ClawWatch Share.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDC1F0000000000000000002 /* ClawWatch Share.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DDC1B000000000000000000C /* AgentSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000B /* AgentSettingsScreen.swift */; };
 		DDC1B000000000000000000E /* ContextPushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000D /* ContextPushService.swift */; };
+		DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000F /* LiveVoiceService.swift */; };
+		DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000011 /* LiveVoiceView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -406,6 +408,8 @@
 		DDC1F0000000000000000031 /* ClawWatch-Share.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ClawWatch-Share.entitlements"; sourceTree = "<group>"; };
 		DDC1B000000000000000000B /* AgentSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSettingsScreen.swift; sourceTree = "<group>"; };
 		DDC1B000000000000000000D /* ContextPushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextPushService.swift; sourceTree = "<group>"; };
+		DDC1B000000000000000000F /* LiveVoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceService.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000011 /* LiveVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -884,6 +888,8 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B000000000000000000F /* LiveVoiceService.swift */,
+				DDC1B0000000000000000011 /* LiveVoiceView.swift */,
 				DDC1B000000000000000000D /* ContextPushService.swift */,
 				DDC1B000000000000000000B /* AgentSettingsScreen.swift */,
 				DDC1B0000000000000000007 /* CallActivityAttributes.swift */,
@@ -1288,6 +1294,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */,
+				DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */,
 				DDC1B000000000000000000E /* ContextPushService.swift in Sources */,
 				DDC1B000000000000000000C /* AgentSettingsScreen.swift in Sources */,
 				DDC1B0000000000000000008 /* CallActivityAttributes.swift in Sources */,
