@@ -1,0 +1,35 @@
+# ClawWatch — cloudflared tunnel config (example)
+#
+# Exposes the OpenClaw gateway and the live-voice server at public wss://
+# hostnames so a standalone Apple Watch (which cannot join a Tailscale
+# tailnet) can reach them from anywhere over a normal outbound connection.
+#
+# Runs on the same box as OpenClaw — Windows, Linux, or macOS.
+#
+# One-time setup:
+#   1. Install cloudflared and log in:      cloudflared tunnel login
+#   2. Create a named tunnel:               cloudflared tunnel create clawwatch
+#   3. Copy this file to ~/.cloudflared/config.yml and fill in the UUID below
+#   4. Route DNS (needs a domain on Cloudflare):
+#        cloudflared tunnel route dns clawwatch gateway.example.com
+#        cloudflared tunnel route dns clawwatch voice.example.com
+#   5. Run it:                              cloudflared tunnel run clawwatch
+#   6. Cloudflare dashboard -> Network -> enable WebSockets (required)
+#
+# The gateway keeps binding 127.0.0.1 — cloudflared runs locally and reaches
+# it over loopback, so you never expose a port or bind 0.0.0.0.
+
+tunnel: <TUNNEL-UUID>
+credentials-file: /path/to/<TUNNEL-UUID>.json
+
+ingress:
+  # OpenClaw gateway — the node (structured-tools) channel
+  - hostname: gateway.example.com
+    service: http://localhost:18789
+
+  # Live-voice server (STT -> agent -> TTS)
+  - hostname: voice.example.com
+    service: http://localhost:8790
+
+  # Everything else is rejected
+  - service: http_status:404

@@ -1,244 +1,250 @@
-# Mercury Messaging
-<img width="2458" alt="Git Banner" src="https://github.com/user-attachments/assets/ce069091-71ee-4471-b2a3-4e1267d651e8">
-<br></br>
+# ClawWatch
 
+**A Telegram client for Apple Watch and iPhone, built as an agent-native surface.**
 
-Mercury is an open-source Telegram client designed specifically for the Apple Watch. It delivers a native and standalone experience, allowing you to send and receive Telegram messages directly from your wrist without relying on your iPhone. 
-More info available [here](https://alessandro-alberti.notion.site/mercury).
+ClawWatch is a fork of [Mercury](https://github.com/mercurytelegram/Mercury) — the open-source standalone Telegram client for Apple Watch — extended into a two-app, agent-connected system. It keeps everything Mercury does on the wrist, adds a native iPhone app that shares the same engine, and turns the whole thing into a device your AI agent can *talk to and act through* — over Telegram, as a structured OpenClaw node, and by live voice.
 
-<div style="display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 32px;">
-  <a href="https://apps.apple.com/it/app/mercury-messaging/id6498714256" style="text-decoration: none;">
-    <img 
-      src="https://github.com/user-attachments/assets/466c2d9e-fa05-4197-b3bc-9378dbe6b3fa" 
-      alt="Download on the App Store" 
-      width="180"
-    >
-  </a>
-  <a href="https://testflight.apple.com/join/dCndzeB1" style="text-decoration: none;">
-    <img 
-      src="https://github.com/user-attachments/assets/86f3a622-ed56-485e-8572-b046c56d64bf" 
-      alt="Download on TestFlight" 
-      width="180"
-    >
-  </a>
-</div>
+> This is a personal fork under DoctorDuRant LLC. For the original standalone watch client, see the [upstream Mercury project](https://github.com/mercurytelegram/Mercury). Credits to the original authors are at the bottom.
 
+---
 
-## Main Features
+## What's in this fork
 
-### **Privacy-Focused and Open-Source**
-Mercury’s code is fully open-source, so anyone can verify it handles user data responsibly and transparently.
+- **Two native apps that share one engine.** The watchOS app and a new iPhone app (`ClawWatch iOS`) are built on the same TDLib service core — messaging, health/status, the agent logic — with per-platform UI on top.
+- **A companion + standalone watch.** The watch app installs on its own *and* pairs with the phone, so it can relay through the phone when nearby and run independently otherwise.
+- **An AI agent channel with three doors:** Telegram `#`-commands (works anywhere), a structured **OpenClaw node** (the agent's direct JSON API into the device), and a **live voice** channel.
+- **Remote access without a VPN** via Cloudflare Tunnel — so the standalone watch can reach a private gateway from anywhere.
+- A trust layer (per-category consent, a command token, rate limiting, an audit log) over all of it.
 
-### **True Standalone Experience**
-Enjoy Telegram on your Apple Watch without needing an iPhone. Mercury works independently, so you stay connected wherever you are.
+---
 
-### **Modern Design, Cutting-Edge Technology**
-Built with the latest Apple technologies and APIs, including Liquid Glass on watchOS 26, Mercury delivers a sleek, intuitive design for a seamless user experience.
+## Architecture
 
-### **Messaging**
-- Send and receive text messages in real time
-- Voice notes with waveform visualization and OGG Opus conversion
-- Send and view photos with captions
-- Watch videos, GIFs, and video notes inline with native playback
-- Browse and send stickers (static WebP and animated Lottie)
-- Emoji reactions on any message
-- Reply to specific messages
-- Share messages, photos, videos, and locations to Messages, Mail, and more via the system share sheet
-- View message info (sender, date, forward origin, view/forward counts)
-- Delete messages (for yourself or for everyone)
-- Tappable URLs, Apple Music links, and phone numbers in messages
-- Addresses in messages open in Maps when tapped
+```
+                    ┌──────────────── your devices ────────────────┐
+                    │                                               │
+   Apple Watch  ────┤  shared TDLib service core (messaging,        │
+   (standalone +    │  health/status, agent logic, PTT, voice)      │
+    companion)      │                                               │
+                    │        per-platform UI on top                 │
+   iPhone       ────┤                                               │
+   (ClawWatch iOS)  └───────────────────────────────────────────────┘
+        │  │  │
+        │  │  └── Live voice ....... wss:// → voice server (STT → agent → TTS)
+        │  └───── OpenClaw node .... wss:// → OpenClaw gateway (structured tools)
+        └──────── Telegram ......... Telegram's servers (always-on floor)
 
-### **Secret Chats**
-- End-to-end encrypted messaging via Telegram's secret chat protocol
-- Start a secret chat from the compose menu (lock icon)
-- Green lock indicator on secret chat titles in the chat list and chat detail
-- Key exchange status banner during setup
-- All encryption handled by TDLib — messages never touch Telegram's servers
-- Note: Secret chats are device-specific (same as Telegram Desktop)
+              off-network: gateway + voice exposed via Cloudflare Tunnel
+```
 
-### **Location Sharing**
-- Send your current GPS location directly from the Watch
-- View received locations and venues on an interactive map
+**Three channels, by design.** Telegram is the reliable floor — text and `#`-commands, works anywhere with internet, no infrastructure. The OpenClaw node is the agent's direct, structured tool API. Live voice is the spoken channel. Nothing replaces Telegram; the others are upgrades that need a reachable gateway.
 
-### **Contacts and New Chats**
-- Start new conversations from a searchable contact list
-- Create private chats with any Telegram contact
+---
 
-### **Chat Management**
-- All chats, archived chats, and custom chat folders
-- Pin and mute chats with swipe actions
-- Read receipts and typing/recording indicators
-- Unread message badges with mention and reaction indicators
+## The apps
 
-### **Quick Replies and Smart Status**
-- Bolt icon in chat toolbar for instant canned responses (OK, On my way, Call me, BRB, etc.)
-- Smart status replies powered by 19 live watch data sources — tap any to send as a message:
-  - Workout status ("In a workout - Running 23min") — HealthKit
-  - Calendar status ("Busy until 3pm - Team Meeting") — EventKit
-  - Health stats ("Today: 8,432 steps | 340 cal | 72 bpm") — HealthKit
-  - Now Playing ("Listening to: Bohemian Rhapsody - Queen") — MediaPlayer
-  - Weather ("Weather: 72°F, Mostly Clear") — WeatherKit
-  - Location ("Currently in San Francisco, CA") — CoreLocation
-  - Sleep ("Slept 7h 23m last night") — HealthKit
-  - Activity Rings ("Move: 420/500 cal | Exercise: 22/30 min | Stand: 8/12 hr") — HealthKit
-  - Blood Oxygen ("Blood oxygen: 98%") — HealthKit
-  - Noise Level ("Ambient noise: 45 dB") — HealthKit
-  - Altitude ("Relative altitude: 1,200 ft") — CMAltimeter
-  - Wrist Temperature ("Wrist temp: 97.2°F") — HealthKit (Series 8+)
-  - VO2 Max ("VO2 Max: 42.5 mL/kg/min") — HealthKit
-  - Respiratory Rate ("Respiratory rate: 16 breaths/min") — HealthKit
-  - Walking Speed ("Walking speed: 3.2 mph") — HealthKit
-  - Distance ("Distance today: 4.2 mi") — HealthKit
-  - Focus Mode ("Focus mode is active") — Intents
-  - Reminders ("Reminder: Buy groceries") — EventKit
-  - Battery ("Watch battery: 45%") — WKInterfaceDevice
+### Apple Watch app — standalone + companion
 
-### **AI Assistant Auto-Responder**
-- Designed for use with [OpenClaw](https://github.com/openclaw/openclaw) and other AI agent frameworks on Telegram
-- Mark any chat as an AI Assistant with the brain icon toggle
-- Two query modes:
-  - **Natural language**: "What's your heart rate?" → Mercury auto-replies with matching data
-  - **Silent tags**: `#status`, `#heart`, `#location` → Mercury responds silently (no notification, no buzz)
-- Full status dumps led by a human-readable Focus profile summary, followed by the complete data payload
-- `#help` returns a list of all available tag commands
+The full Mercury watch client (messaging, secret chats, complications, Siri, notifications — see **Messaging** below) plus this fork's additions: the agent channel, walkie-talkie, disappearing messages, live voice, and a standalone OpenClaw node. It runs on its own on a cellular watch and, when paired, is the companion of the iPhone app.
 
-**Silent Tag Commands** (no notification — perfect for background AI polling):
-| Command | Data |
-|---------|------|
-| `#status` | Full status: Focus profile + all sensor data |
-| `#health` | Steps, calories, heart rate |
-| `#heart` / `#hr` | Heart rate |
-| `#steps` | Step count |
-| `#rings` | Activity ring progress with goals |
-| `#o2` | Blood oxygen (SpO2) |
-| `#sleep` | Sleep duration, bedtime, time until morning |
-| `#workout` | Activity type, start time, duration, calories |
-| `#calendar` / `#cal` | Availability, calendar gaps, next free slot |
-| `#location` / `#loc` | Reverse-geocoded city/state |
-| `#weather` | Temperature and conditions |
-| `#music` | Now playing song and artist |
-| `#battery` | Watch battery percentage |
-| `#focus` / `#dnd` | Focus mode status |
-| `#noise` | Ambient noise level (dB) |
-| `#temp` | Wrist temperature |
-| `#vo2` | VO2 Max |
-| `#speed` | Walking speed |
-| `#distance` | Distance walked/run today |
-| `#respiratory` | Respiratory rate |
-| `#reminder` | Next incomplete reminder |
-| `#altitude` | Relative altitude |
-| `#music [query]` | Look up a song and return Apple Music link |
-| `#play [query]` | Same as #music with song lookup |
-| `#help` | List all commands |
+### iPhone app — `ClawWatch iOS`
 
-Song recommendations with links: AI sends `#music Dave Matthews Band - Crush` → Mercury searches Apple Music catalog on-device via MusicKit → replies with tappable link that opens the Music app on Watch.
+A native iOS app on the same shared core. It embeds the watch app as its companion (so the two share a WatchConnectivity link) while the watch stays independently installable.
 
-### **Focus Mode Auto-Reply**
-- Automatic replies when Focus/Do Not Disturb is active
-- 5 built-in profiles with customizable messages and smart auto-detection:
-  - **Driving**: "I'm driving right now..." + destination/ETA from calendar + current location (auto-detected via CoreMotion)
-  - **Workout**: "I'm working out right now..." + activity type, start time, duration, calories (auto-detected via CoreMotion)
-  - **Work**: "I'm at work and can't chat..." + smart availability from calendar gaps ("Free at 2pm for 30 min before Design Review")
-  - **Sleep**: "I'm sleeping..." + bedtime + time until morning (auto-detected between 10pm-7am)
-  - **General**: "I'm currently unavailable..." + calendar + workout status
-- Each profile controls which context data to include (calendar, workout, health, location, battery)
-- Auto-detects the right profile: Driving > Workout > Sleep (by time) > manually selected
-- Only replies once per chat per Focus session to avoid spam
-- Configure in Settings → Focus Auto-Reply
+iOS-specific capabilities:
 
-### **Search**
-- Global search from the Home page — find chats by name and messages across all conversations
-- In-chat search — search messages within the current conversation
-- Results show sender, preview text, and date
+- **Push notifications** with inline quick-reply, mark-as-read, and open-link actions; APNs registered with Telegram.
+- **CallKit + PushKit VoIP** — native incoming-call UI mapped to TDLib call signaling.
+- **Live Activities & Dynamic Island** — a call activity; plus a home-screen unread widget.
+- **Notification Service** and **Share** extensions.
+- **Photo send** (system photo picker), **App Intents / Siri Shortcuts**, background refresh (`BGTaskScheduler`), HealthKit.
+- **Walkie-talkie**, **disappearing messages**, the **agent settings** screen, the **OpenClaw node**, and **live voice**.
 
-### **Siri and Shortcuts**
-- "Hey Siri, send a message on Mercury" — voice-driven messaging
-- "Hey Siri, check my Mercury messages" — check unread count hands-free
-- Siri Announce Messages — Siri reads incoming messages aloud via AirPods
-- Full Shortcuts app integration for custom automations
+---
 
-### **Watch Face Complications**
-- WidgetKit complications in circular, corner, rectangular, and inline families
-- Shows unread message count and last sender name
-- Smart Stack relevance — widget surfaces automatically when messages are waiting
-- Deep link to open the app directly from the complication
+## Messaging
 
-### **Notifications**
-- Reply to messages directly from notification banners
-- Mark as Read action without opening the app
-- Tap notification to jump straight to the conversation
-- Smart link detection with typed action buttons:
-  - **Call** — phone numbers detected in message
-  - **Open in Maps** — street addresses auto-converted to Maps links
-  - **Open in Music** — Apple Music links open the Music app
-  - **Open Link** — generic URLs open in Safari
-  - Up to 3 link actions per notification, dynamically labeled
-- APNs integration with Telegram’s push servers
-- Siri Announce Messages — reads incoming messages aloud via AirPods
+Real-time text; voice notes (waveform + OGG Opus); photos with captions (send on iPhone); inline video/GIF/video-note playback; stickers (WebP + Lottie); reactions; replies; system-share of messages/media/locations; message info; delete for self/everyone; tappable URLs, Apple Music links, phone numbers, and addresses (open in Maps).
 
-### **Double Tap Gesture**
-- On Apple Watch Series 9, Ultra 2, and later — double tap (pinch) to perform a configurable action in the current chat
-- 5 options configurable in Settings → Double Tap:
-  - 👍 Thumbs Up — react to last received message (default)
-  - ❤️ Heart — react with heart
-  - 🔥 Fire — react with fire
-  - Mark as Read — silently mark chat as read
-  - Open Quick Reply — open the quick reply + status sheet
+- **Disappearing messages** — per-chat auto-delete timer (Off / 1 Day / 1 Week / 1 Month), on both watch and iPhone.
+- **Walkie-talkie (push-to-talk)** — hold to record a voice note, release to send; designated chats auto-play incoming voice notes. On the watch, **Lift to Speak** uses the wrist gesture (raise to record, lower to send) and holds the connection with an extended runtime session.
+- **Secret chats** (end-to-end encrypted), **location sharing**, **contacts / new chats**, **chat folders**, pin/mute, read receipts, unread badges, **global + in-chat search**.
+- **Siri & Shortcuts**, **watch-face complications**, **notifications** with smart link actions, **double-tap** gesture, account/session management, block/report, background sync, haptics.
 
-### **Account Settings**
-- Edit your name and bio from the Watch
-- View and manage active Telegram sessions (devices)
-- Terminate sessions with a swipe
+---
 
-### **Profile and Moderation**
-- View user profiles with avatar, username, and phone number
-- Block and unblock users
-- Report messages in group chats
+## The AI agent channel
 
-### **Background Sync**
-- Background App Refresh keeps unread counts synced every 15 minutes
-- Messages are ready the instant you launch the app
+Designed for use with [OpenClaw](https://github.com/openclaw/openclaw) (or any agent framework on Telegram). Mark any chat as an assistant chat (brain icon); the agent then reaches the device three ways.
 
-### **Haptic Feedback**
-- Distinct haptic patterns for new messages, mentions, reactions, and sent confirmations
+### 1. Telegram `#`-commands — the floor
 
-### **Security**
-- TDLib database encrypted at rest with Keychain-stored key
-- NSFileProtection on sensitive directories
-- Keychain-based credential storage
-- Voice recordings cleaned up immediately after sending
-- Release builds suppress sensitive logging
-- Dependencies pinned to specific commit hashes for supply chain security
-- Privacy manifest (PrivacyInfo.xcprivacy) included
+Works anywhere with internet, no gateway needed. Natural-language queries ("what's your heart rate?") also work. Silent `#`-commands suppress the notification and reply in place.
 
-## How to Build  
+**Read / status:** `#status` `#json` `#capabilities` `#session` `#health` `#heart` `#steps` `#rings` `#o2` `#sleep` `#workout` `#calendar` `#weather` `#music` `#battery` `#focus` `#noise` `#temp` `#vo2` `#speed` `#distance` `#respiratory` `#reminder` `#altitude`
 
-If you want to build the project yourself, you'll need to generate your own **Telegram API Hash** and **ID**. Follow these steps:  
+- `#json` — a parseable JSON status snapshot (instead of prose)
+- `#capabilities` — what this device can sense/do right now, plus the command list
+- `#session` — the device's stable session id
 
-1. **Generate Telegram API Credentials**  
-   - Visit [this page](https://core.telegram.org/api/obtaining_api_id) to obtain your **API Hash** and **API ID**.  
+**Act (actuators):** `#navigate <place>` · `#directions <place>` · `#play <song>` (opens Apple Music) · `#remind <text>` (iOS) · `#call <name>` · `#open <url>`
 
-2. **Modify the Secret Service File**  
-   - Navigate to [`SecretService-sample.swift`](https://github.com/mercurytelegram/Mercury/blob/main/Mercury%20Watch%20App/Utils/Services/SecretService-sample.swift).  
-   - Rename the `SecretService_Sample` enum to `SecretService`.  
+**Interrupt:** `#alert <text>` — a critical notification that bypasses silent/Focus · `#notify <text>` — time-sensitive
 
-3. **Add Your Credentials**  
-   - Insert the **API Hash** and **API ID** you obtained in Step 1 into the `static` properties of the `SecretService` enum.  
+`#help` lists everything.
 
-4. **Build and Run**  
-   - You're all set! Build and run the project in Xcode. 🚀
+### 2. OpenClaw node — the structured tool channel
 
-## Contributing
+The phone (and the watch) register as first-class **OpenClaw nodes**, so the agent queries the device directly as JSON — no chat round-trip. Implemented to OpenClaw's real node protocol: a persistent Curve25519/Ed25519 device identity, a v3-signed connect over the gateway WebSocket, and `node.invoke` handling.
 
-Contributions are welcome! Feel free to submit issues or pull requests to make **Mercury for Telegram** even better.
+Node commands: `battery.get` `location.get` `health.snapshot` `device.info` `heart.get` `steps.get` `sleep.get` `workout.get` `calendar.get` `weather.get` `system.notify` — plus **watch-only sensors relayed from the phone over WatchConnectivity**: `watch.heart` `watch.temp` `watch.o2` `watch.rings` `watch.health`.
 
-Before opening a pull request, read the [contributor guidelines](CONTRIBUTING.md) to follow the project structure, naming, SwiftUI patterns, mocks, and TDLib conventions already used in the app.
+Configure the gateway URL + token in **Agent settings** on the phone; it syncs to the watch via iCloud. Pair the device once (`openclaw nodes approve`) — the identity travels, so it stays paired from any network.
 
-## Contact  
+### 3. Live voice
 
-Feel free to reach out to us on Telegram:  
-- **Alessandro Alberti**: [@AlessandroAlberti](https://t.me/AlessandroAlberti)  
-- **Marco Tammaro**: [@MarcoTammaro](https://t.me/MarcoTammaro)  
+Full-duplex spoken channel: the app streams mic audio up and plays agent audio back over a WebSocket. The app is a dumb audio pipe — **the server does STT and TTS** (see **Server setup**). Works on iPhone and (foreground-only) on the watch. Echo cancellation is on, so barge-in triggers on you, not the agent's own voice.
 
+### Trust & consent (applies to all of the above)
 
+- **Per-category consent** — grant the agent Health / Location / Calendar / Media / Actions independently.
+- **Command token** — an optional shared secret; commands must be sent as `#<token> <cmd>` or they're ignored.
+- **Rate limiting** and a reviewable **audit log** of every agent query.
+- **Interactive buttons** — inline keyboards on agent messages route taps back (callback / URL).
+- **Proactive context** (iOS) — pushes "Arrived at / Left <place>" to assistant chats on location visits.
+
+Configure it all in **Agent settings**.
+
+---
+
+## Server setup
+
+The server side runs wherever OpenClaw runs — **Windows, Linux, or macOS**. None of it is Mac-only.
+
+### OpenClaw gateway (the node channel)
+
+```bash
+npm install -g openclaw
+openclaw gateway          # WebSocket server on 127.0.0.1:18789
+```
+
+Minimal `~/.openclaw/openclaw.json` — set a token and allowlist ClawWatch's node commands:
+
+```json
+{
+  "gateway": {
+    "mode": "local",
+    "bind": "loopback",
+    "port": 18789,
+    "auth": { "mode": "token", "token": "<your-token>" },
+    "nodes": {
+      "allowCommands": [
+        "battery.get", "location.get", "health.snapshot", "device.info",
+        "heart.get", "steps.get", "sleep.get", "workout.get",
+        "calendar.get", "weather.get", "system.notify",
+        "watch.heart", "watch.temp", "watch.o2", "watch.rings", "watch.health"
+      ]
+    }
+  }
+}
+```
+
+You also need a model/LLM configured in OpenClaw for the agent to *use* the node. Pair the device with `openclaw nodes approve` on first connect.
+
+### Live-voice server
+
+A WebSocket server (default `:8790`) that turns audio into agent turns and back. Its contract — the fixed part the app already speaks:
+
+| | |
+|---|---|
+| Transport | WebSocket, binary frames |
+| Device → server | 16 kHz · mono · signed 16-bit LE PCM |
+| Server → device | 24 kHz · mono · signed 16-bit LE PCM |
+| Query params | `?token=<token>&device=<watch\|phone>` (the app appends these) |
+| Turn-taking | server owns barge-in (`CW_BARGE_IN=1`; the app does echo cancellation) |
+
+Inside it: Whisper (STT) → the OpenClaw agent → TTS (local MLX/Chatterbox for ~free, or a hosted voice). [openclaw-voice](https://github.com/Purple-Horizons/openclaw-voice) provides most of this. See [`docs/`](docs) if present, or the voice server's own README.
+
+---
+
+## Remote access with Cloudflare Tunnel
+
+On the LAN the apps hit the gateway's local IP. Off-network, the standalone watch **cannot** join a Tailscale tailnet — but it *can* make a normal outbound `wss://` connection to a public hostname. So expose the gateway and voice server through a Cloudflare Tunnel.
+
+### On the server
+
+Use [`deploy/cloudflared-config.example.yml`](deploy/cloudflared-config.example.yml):
+
+```bash
+cloudflared tunnel login
+cloudflared tunnel create clawwatch
+# copy the example config to ~/.cloudflared/config.yml, fill in the UUID + hostnames
+cloudflared tunnel route dns clawwatch gateway.example.com
+cloudflared tunnel route dns clawwatch voice.example.com
+cloudflared tunnel run clawwatch
+# Cloudflare dashboard → Network → enable WebSockets
+```
+
+`cloudflared` runs on the box and reaches the services over loopback, so nothing binds `0.0.0.0` and no ports are opened. TLS is terminated at Cloudflare's edge, giving you `wss://` for free.
+
+### In the app
+
+In **Agent settings** (phone; syncs to the watch via iCloud), point the URLs at the public hostnames:
+
+- Node gateway: `wss://gateway.example.com`
+- Voice base URL: `wss://voice.example.com`
+
+**No Cloudflare API keys are ever needed in the app** — it just connects to a URL. Two options for auth:
+
+- **Plain tunnel** — the app's own `?token=` (voice) and the gateway's token + device pairing (node) are the auth. Nothing Cloudflare-specific in the app.
+- **Cloudflare Access** (recommended for a public gateway) — generate a Zero Trust *service token* and enter its two values (`CF-Access-Client-Id` / `CF-Access-Client-Secret`) in Agent settings. The app adds them as headers to both the node and voice sockets; the edge rejects anything without them. Leave blank for the plain-tunnel path.
+
+Use a **named** tunnel (stable hostname) rather than a quick `trycloudflare.com` URL, since the app syncs the URL to the watch.
+
+---
+
+## Building the apps (Xcode / macOS)
+
+The apps build with Xcode on macOS. Targets: **ClawWatch iOS** (iPhone app, embeds the watch app) and **Mercury Watch App** (watchOS).
+
+### 1. Telegram API credentials
+
+Get an **API ID** and **API Hash** from [my.telegram.org](https://my.telegram.org) ([docs](https://core.telegram.org/api/obtaining_api_id)).
+
+Copy `Mercury Watch App/Utils/Services/SecretService-sample.swift` to `SecretService.swift` (it's gitignored), rename the enum to `SecretService`, and fill in your `apiId` / `apiHash`.
+
+### 2. Signing & identifiers
+
+Set your own team and bundle IDs. This fork uses (team `ADVQS8RXPZ`, DoctorDuRant LLC):
+
+| Target | Bundle ID |
+|---|---|
+| iPhone app | `com.doctordurant.clawwatch.ios` |
+| Watch app | `com.doctordurant.clawwatch.ios.watchkitapp` |
+| Widget | `com.doctordurant.clawwatch.ios.widget` |
+| Notification Service | `com.doctordurant.clawwatch.ios.notificationservice` |
+| Share extension | `com.doctordurant.clawwatch.ios.share` |
+
+Shared entitlements: App Group `group.com.doctordurant.clawwatch`, iCloud key-value store `<TEAM>.com.doctordurant.clawwatch.shared` (this is what syncs agent/voice config from phone to watch). Capabilities to enable per target: Push, HealthKit, Background Modes (audio/voip/fetch/remote-notification/location), App Groups, iCloud (key-value), Critical Alerts.
+
+### 3. Build & run
+
+Open `Mercury.xcodeproj`, select the **ClawWatch iOS** scheme (or **Mercury Watch App**), and build. First build resolves the Swift packages (TDLibKit and friends).
+
+---
+
+## Security
+
+- TDLib database encrypted at rest with a Keychain-stored key; file protection on sensitive directories.
+- Keychain-based credential storage (incl. the node's device identity key).
+- Voice recordings deleted immediately after sending; release builds suppress sensitive logging.
+- The agent channel is gated by consent, an optional token, rate limiting, and an audit log.
+- Dependencies pinned; privacy manifest included. `SecretService.swift` and `.mcp.json` are gitignored (real credentials stay local).
+
+---
+
+## Credits
+
+ClawWatch is a fork of **[Mercury](https://github.com/mercurytelegram/Mercury)** by **Alessandro Alberti** ([@AlessandroAlberti](https://t.me/AlessandroAlberti)) and **Marco Tammaro** ([@MarcoTammaro](https://t.me/MarcoTammaro)) — the original standalone Apple Watch Telegram client. This fork adds the iPhone app, the AI agent channel, live voice, and the OpenClaw/Cloudflare integration.
+
+Before opening a pull request, read the [contributor guidelines](CONTRIBUTING.md).
