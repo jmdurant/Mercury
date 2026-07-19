@@ -22,20 +22,55 @@ final class OpenClawNodeService: NSObject {
     var status: Status = .idle
     var lastEvent: String = ""
 
+    override init() {
+        super.init()
+        NSUbiquitousKeyValueStore.default.synchronize()
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(iCloudConfigChanged),
+            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: NSUbiquitousKeyValueStore.default)
+    }
+
+    /// Config arrived from another device (e.g. the phone set it). Mirror it
+    /// locally and, if enabled and idle, connect — turnkey watch setup.
+    @objc private func iCloudConfigChanged() {
+        Task { @MainActor in
+            if !self.gatewayURL.isEmpty, self.isAutoConnect, self.status == .idle {
+                self.lastEvent = "Config synced from iPhone"
+                self.start()
+            }
+        }
+    }
+
+    // Config is stored in the iCloud key-value store (shared across the
+    // user's devices via the ubiquity-kvstore entitlement) with a local
+    // UserDefaults mirror for immediacy. Set it once on the phone; the watch
+    // picks it up over iCloud — no typing on the watch.
+    private let kv = NSUbiquitousKeyValueStore.default
+
+    private func syncedString(_ key: String) -> String {
+        kv.string(forKey: key) ?? UserDefaults.standard.string(forKey: key) ?? ""
+    }
+    private func setSynced(_ key: String, _ value: String) {
+        kv.set(value, forKey: key); kv.synchronize()
+        UserDefaults.standard.set(value, forKey: key)
+    }
+
     /// gateway URL e.g. ws://127.0.0.1:18789 (or wss:// over Tailscale)
     var gatewayURL: String {
-        get { UserDefaults.standard.string(forKey: "ocGatewayURL") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "ocGatewayURL") }
+        get { syncedString("ocGatewayURL") }
+        set { setSynced("ocGatewayURL", newValue) }
     }
     /// bootstrap/connect token from the gateway config (auth.token)
     var token: String {
-        get { UserDefaults.standard.string(forKey: "ocGatewayToken") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "ocGatewayToken") }
+        get { syncedString("ocGatewayToken") }
+        set { setSynced("ocGatewayToken", newValue) }
     }
-    /// Reconnect the node automatically on launch once the user has enabled it.
+    /// Reconnect the node automatically once the user has enabled it (synced).
     var isAutoConnect: Bool {
-        get { UserDefaults.standard.bool(forKey: "ocAutoConnect") }
-        set { UserDefaults.standard.set(newValue, forKey: "ocAutoConnect") }
+        get { kv.object(forKey: "ocAutoConnect") as? Bool ?? UserDefaults.standard.bool(forKey: "ocAutoConnect") }
+        set { kv.set(newValue, forKey: "ocAutoConnect"); kv.synchronize()
+              UserDefaults.standard.set(newValue, forKey: "ocAutoConnect") }
     }
 
     private let clientId = "node-host"

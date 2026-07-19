@@ -114,7 +114,7 @@ struct SettingsPage: View {
             } header: {
                 Text("OpenClaw node")
             } footer: {
-                Text("Connect this watch to your gateway (set URL/token on iPhone). Foreground only.")
+                Text("Config syncs automatically from iPhone via iCloud. The watch connects while in the foreground.")
             }
 
             Section("Recent agent activity") {
