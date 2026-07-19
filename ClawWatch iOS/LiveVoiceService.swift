@@ -19,9 +19,18 @@ final class LiveVoiceService: NSObject {
     static let shared = LiveVoiceService()
 
     var state: State = .idle
+    /// Endpoint syncs from the phone to the watch via the shared iCloud KV
+    /// store (set it once on iPhone), with a local mirror for immediacy.
     var endpoint: String {
-        get { UserDefaults.standard.string(forKey: "liveVoiceEndpoint") ?? "" }
-        set { UserDefaults.standard.set(newValue, forKey: "liveVoiceEndpoint") }
+        get {
+            NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceEndpoint")
+                ?? UserDefaults.standard.string(forKey: "liveVoiceEndpoint") ?? ""
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "liveVoiceEndpoint")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(newValue, forKey: "liveVoiceEndpoint")
+        }
     }
 
     private let engine = AVAudioEngine()
@@ -72,8 +81,14 @@ final class LiveVoiceService: NSObject {
 
     private func configureSession() {
         let session = AVAudioSession.sharedInstance()
+        #if os(watchOS)
+        // watchOS routes to the watch speaker / paired BT automatically;
+        // the iOS-only routing options aren't available here.
+        try? session.setCategory(.playAndRecord, mode: .voiceChat)
+        #else
         try? session.setCategory(.playAndRecord, mode: .voiceChat,
                                  options: [.defaultToSpeaker, .allowBluetooth])
+        #endif
         try? session.setActive(true)
     }
 

@@ -117,6 +117,20 @@ struct SettingsPage: View {
                 Text("Config syncs automatically from iPhone via iCloud. The watch connects while in the foreground.")
             }
 
+            Section {
+                let voice = LiveVoiceService.shared
+                Text("Voice: \(voice.state.rawValue)").font(.caption)
+                Button(voice.state == .live || voice.state == .connecting ? "End" : "Talk to Agent") {
+                    if voice.state == .live || voice.state == .connecting { voice.stop() }
+                    else { voice.start() }
+                }
+                .font(.caption)
+            } header: {
+                Text("Live voice")
+            } footer: {
+                Text("Streams to your agent's voice endpoint (set on iPhone, synced via iCloud). Foreground only.")
+            }
+
             Section("Recent agent activity") {
                 let log = AutoResponderStore.auditLog()
                 if log.isEmpty {
