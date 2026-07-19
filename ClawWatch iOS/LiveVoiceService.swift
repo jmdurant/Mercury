@@ -43,10 +43,40 @@ final class LiveVoiceService: NSObject {
     private let playbackFormat = AVAudioFormat(
         commonFormat: .pcmFormatInt16, sampleRate: 24000, channels: 1, interleaved: true)!
 
+    /// Auth token for the voice server, synced from the phone via iCloud KV.
+    var voiceToken: String {
+        get {
+            NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceToken")
+                ?? UserDefaults.standard.string(forKey: "liveVoiceToken") ?? ""
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "liveVoiceToken")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(newValue, forKey: "liveVoiceToken")
+        }
+    }
+
+    #if os(watchOS)
+    private let deviceParam = "watch"
+    #else
+    private let deviceParam = "phone"
+    #endif
+
+    /// Appends ?token=…&device=… to the configured base endpoint.
+    private func connectURL() -> URL? {
+        guard var comps = URLComponents(string: endpoint),
+              comps.scheme?.hasPrefix("ws") == true else { return nil }
+        var items = comps.queryItems ?? []
+        if !voiceToken.isEmpty { items.append(URLQueryItem(name: "token", value: voiceToken)) }
+        items.append(URLQueryItem(name: "device", value: deviceParam))
+        comps.queryItems = items
+        return comps.url
+    }
+
     // MARK: - Lifecycle
 
     func start() {
-        guard state == .idle, let url = URL(string: endpoint), url.scheme?.hasPrefix("ws") == true else {
+        guard state == .idle, let url = connectURL() else {
             state = .error
             return
         }
@@ -93,10 +123,16 @@ final class LiveVoiceService: NSObject {
     }
 
     private func startCapture() throws {
+        let input = engine.inputNode
+        // Echo cancellation (+ noise suppression / AGC): keeps the agent's
+        // own voice out of the mic so barge-in triggers on the user, not the
+        // speaker. Must be set before the engine starts. Full-duplex — no
+        // need for the server's CW_BARGE_IN=0 half-duplex fallback.
+        try? input.setVoiceProcessingEnabled(true)
+
         engine.attach(playerNode)
         engine.connect(playerNode, to: engine.mainMixerNode, format: playbackFormat)
 
-        let input = engine.inputNode
         let inputFormat = input.outputFormat(forBus: 0)
         input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
             self?.sendCaptured(buffer)

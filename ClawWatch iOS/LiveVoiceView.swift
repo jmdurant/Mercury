@@ -12,6 +12,7 @@ struct LiveVoiceView: View {
     @Binding var isPresented: Bool
     @State private var voice = LiveVoiceService.shared
     @State private var endpoint = LiveVoiceService.shared.endpoint
+    @State private var token = LiveVoiceService.shared.voiceToken
 
     var body: some View {
         NavigationStack {
@@ -35,12 +36,17 @@ struct LiveVoiceView: View {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Realtime endpoint").font(.caption).foregroundStyle(.secondary)
-                    TextField("wss://your-agent-gateway", text: $endpoint)
+                    TextField("ws://box-lan-ip:8790", text: $endpoint)
                         .textFieldStyle(.roundedBorder)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .onChange(of: endpoint) { _, new in voice.endpoint = new }
-                    Text("Point at a LiveKit/Gemini-Live gateway that speaks 16 kHz PCM up, 24 kHz PCM down.")
+                    TextField("token", text: $token)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .onChange(of: token) { _, new in voice.voiceToken = new }
+                    Text("Base URL only — the app adds ?token=…&device=…. Endpoint and token sync to the watch via iCloud.")
                         .font(.caption2).foregroundStyle(.tertiary)
                 }
                 Spacer()
