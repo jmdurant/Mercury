@@ -8,13 +8,31 @@
 import Foundation
 #if os(watchOS)
 import WatchKit
+#else
+import BackgroundTasks
 #endif
 import WidgetKit
 
 enum BackgroundSyncService {
 
     private static let logger = LoggerService(BackgroundSyncService.self)
-    private static let taskIdentifier = "mercury.sync"
+    static let taskIdentifier = "mercury.sync"
+
+    #if os(iOS)
+    /// Register the BGTask handler. Call once from didFinishLaunching, and
+    /// list `mercury.sync` under BGTaskSchedulerPermittedIdentifiers in Info.plist.
+    static func registerBackgroundTask() {
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: taskIdentifier, using: nil
+        ) { task in
+            let refresh = task as? BGAppRefreshTask
+            Task {
+                await performSync()
+                refresh?.setTaskCompleted(success: true)
+            }
+        }
+    }
+    #endif
 
     static func scheduleNextRefresh() {
         #if os(watchOS)
@@ -27,7 +45,13 @@ enum BackgroundSyncService {
             }
         }
         #else
-        // iOS uses BGTaskScheduler; not wired up for the phone app yet
+        let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
+        do {
+            try BGTaskScheduler.shared.submit(request)
+        } catch {
+            logger.log("BGTask scheduling failed: \(error)", level: .error)
+        }
         #endif
     }
 

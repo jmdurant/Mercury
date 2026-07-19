@@ -84,23 +84,27 @@ struct ChatListScreen: View {
     var body: some View {
         NavigationStack {
             List(store.rows) { row in
-                HStack(spacing: 12) {
-                    initialsCircle(row.title)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(row.title).font(.headline).lineLimit(1)
-                        Text(row.subtitle).font(.subheadline)
-                            .foregroundStyle(.secondary).lineLimit(1)
+                NavigationLink {
+                    ChatDetailScreen(chatId: row.id, title: row.title)
+                } label: {
+                    HStack(spacing: 12) {
+                        initialsCircle(row.title)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(row.title).font(.headline).lineLimit(1)
+                            Text(row.subtitle).font(.subheadline)
+                                .foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        Spacer()
+                        if row.unread > 0 {
+                            Text("\(row.unread)")
+                                .font(.caption2.bold())
+                                .padding(6)
+                                .background(.blue, in: Circle())
+                                .foregroundStyle(.white)
+                        }
                     }
-                    Spacer()
-                    if row.unread > 0 {
-                        Text("\(row.unread)")
-                            .font(.caption2.bold())
-                            .padding(6)
-                            .background(.blue, in: Circle())
-                            .foregroundStyle(.white)
-                    }
+                    .padding(.vertical, 2)
                 }
-                .padding(.vertical, 2)
             }
             .listStyle(.plain)
             .navigationTitle("Chats")

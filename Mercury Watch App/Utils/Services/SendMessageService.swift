@@ -149,6 +149,39 @@ class SendMessageService {
     }
     #endif
     
+    func sendPhoto(fileURL: URL, caption: String = "") {
+        let photo: InputMessagePhoto = .init(
+            addedStickerFileIds: [],
+            caption: caption.isEmpty ? nil : FormattedText(entities: [], text: caption),
+            hasSpoiler: false,
+            height: 0,
+            photo: .inputFileLocal(.init(path: fileURL.path)),
+            selfDestructType: nil,
+            showCaptionAboveMedia: false,
+            thumbnail: nil,
+            width: 0
+        )
+        let messageContent: InputMessageContent = .inputMessagePhoto(photo)
+
+        Task.detached {
+            do {
+                let result = try await TDLibManager.shared.client?.sendMessage(
+                    chatId: self.chat?.id,
+                    inputMessageContent: messageContent,
+                    options: nil,
+                    replyMarkup: nil,
+                    replyTo: nil,
+                    topicId: nil
+                )
+                self.logger.log(result)
+                // Clean up the temp copy the picker wrote
+                try? FileManager.default.removeItem(at: fileURL)
+            } catch {
+                self.logger.log(error, level: .error)
+            }
+        }
+    }
+
     func sendLocation(latitude: Double, longitude: Double) {
         let location = InputMessageLocation(
             heading: 0,
