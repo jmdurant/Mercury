@@ -13,6 +13,9 @@ struct AgentSettingsScreen: View {
     @Binding var isPresented: Bool
     @State private var token: String = AutoResponderStore.token ?? ""
     @State private var log: [String] = AutoResponderStore.auditLog()
+    @State private var node = OpenClawNodeService.shared
+    @State private var nodeURL: String = OpenClawNodeService.shared.gatewayURL
+    @State private var nodeToken: String = OpenClawNodeService.shared.token
 
     var body: some View {
         NavigationStack {
@@ -56,6 +59,28 @@ struct AgentSettingsScreen: View {
                     Text("Proactive context")
                 } footer: {
                     Text("Sends a note to assistant chats when you arrive at or leave a place, so the agent has context without polling.")
+                }
+
+                Section {
+                    LabeledContent("Status", value: node.status.rawValue)
+                    if !node.lastEvent.isEmpty {
+                        Text(node.lastEvent).font(.caption).foregroundStyle(.secondary)
+                    }
+                    TextField("ws://127.0.0.1:18789", text: $nodeURL)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .onChange(of: nodeURL) { _, v in node.gatewayURL = v }
+                    TextField("Gateway token", text: $nodeToken)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .onChange(of: nodeToken) { _, v in node.token = v }
+                    Button(node.status == .connected || node.status == .connecting || node.status == .pending
+                           ? "Disconnect Node" : "Connect as Node") {
+                        if node.status == .idle || node.status == .error { node.start() }
+                        else { node.stop() }
+                    }
+                } header: {
+                    Text("OpenClaw node")
+                } footer: {
+                    Text("Registers this phone as an OpenClaw node so the agent can query location, health, and battery directly. First connect needs approval on the gateway (openclaw nodes approve).")
                 }
 
                 Section("Recent agent activity") {

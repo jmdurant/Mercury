@@ -197,6 +197,7 @@
 		DDC1B000000000000000000E /* ContextPushService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000D /* ContextPushService.swift */; };
 		DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000F /* LiveVoiceService.swift */; };
 		DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000011 /* LiveVoiceView.swift */; };
+		DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -410,6 +411,7 @@
 		DDC1B000000000000000000D /* ContextPushService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContextPushService.swift; sourceTree = "<group>"; };
 		DDC1B000000000000000000F /* LiveVoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceService.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000011 /* LiveVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceView.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000013 /* OpenClawNodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawNodeService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -888,6 +890,7 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B0000000000000000013 /* OpenClawNodeService.swift */,
 				DDC1B000000000000000000F /* LiveVoiceService.swift */,
 				DDC1B0000000000000000011 /* LiveVoiceView.swift */,
 				DDC1B000000000000000000D /* ContextPushService.swift */,
@@ -1294,6 +1297,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */,
 				DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */,
 				DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */,
 				DDC1B000000000000000000E /* ContextPushService.swift in Sources */,

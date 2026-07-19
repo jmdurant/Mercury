@@ -37,6 +37,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Proactive location-context push to the agent
         ContextPushService.shared.start()
 
+        // Reconnect as an OpenClaw node if the user enabled it
+        if OpenClawNodeService.shared.isAutoConnect {
+            OpenClawNodeService.shared.start()
+        }
+
         return true
     }
 
