@@ -31,6 +31,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         BackgroundSyncService.registerBackgroundTask()
         BackgroundSyncService.scheduleNextRefresh()
 
+        // CallKit + VoIP push
+        CallService.shared.start()
+
         return true
     }
 
