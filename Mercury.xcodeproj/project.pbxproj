@@ -198,6 +198,7 @@
 		DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000F /* LiveVoiceService.swift */; };
 		DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000011 /* LiveVoiceView.swift */; };
 		DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
+		DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1182,6 +1183,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */,
 				9B0B6CBC2CD679A600BB6A94 /* StepView.swift in Sources */,
 				A080D8E22CDC0B1800920564 /* VoiceNoteView.swift in Sources */,
 				A04ABE5A2CE015F800641BC1 /* VoiceNoteRecordSubpage.swift in Sources */,

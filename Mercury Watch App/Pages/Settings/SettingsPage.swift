@@ -101,6 +101,22 @@ struct SettingsPage: View {
                 Text("Controls which data/actions designated assistant chats can request")
             }
 
+            Section {
+                let node = OpenClawNodeService.shared
+                Text("Node: \(node.status.rawValue)").font(.caption)
+                if !node.lastEvent.isEmpty {
+                    Text(node.lastEvent).font(.caption2).foregroundStyle(.secondary)
+                }
+                Button(node.status == .connected || node.status == .connecting ? "Disconnect" : "Connect Node") {
+                    if node.status == .idle || node.status == .error { node.start() } else { node.stop() }
+                }
+                .font(.caption)
+            } header: {
+                Text("OpenClaw node")
+            } footer: {
+                Text("Connect this watch to your gateway (set URL/token on iPhone). Foreground only.")
+            }
+
             Section("Recent agent activity") {
                 let log = AutoResponderStore.auditLog()
                 if log.isEmpty {

@@ -40,11 +40,25 @@ final class OpenClawNodeService: NSObject {
 
     private let clientId = "node-host"
     private let protocolVersion = 4
-    private let commands = ["health.snapshot", "location.get", "battery.get", "device.info"]
+    private let commands = [
+        "health.snapshot", "location.get", "battery.get", "device.info",
+        "heart.get", "steps.get", "sleep.get", "workout.get",
+        "calendar.get", "weather.get", "system.notify",
+    ]
 
     private var socket: URLSessionWebSocketTask?
     private let logger = LoggerService(OpenClawNodeService.self)
     private let locationManager = CLLocationManager()
+
+    #if os(watchOS)
+    private let platformName = "watchos"
+    private let deviceFamilyName = "watch"
+    private let displayName = "ClawWatch Watch"
+    #else
+    private let platformName = "ios"
+    private let deviceFamilyName = "phone"
+    private let displayName = "ClawWatch iPhone"
+    #endif
 
     // MARK: - Persistent device identity (Ed25519)
 
@@ -76,7 +90,7 @@ final class OpenClawNodeService: NSObject {
     private func v3Payload(deviceId: String, signedAtMs: Int64, nonce: String) -> String {
         [
             "v3", deviceId, clientId, "node", "node", "",
-            String(signedAtMs), token, nonce, "ios", "phone",
+            String(signedAtMs), token, nonce, platformName, deviceFamilyName,
         ].joined(separator: "|")
     }
 
@@ -160,10 +174,10 @@ final class OpenClawNodeService: NSObject {
             "maxProtocol": protocolVersion,
             "client": [
                 "id": clientId,
-                "displayName": "ClawWatch iPhone",
+                "displayName": displayName,
                 "version": "1.0.0",
-                "platform": "ios",
-                "deviceFamily": "phone",
+                "platform": platformName,
+                "deviceFamily": deviceFamilyName,
                 "mode": "node",
                 "instanceId": identity.deviceId,
             ],
@@ -188,8 +202,14 @@ final class OpenClawNodeService: NSObject {
               let nodeId = payload["nodeId"] as? String,
               let command = payload["command"] as? String else { return }
         lastEvent = "Agent asked: \(command)"
+        var invokeParams: [String: Any] = [:]
+        if let paramsJSON = payload["paramsJSON"] as? String,
+           let data = paramsJSON.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            invokeParams = parsed
+        }
         Task {
-            let result = await runCommand(command)
+            let result = await runCommand(command, params: invokeParams)
             let params: [String: Any] = [
                 "id": id, "nodeId": nodeId, "ok": true,
                 "payloadJSON": String(decoding: (try? JSONSerialization.data(withJSONObject: result)) ?? Data("{}".utf8), as: UTF8.self),
@@ -198,23 +218,57 @@ final class OpenClawNodeService: NSObject {
         }
     }
 
-    private func runCommand(_ command: String) async -> [String: Any] {
+    private func runCommand(_ command: String, params: [String: Any]) async -> [String: Any] {
+        // Consent gate: node commands honour the same per-category consent as
+        // the Telegram #-command channel.
+        if let consent = consentCategory(for: command), !AutoResponderStore.isConsented(consent) {
+            return ["error": "\(consent.label) access is disabled"]
+        }
         switch command {
         case "battery.get":
-            return ["battery_percent": StatusDataService.buildBatteryStatus() ?? "unknown"]
+            return ["battery": StatusDataService.buildBatteryStatus() ?? "unknown"]
         case "location.get":
             if let loc = locationManager.location {
                 return ["lat": loc.coordinate.latitude, "lon": loc.coordinate.longitude]
             }
             return ["error": "location unavailable"]
         case "health.snapshot":
-            let json = await StatusDataService.buildJSONStatus()
-            return ["json": json]
+            return ["json": await StatusDataService.buildJSONStatus()]
+        case "heart.get":
+            if let hr = await StatusDataService.getCurrentHeartRate() { return ["bpm": hr] }
+            return ["error": "no recent heart rate"]
+        case "steps.get":
+            if let s = await StatusDataService.getTodaySteps() { return ["steps": s] }
+            return ["error": "no step data"]
+        case "sleep.get":
+            return ["summary": await StatusDataService.buildSleepStatus() ?? "no sleep data"]
+        case "workout.get":
+            return ["summary": await StatusDataService.buildWorkoutStatus() ?? "no active workout"]
+        case "calendar.get":
+            if let avail = await StatusDataService.buildWorkAvailabilityStatus() {
+                return ["summary": avail]
+            }
+            return ["summary": await StatusDataService.buildCalendarStatus() ?? "no events"]
+        case "weather.get":
+            return ["summary": await StatusDataService.buildWeatherStatus() ?? "weather unavailable"]
+        case "system.notify":
+            let text = params["text"] as? String ?? "Notification from your agent"
+            AgentAlertService.raise(text, critical: params["critical"] as? Bool ?? false)
+            return ["ok": true]
         case "device.info":
-            return ["platform": "ios", "app": "ClawWatch", "session": AutoResponderStore.sessionId]
+            return ["platform": platformName, "app": "ClawWatch", "session": AutoResponderStore.sessionId]
         default:
             return ["error": "unsupported command \(command)"]
         }
+    }
+
+    private func consentCategory(for command: String) -> AutoResponderStore.Consent? {
+        if command.hasPrefix("health") || command.hasPrefix("heart")
+            || command.hasPrefix("steps") || command.hasPrefix("sleep")
+            || command.hasPrefix("workout") { return .health }
+        if command.hasPrefix("location") { return .location }
+        if command.hasPrefix("calendar") { return .calendar }
+        return nil
     }
 
     // MARK: - Send

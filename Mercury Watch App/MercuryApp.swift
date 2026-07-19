@@ -34,8 +34,12 @@ struct MercuryApp: App {
         .onChange(of: isLuminanceReduced) {
             if isLuminanceReduced {
                 LoginViewModel.setOfflineStatus()
+                OpenClawNodeService.shared.stop()   // node is foreground-only
             } else {
                 LoginViewModel.setOnlineStatus()
+                if OpenClawNodeService.shared.isAutoConnect {
+                    OpenClawNodeService.shared.start()
+                }
             }
         }
         .backgroundTask(.appRefresh("mercury.sync")) {
