@@ -7,7 +7,11 @@
 
 import Foundation
 import TDLibKit
+#if os(watchOS)
 import WatchKit
+#else
+import UIKit
+#endif
 
 final class TDLibManager {
     
@@ -136,9 +140,15 @@ final class TDLibManager {
                 }
 
                 let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+                #if os(watchOS)
                 let device = WKInterfaceDevice.current()
                 let deviceModel = device.name
                 let systemVersion = "\(device.systemName) \(device.systemVersion)"
+                #else
+                let device = UIDevice.current
+                let deviceModel = device.name
+                let systemVersion = "\(device.systemName) \(device.systemVersion)"
+                #endif
 
                 let result = try await self.client?.setTdlibParameters(
                     apiHash: SecretService.apiHash,

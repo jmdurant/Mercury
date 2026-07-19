@@ -13,7 +13,11 @@ import MusicKit
 import WeatherKit
 import CoreLocation
 import CoreMotion
+#if os(watchOS)
 import WatchKit
+#else
+import UIKit
+#endif
 import Intents
 
 enum StatusDataService {
@@ -312,12 +316,21 @@ enum StatusDataService {
     }
 
     static func buildBatteryStatus() -> String? {
+        #if os(watchOS)
         let device = WKInterfaceDevice.current()
         device.isBatteryMonitoringEnabled = true
         let level = device.batteryLevel
         guard level >= 0 else { return nil }
         let percent = Int(level * 100)
         return "Watch battery: \(percent)%"
+        #else
+        let device = UIDevice.current
+        device.isBatteryMonitoringEnabled = true
+        let level = device.batteryLevel
+        guard level >= 0 else { return nil }
+        let percent = Int(level * 100)
+        return "Battery: \(percent)%"
+        #endif
     }
 
     static func buildHealthStatus() async -> String? {

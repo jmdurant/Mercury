@@ -140,14 +140,24 @@ class AutoResponderService: TDLibManagerProtocol {
             } else if text == "#weather" {
                 response = await StatusDataService.buildWeatherStatus()
             } else if text == "#calendar" || text == "#cal" {
-                response = await StatusDataService.buildWorkAvailabilityStatus()
-                    ?? (await StatusDataService.buildCalendarStatus())
+                // `??` autoclosures cannot await; fall back explicitly
+                if let availability = await StatusDataService.buildWorkAvailabilityStatus() {
+                    response = availability
+                } else {
+                    response = await StatusDataService.buildCalendarStatus()
+                }
             } else if text == "#workout" {
-                response = await StatusDataService.buildWorkoutContextStatus()
-                    ?? (await StatusDataService.buildWorkoutStatus())
+                if let workoutContext = await StatusDataService.buildWorkoutContextStatus() {
+                    response = workoutContext
+                } else {
+                    response = await StatusDataService.buildWorkoutStatus()
+                }
             } else if text == "#sleep" {
-                response = await StatusDataService.buildSleepContextStatus()
-                    ?? (await StatusDataService.buildSleepStatus())
+                if let sleepContext = await StatusDataService.buildSleepContextStatus() {
+                    response = sleepContext
+                } else {
+                    response = await StatusDataService.buildSleepStatus()
+                }
             } else if text == "#heart" || text == "#hr" || text == "#heartrate" {
                 if let hr = await StatusDataService.getCurrentHeartRate() {
                     response = "Heart rate: \(hr) bpm"

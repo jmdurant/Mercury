@@ -124,6 +124,9 @@ class SendMessageService {
         }
     }
     
+    #if os(watchOS)
+    // StickerModel is a watch-only presentation type; the iOS app has no
+    // sticker picker yet
     func sendSticker(_ model: StickerModel) {
         guard let sticker = model.sticker else { return }
         Task.detached {
@@ -136,14 +139,15 @@ class SendMessageService {
                     replyTo: nil,
                     topicId: nil
                 )
-    
+
                 self.logger.log(result)
-    
+
             } catch {
                 self.logger.log(error, level: .error)
             }
         }
     }
+    #endif
     
     func sendLocation(latitude: Double, longitude: Double) {
         let location = InputMessageLocation(
@@ -264,27 +268,30 @@ class SendMessageService {
     }
 }
 
+#if os(watchOS)
+// Mock drives SwiftUI previews via watch-only presentation models
 class SendMessageServiceMock: SendMessageService {
     let onSendMessage: (MessageModel.MessageContent) -> Void
-    
+
     init(_ onSendMessage: @escaping (MessageModel.MessageContent) -> Void) {
         self.onSendMessage = onSendMessage
         super.init(chat: nil)
     }
-    
+
     override func sendTextMessage(_ text: String) {
         self.onSendMessage(.text(AttributedString(text)))
     }
-    
+
     override func sendVoiceNote(_ filePath: URL, _ duration: Int, didProcessAudio: @escaping () -> Void) {
         didProcessAudio()
         self.onSendMessage(.voiceNote(model: VoiceNoteModel(getPlayer: {
             return PlayerServiceMock()
         })))
     }
-    
+
     override func sendSticker(_ sticker: StickerModel) {
         self.onSendMessage(.stickerImage(model: .init(emoji: "😃", getImage: sticker.getImage)))
     }
     override func sendReaction(_ emoji: String, chatId: Int64, messageId: Int64) {}
 }
+#endif

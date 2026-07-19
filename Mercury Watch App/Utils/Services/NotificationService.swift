@@ -8,7 +8,11 @@
 import Foundation
 import UserNotifications
 import Intents
+#if os(watchOS)
 import WatchKit
+#else
+import UIKit
+#endif
 
 enum NotificationService {
 
@@ -109,7 +113,11 @@ enum NotificationService {
 
             if granted {
                 DispatchQueue.main.async {
+                    #if os(watchOS)
                     WKExtension.shared().registerForRemoteNotifications()
+                    #else
+                    UIApplication.shared.registerForRemoteNotifications()
+                    #endif
                 }
             }
         }

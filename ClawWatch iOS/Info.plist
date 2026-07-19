@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ClawWatch uses the microphone for voice messages.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ClawWatch can share your location in chats.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>ClawWatch can share health status as quick replies.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>ClawWatch can share your calendar status as a quick reply.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>ClawWatch can share your next reminder as a quick reply.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>

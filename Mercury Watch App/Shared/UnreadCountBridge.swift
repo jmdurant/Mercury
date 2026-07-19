@@ -46,7 +46,8 @@ class UnreadCountBridge: TDLibManagerProtocol {
             switch message.senderId {
             case .messageSenderUser(let user):
                 let u = try? await TDLibManager.shared.client?.getUser(userId: user.userId)
-                senderName = u?.fullName ?? "Someone"
+                // Inlined (User.fullName lives in the watch-only User+ extension)
+                senderName = u.map { "\($0.firstName) \($0.lastName)" } ?? "Someone"
             case .messageSenderChat(let chat):
                 let c = try? await TDLibManager.shared.client?.getChat(chatId: chat.chatId)
                 senderName = c?.title ?? "Chat"

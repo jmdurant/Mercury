@@ -5,47 +5,96 @@
 //  Created on 14/03/26.
 //
 
+#if os(watchOS)
 import WatchKit
+#else
+import UIKit
+#endif
 
 enum HapticService {
 
+    #if os(watchOS)
+    private static func play(_ type: WKHapticType) {
+        WKInterfaceDevice.current().play(type)
+    }
+    #else
+    private static func notify(_ type: UINotificationFeedbackGenerator.FeedbackType) {
+        UINotificationFeedbackGenerator().notificationOccurred(type)
+    }
+    private static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
+        UIImpactFeedbackGenerator(style: style).impactOccurred()
+    }
+    #endif
+
     /// New text message received
     static func messageReceived() {
-        WKInterfaceDevice.current().play(.notification)
+        #if os(watchOS)
+        play(.notification)
+        #else
+        notify(.success)
+        #endif
     }
 
     /// Mentioned in a group chat
     static func mentionReceived() {
-        WKInterfaceDevice.current().play(.directionUp)
+        #if os(watchOS)
+        play(.directionUp)
+        #else
+        notify(.warning)
+        #endif
     }
 
     /// Reaction on your message
     static func reactionReceived() {
-        WKInterfaceDevice.current().play(.success)
+        #if os(watchOS)
+        play(.success)
+        #else
+        impact(.light)
+        #endif
     }
 
     /// Message sent successfully
     static func messageSent() {
-        WKInterfaceDevice.current().play(.click)
+        #if os(watchOS)
+        play(.click)
+        #else
+        impact(.rigid)
+        #endif
     }
 
     /// Action failed
     static func actionFailed() {
-        WKInterfaceDevice.current().play(.failure)
+        #if os(watchOS)
+        play(.failure)
+        #else
+        notify(.error)
+        #endif
     }
 
     /// Message deleted
     static func messageDeleted() {
-        WKInterfaceDevice.current().play(.retry)
+        #if os(watchOS)
+        play(.retry)
+        #else
+        impact(.medium)
+        #endif
     }
 
     /// Incoming walkie-talkie voice note about to auto-play
     static func pttReceived() {
-        WKInterfaceDevice.current().play(.directionDown)
+        #if os(watchOS)
+        play(.directionDown)
+        #else
+        impact(.soft)
+        #endif
     }
 
     /// Walkie-talkie recording started
     static func pttTalkStarted() {
-        WKInterfaceDevice.current().play(.start)
+        #if os(watchOS)
+        play(.start)
+        #else
+        impact(.rigid)
+        #endif
     }
 }
