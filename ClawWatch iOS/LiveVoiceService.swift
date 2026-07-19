@@ -11,6 +11,41 @@
 import Foundation
 import AVFoundation
 
+/// Optional Cloudflare Access service-token headers for sockets that sit
+/// behind a Cloudflare Tunnel + Access. Credentials sync from the phone via
+/// iCloud. When unset, sockets are unchanged — pure-tunnel and LAN keep
+/// working with no headers.
+enum CloudflareAccess {
+
+    private static func synced(_ key: String) -> String {
+        NSUbiquitousKeyValueStore.default.string(forKey: key)
+            ?? UserDefaults.standard.string(forKey: key) ?? ""
+    }
+    private static func setSynced(_ key: String, _ value: String) {
+        NSUbiquitousKeyValueStore.default.set(value, forKey: key)
+        NSUbiquitousKeyValueStore.default.synchronize()
+        UserDefaults.standard.set(value, forKey: key)
+    }
+
+    static var clientId: String {
+        get { synced("cfAccessClientId") } set { setSynced("cfAccessClientId", newValue) }
+    }
+    static var clientSecret: String {
+        get { synced("cfAccessClientSecret") } set { setSynced("cfAccessClientSecret", newValue) }
+    }
+    static var isConfigured: Bool { !clientId.isEmpty && !clientSecret.isEmpty }
+
+    /// A request carrying the Access headers when configured, plain otherwise.
+    static func request(_ url: URL) -> URLRequest {
+        var req = URLRequest(url: url)
+        if isConfigured {
+            req.setValue(clientId, forHTTPHeaderField: "CF-Access-Client-Id")
+            req.setValue(clientSecret, forHTTPHeaderField: "CF-Access-Client-Secret")
+        }
+        return req
+    }
+}
+
 @Observable
 final class LiveVoiceService: NSObject {
 
@@ -83,7 +118,7 @@ final class LiveVoiceService: NSObject {
         state = .connecting
         configureSession()
 
-        socket = URLSession(configuration: .default).webSocketTask(with: url)
+        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
         socket?.resume()
         receiveLoop()
 

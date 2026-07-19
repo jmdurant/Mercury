@@ -16,6 +16,8 @@ struct AgentSettingsScreen: View {
     @State private var node = OpenClawNodeService.shared
     @State private var nodeURL: String = OpenClawNodeService.shared.gatewayURL
     @State private var nodeToken: String = OpenClawNodeService.shared.token
+    @State private var cfId: String = CloudflareAccess.clientId
+    @State private var cfSecret: String = CloudflareAccess.clientSecret
 
     var body: some View {
         NavigationStack {
@@ -81,6 +83,18 @@ struct AgentSettingsScreen: View {
                     Text("OpenClaw node")
                 } footer: {
                     Text("Registers this phone as an OpenClaw node so the agent can query location, health, and battery directly. First connect needs approval on the gateway (openclaw nodes approve).")
+                }
+
+                Section {
+                    TextField("CF-Access-Client-Id", text: $cfId)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .onChange(of: cfId) { _, v in CloudflareAccess.clientId = v }
+                    SecureField("CF-Access-Client-Secret", text: $cfSecret)
+                        .onChange(of: cfSecret) { _, v in CloudflareAccess.clientSecret = v }
+                } header: {
+                    Text("Cloudflare Access (optional)")
+                } footer: {
+                    Text("For a gateway behind Cloudflare Tunnel + Access. Leave blank for a plain tunnel or LAN. Syncs to the watch via iCloud and applies to both the node and voice connections.")
                 }
 
                 Section("Recent agent activity") {

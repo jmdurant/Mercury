@@ -140,7 +140,7 @@ final class OpenClawNodeService: NSObject {
         }
         status = .connecting
         isAutoConnect = true
-        socket = URLSession(configuration: .default).webSocketTask(with: url)
+        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
         socket?.resume()
         receive()
     }
