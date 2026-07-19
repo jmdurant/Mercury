@@ -53,6 +53,12 @@ struct SettingsPage: View {
                 Label("Walkie-Talkie", systemImage: "antenna.radiowaves.left.and.right")
             }
 
+            Button {
+                vm.showAgentSettings = true
+            } label: {
+                Label("Agent Access", systemImage: "brain.head.profile")
+            }
+
             Button("Logout", role: .destructive) {
                 vm.logout()
             }
@@ -73,6 +79,43 @@ struct SettingsPage: View {
         .sheet(isPresented: $vm.showPTTSettings) {
             pttSettingsView()
         }
+        .sheet(isPresented: $vm.showAgentSettings) {
+            agentSettingsView()
+        }
+    }
+
+    @ViewBuilder
+    func agentSettingsView() -> some View {
+        List {
+            Section {
+                ForEach(AutoResponderStore.Consent.allCases) { c in
+                    Toggle(c.label, isOn: Binding(
+                        get: { AutoResponderStore.isConsented(c) },
+                        set: { AutoResponderStore.setConsent(c, $0) }
+                    ))
+                    .font(.caption)
+                }
+            } header: {
+                Text("Agent may access")
+            } footer: {
+                Text("Controls which data/actions designated assistant chats can request")
+            }
+
+            Section("Recent agent activity") {
+                let log = AutoResponderStore.auditLog()
+                if log.isEmpty {
+                    Text("No activity yet").font(.caption2).foregroundStyle(.secondary)
+                } else {
+                    ForEach(log.prefix(20), id: \.self) { entry in
+                        Text(entry).font(.system(.caption2, design: .monospaced))
+                    }
+                    Button("Clear Log", role: .destructive) {
+                        AutoResponderStore.clearAudit()
+                    }
+                }
+            }
+        }
+        .navigationTitle("Agent Access")
     }
 
     @ViewBuilder

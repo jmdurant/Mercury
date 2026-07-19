@@ -9,6 +9,21 @@ import Foundation
 
 enum AutoResponderStore {
 
+    // MARK: - Agent session identity
+
+    private static let sessionIdKey = "agentSessionId"
+
+    /// Stable per-install identifier so the agent knows which device it is
+    /// talking to across a multi-turn conversation.
+    static var sessionId: String {
+        if let existing = UserDefaults.standard.string(forKey: sessionIdKey) {
+            return existing
+        }
+        let new = UUID().uuidString
+        UserDefaults.standard.set(new, forKey: sessionIdKey)
+        return new
+    }
+
     // MARK: - Double Tap Action
 
     private static let doubleTapActionKey = "doubleTapAction"
@@ -189,5 +204,92 @@ enum AutoResponderStore {
 
     private static func saveAssistantChatIds(_ ids: Set<Int64>) {
         UserDefaults.standard.set(Array(ids), forKey: key)
+    }
+
+    // MARK: - Trust layer
+
+    /// Categories of data/actions the agent may access. Commands are gated
+    /// by category so the user can grant e.g. health but not location.
+    enum Consent: String, CaseIterable, Identifiable {
+        case health, location, calendar, media, actions
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .health: return "Health"
+            case .location: return "Location"
+            case .calendar: return "Calendar"
+            case .media: return "Media"
+            case .actions: return "Actions (call, remind, open)"
+            }
+        }
+    }
+
+    private static let consentKey = "agentConsent"
+    private static let tokenKey = "agentToken"
+    private static let auditKey = "agentAuditLog"
+    private static let rateWindowKey = "agentRateTimestamps"
+
+    /// Consent defaults to all-granted (opt-out) to preserve current behaviour.
+    static func isConsented(_ c: Consent) -> Bool {
+        guard let raw = UserDefaults.standard.array(forKey: consentKey) as? [String]
+        else { return true }
+        return raw.contains(c.rawValue)
+    }
+    static func setConsent(_ c: Consent, _ on: Bool) {
+        var set = Set(UserDefaults.standard.array(forKey: consentKey) as? [String]
+                      ?? Consent.allCases.map(\.rawValue))
+        if on { set.insert(c.rawValue) } else { set.remove(c.rawValue) }
+        UserDefaults.standard.set(Array(set), forKey: consentKey)
+    }
+
+    /// Optional shared secret. When set, commands must be prefixed with it
+    /// (e.g. "#<token> status") or they are ignored.
+    static var token: String? {
+        get { UserDefaults.standard.string(forKey: tokenKey) }
+        set { UserDefaults.standard.set(newValue, forKey: tokenKey) }
+    }
+
+    /// Rate limit: max queries per rolling minute. Returns false if exceeded.
+    static func allowRequest(limitPerMinute: Int = 30) -> Bool {
+        let now = Date().timeIntervalSince1970
+        var stamps = (UserDefaults.standard.array(forKey: rateWindowKey) as? [Double] ?? [])
+            .filter { now - $0 < 60 }
+        guard stamps.count < limitPerMinute else {
+            UserDefaults.standard.set(stamps, forKey: rateWindowKey)
+            return false
+        }
+        stamps.append(now)
+        UserDefaults.standard.set(stamps, forKey: rateWindowKey)
+        return true
+    }
+
+    /// Append a reviewable record of what the agent queried and when.
+    static func audit(command: String, chatId: Int64) {
+        var log = UserDefaults.standard.array(forKey: auditKey) as? [String] ?? []
+        let ts = ISO8601DateFormatter().string(from: Date())
+        log.append("\(ts)\tchat \(chatId)\t\(command)")
+        if log.count > 200 { log.removeFirst(log.count - 200) }
+        UserDefaults.standard.set(log, forKey: auditKey)
+    }
+    static func auditLog() -> [String] {
+        (UserDefaults.standard.array(forKey: auditKey) as? [String] ?? []).reversed()
+    }
+    static func clearAudit() {
+        UserDefaults.standard.removeObject(forKey: auditKey)
+    }
+
+    /// Maps a command to the consent category it requires (nil = always allowed).
+    static func requiredConsent(for command: String) -> Consent? {
+        let c = command.lowercased()
+        if c.hasPrefix("#health") || c.hasPrefix("#heart") || c.hasPrefix("#steps")
+            || c.hasPrefix("#sleep") || c.hasPrefix("#o2") || c.hasPrefix("#rings")
+            || c.hasPrefix("#temp") || c.hasPrefix("#vo2") || c.hasPrefix("#respiratory")
+            || c.hasPrefix("#json") { return .health }
+        if c.hasPrefix("#location") || c.hasPrefix("#loc") || c.hasPrefix("#navigate")
+            || c.hasPrefix("#directions") { return .location }
+        if c.hasPrefix("#calendar") || c.hasPrefix("#cal") || c.hasPrefix("#reminder") { return .calendar }
+        if c.hasPrefix("#music") || c.hasPrefix("#play") { return .media }
+        if c.hasPrefix("#call") || c.hasPrefix("#remind") || c.hasPrefix("#open") { return .actions }
+        return nil
     }
 }

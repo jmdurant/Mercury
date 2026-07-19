@@ -80,6 +80,7 @@ final class ChatListStore: TDLibManagerProtocol {
 struct ChatListScreen: View {
 
     @State private var store = ChatListStore()
+    @State private var showAgentSettings = false
 
     var body: some View {
         NavigationStack {
@@ -108,6 +109,18 @@ struct ChatListScreen: View {
             }
             .listStyle(.plain)
             .navigationTitle("Chats")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAgentSettings = true
+                    } label: {
+                        Image(systemName: "brain.head.profile")
+                    }
+                }
+            }
+            .sheet(isPresented: $showAgentSettings) {
+                AgentSettingsScreen(isPresented: $showAgentSettings)
+            }
             .overlay {
                 if store.rows.isEmpty {
                     ProgressView(store.isLoading ? "Loading…" : "No chats")

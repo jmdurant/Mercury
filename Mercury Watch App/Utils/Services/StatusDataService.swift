@@ -816,6 +816,73 @@ enum StatusDataService {
             healthStore.execute(query)
         }
     }
+
+    // MARK: - Structured (machine-readable) output for the AI agent
+
+    private static func jsonString(_ dict: [String: Any]) -> String {
+        guard let data = try? JSONSerialization.data(
+                withJSONObject: dict, options: [.prettyPrinted, .sortedKeys]),
+              let str = String(data: data, encoding: .utf8) else { return "{}" }
+        return str
+    }
+
+    /// A parseable snapshot the agent can consume instead of prose.
+    static func buildJSONStatus() async -> String {
+        var out: [String: Any] = [:]
+        if let hr = await getCurrentHeartRate() { out["heart_rate_bpm"] = hr }
+        if let steps = await getTodaySteps() { out["steps"] = steps }
+        if let cal = await getActiveCalories() { out["active_calories"] = cal }
+        if let level = batteryLevelPercent() { out["battery_percent"] = level }
+        if let loc = currentCoordinate() {
+            out["location"] = ["lat": loc.lat, "lon": loc.lon]
+        }
+        out["focus_active"] = INFocusStatusCenter.default.focusStatus.isFocused == true
+        out["timestamp"] = Int(Date().timeIntervalSince1970)
+        return jsonString(out)
+    }
+
+    /// What this device can sense/do right now, so the agent can plan.
+    static func buildCapabilities() -> String {
+        let health = HKHealthStore.isHealthDataAvailable()
+        let locStatus = CLLocationManager().authorizationStatus
+        let locGranted = locStatus == .authorizedAlways || locStatus == .authorizedWhenInUse
+        #if os(watchOS)
+        let platform = "watchOS"
+        #else
+        let platform = "iOS"
+        #endif
+        let caps: [String: Any] = [
+            "platform": platform,
+            "health_available": health,
+            "location_authorized": locGranted,
+            "motion_available": CMMotionActivityManager.isActivityAvailable(),
+            "altimeter_available": CMAltimeter.isRelativeAltitudeAvailable(),
+            "battery_available": batteryLevelPercent() != nil,
+            "commands": ["#json", "#capabilities", "#status", "#health", "#heart",
+                         "#steps", "#location", "#weather", "#music", "#remind",
+                         "#navigate", "#play", "#call", "#focus", "#alert"],
+        ]
+        return jsonString(caps)
+    }
+
+    private static func batteryLevelPercent() -> Int? {
+        #if os(watchOS)
+        let device = WKInterfaceDevice.current()
+        device.isBatteryMonitoringEnabled = true
+        let level = device.batteryLevel
+        #else
+        let device = UIDevice.current
+        device.isBatteryMonitoringEnabled = true
+        let level = device.batteryLevel
+        #endif
+        guard level >= 0 else { return nil }
+        return Int(level * 100)
+    }
+
+    private static func currentCoordinate() -> (lat: Double, lon: Double)? {
+        guard let loc = CLLocationManager().location else { return nil }
+        return (loc.coordinate.latitude, loc.coordinate.longitude)
+    }
 }
 
 extension HKWorkoutActivityType {

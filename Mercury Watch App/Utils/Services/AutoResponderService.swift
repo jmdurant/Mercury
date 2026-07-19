@@ -9,6 +9,88 @@ import Foundation
 import TDLibKit
 import Intents
 import CoreMotion
+import EventKit
+#if os(watchOS)
+import WatchKit
+#else
+import UIKit
+#endif
+
+/// Actuator layer: lets the agent make the device *do* things, not just
+/// report. Cross-platform; URL opening is bridged per platform.
+enum SystemActionService {
+
+    private static let logger = LoggerService(String(describing: SystemActionService.self))
+    private static let callProtocol = CallProtocol(
+        libraryVersions: ["4.0.0"], maxLayer: 92, minLayer: 65,
+        udpP2p: true, udpReflector: true)
+
+    @MainActor static func open(_ url: URL) {
+        #if os(watchOS)
+        WKExtension.shared().openSystemURL(url)
+        #else
+        UIApplication.shared.open(url)
+        #endif
+    }
+
+    static func navigate(to place: String) async -> String {
+        let q = place.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? place
+        guard let url = URL(string: "https://maps.apple.com/?q=\(q)") else { return "Invalid place" }
+        await open(url)
+        return "Opening directions to \(place)"
+    }
+
+    static func play(query: String) async -> String {
+        // Resolve to an Apple Music URL then open it
+        guard let link = await StatusDataService.lookupSongLink(query: query) else {
+            return "Couldn't find \"\(query)\""
+        }
+        if let line = link.split(separator: "\n").first(where: { $0.hasPrefix("http") }),
+           let url = URL(string: String(line)) {
+            await open(url)
+            return "Now playing \(query)"
+        }
+        return link
+    }
+
+    static func addReminder(_ text: String) async -> String {
+        #if os(watchOS)
+        // EKEventStore.save is unavailable on watchOS
+        return "Reminders can only be created from iPhone"
+        #else
+        let store = EKEventStore()
+        do {
+            guard try await store.requestFullAccessToReminders() else {
+                return "Reminders access denied"
+            }
+            let reminder = EKReminder(eventStore: store)
+            reminder.title = text
+            reminder.calendar = store.defaultCalendarForNewReminders()
+            try store.save(reminder, commit: true)
+            return "Reminder set: \(text)"
+        } catch {
+            logger.log(error, level: .error)
+            return "Couldn't set reminder"
+        }
+        #endif
+    }
+
+    static func call(userName: String) async -> String {
+        do {
+            guard let users = try await TDLibManager.shared.client?.searchContacts(
+                    limit: 1, query: userName),
+                  let userId = users.userIds.first else {
+                return "Contact \"\(userName)\" not found"
+            }
+            _ = try await TDLibManager.shared.client?.createCall(
+                isVideo: false, protocol: callProtocol, userId: userId)
+            return "Calling \(userName)…"
+        } catch {
+            logger.log(error, level: .error)
+            return "Couldn't start the call"
+        }
+    }
+}
 
 class AutoResponderService: TDLibManagerProtocol {
 
@@ -118,7 +200,16 @@ class AutoResponderService: TDLibManagerProtocol {
         guard AutoResponderStore.isAssistantChat(chatId) else { return }
 
         guard case .messageText(let textContent) = message.content else { return }
-        let rawText = textContent.text.text
+        var rawText = textContent.text.text
+
+        // Trust layer: if a shared secret is set, commands must carry it as
+        // "#<token> <command>"; strip it (rewriting to a leading '#') or ignore.
+        if let token = AutoResponderStore.token, !token.isEmpty {
+            let prefix = "#\(token) "
+            guard rawText.hasPrefix(prefix) else { return }
+            rawText = "#" + rawText.dropFirst(prefix.count)
+        }
+
         let text = rawText.lowercased().trimmingCharacters(in: .whitespaces)
 
         // Check for silent tags — suppress notification and auto-respond
@@ -127,11 +218,31 @@ class AutoResponderService: TDLibManagerProtocol {
             suppressNotification(messageId: message.id, chatId: chatId)
         }
 
+        // Rate limit + per-category consent gate for tagged commands
+        if isSilent {
+            guard AutoResponderStore.allowRequest() else {
+                SendMessageService.sendQuickReply(text: "Rate limit reached, try again shortly", chatId: chatId)
+                return
+            }
+            if let needed = AutoResponderStore.requiredConsent(for: text),
+               !AutoResponderStore.isConsented(needed) {
+                SendMessageService.sendQuickReply(text: "\(needed.label) access is disabled", chatId: chatId)
+                return
+            }
+            AutoResponderStore.audit(command: text, chatId: chatId)
+        }
+
         Task {
             let response: String?
 
             // Handle tagged commands
-            if text == "#status" || text == "#full" || text == "#dump" {
+            if text == "#json" {
+                response = await StatusDataService.buildJSONStatus()
+            } else if text == "#capabilities" || text == "#caps" {
+                response = StatusDataService.buildCapabilities()
+            } else if text == "#session" || text == "#whoami" {
+                response = "session: \(AutoResponderStore.sessionId)"
+            } else if text == "#status" || text == "#full" || text == "#dump" {
                 response = await buildFullStatus()
             } else if text == "#health" {
                 response = await StatusDataService.buildHealthStatus()
@@ -175,9 +286,23 @@ class AutoResponderService: TDLibManagerProtocol {
                 let searchTerm = String(rawText.dropFirst(7)).trimmingCharacters(in: .whitespaces)
                 response = await StatusDataService.lookupSongLink(query: searchTerm)
             } else if text.hasPrefix("#play ") {
-                // Same as #music but also includes a "now opening" message
                 let searchTerm = String(rawText.dropFirst(6)).trimmingCharacters(in: .whitespaces)
-                response = await StatusDataService.lookupSongLink(query: searchTerm)
+                response = await SystemActionService.play(query: searchTerm)
+            } else if text.hasPrefix("#navigate ") || text.hasPrefix("#directions ") {
+                let place = String(rawText.drop(while: { $0 != " " })).trimmingCharacters(in: .whitespaces)
+                response = await SystemActionService.navigate(to: place)
+            } else if text.hasPrefix("#remind ") {
+                let what = String(rawText.dropFirst(8)).trimmingCharacters(in: .whitespaces)
+                response = await SystemActionService.addReminder(what)
+            } else if text.hasPrefix("#call ") {
+                let who = String(rawText.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                response = await SystemActionService.call(userName: who)
+            } else if text.hasPrefix("#open ") {
+                let raw = String(rawText.dropFirst(6)).trimmingCharacters(in: .whitespaces)
+                if let url = URL(string: raw) {
+                    await SystemActionService.open(url)
+                    response = "Opening \(raw)"
+                } else { response = "Invalid URL" }
             } else if text == "#rings" || text == "#activity" {
                 response = await StatusDataService.buildActivityRingsStatus()
             } else if text == "#o2" || text == "#oxygen" {

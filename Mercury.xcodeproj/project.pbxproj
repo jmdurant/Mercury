@@ -193,6 +193,7 @@
 		DDC1E0000000000000000020 /* ClawWatch NotificationService.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDC1E0000000000000000002 /* ClawWatch NotificationService.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		DDC1F0000000000000000041 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1F0000000000000000040 /* ShareViewController.swift */; };
 		DDC1F0000000000000000020 /* ClawWatch Share.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDC1F0000000000000000002 /* ClawWatch Share.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		DDC1B000000000000000000C /* AgentSettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000B /* AgentSettingsScreen.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -402,6 +403,7 @@
 		DDC1F0000000000000000030 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DDC1F0000000000000000002 /* ClawWatch Share.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ClawWatch Share.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		DDC1F0000000000000000031 /* ClawWatch-Share.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ClawWatch-Share.entitlements"; sourceTree = "<group>"; };
+		DDC1B000000000000000000B /* AgentSettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AgentSettingsScreen.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -880,6 +882,7 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B000000000000000000B /* AgentSettingsScreen.swift */,
 				DDC1B0000000000000000007 /* CallActivityAttributes.swift */,
 				DDC1B0000000000000000009 /* LiveActivityService.swift */,
 				DDC1B0000000000000000005 /* CallService.swift */,
@@ -1282,6 +1285,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B000000000000000000C /* AgentSettingsScreen.swift in Sources */,
 				DDC1B0000000000000000008 /* CallActivityAttributes.swift in Sources */,
 				DDC1B000000000000000000A /* LiveActivityService.swift in Sources */,
 				DDC1B0000000000000000006 /* CallService.swift in Sources */,
