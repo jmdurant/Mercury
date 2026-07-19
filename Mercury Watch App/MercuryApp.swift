@@ -16,6 +16,11 @@ struct MercuryApp: App {
     private let autoResponder = AutoResponderService()
     private let pttService = PTTService()
 
+    init() {
+        // Respond to the phone's WatchConnectivity sensor requests
+        WatchBridge.shared.activate()
+    }
+
     var body: some Scene {
         WindowGroup {
 

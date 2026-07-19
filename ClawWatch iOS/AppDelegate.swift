@@ -42,6 +42,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             OpenClawNodeService.shared.start()
         }
 
+        // WatchConnectivity relay (fetch watch-exclusive sensors)
+        WatchBridge.shared.activate()
+
         return true
     }
 

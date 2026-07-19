@@ -199,6 +199,8 @@
 		DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000011 /* LiveVoiceView.swift */; };
 		DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
 		DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
+		DDC1B0000000000000000016 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
+		DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -413,6 +415,7 @@
 		DDC1B000000000000000000F /* LiveVoiceService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceService.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000011 /* LiveVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceView.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000013 /* OpenClawNodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawNodeService.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000015 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -891,6 +894,7 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B0000000000000000015 /* WatchBridge.swift */,
 				DDC1B0000000000000000013 /* OpenClawNodeService.swift */,
 				DDC1B000000000000000000F /* LiveVoiceService.swift */,
 				DDC1B0000000000000000011 /* LiveVoiceView.swift */,
@@ -1183,6 +1187,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */,
 				DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */,
 				9B0B6CBC2CD679A600BB6A94 /* StepView.swift in Sources */,
 				A080D8E22CDC0B1800920564 /* VoiceNoteView.swift in Sources */,
@@ -1299,6 +1304,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B0000000000000000016 /* WatchBridge.swift in Sources */,
 				DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */,
 				DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */,
 				DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */,

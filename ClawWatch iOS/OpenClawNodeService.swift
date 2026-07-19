@@ -79,6 +79,8 @@ final class OpenClawNodeService: NSObject {
         "health.snapshot", "location.get", "battery.get", "device.info",
         "heart.get", "steps.get", "sleep.get", "workout.get",
         "calendar.get", "weather.get", "system.notify",
+        // relayed to the watch over WatchConnectivity (watch-exclusive sensors)
+        "watch.heart", "watch.temp", "watch.o2", "watch.rings", "watch.health",
     ]
 
     private var socket: URLSessionWebSocketTask?
@@ -293,6 +295,12 @@ final class OpenClawNodeService: NSObject {
         case "device.info":
             return ["platform": platformName, "app": "ClawWatch", "session": AutoResponderStore.sessionId]
         default:
+            #if os(iOS)
+            // watch-exclusive sensors: relay to the watch over WatchConnectivity
+            if command.hasPrefix("watch.") {
+                return await WatchBridge.shared.fetchFromWatch(command)
+            }
+            #endif
             return ["error": "unsupported command \(command)"]
         }
     }
