@@ -82,6 +82,7 @@ final class CallService: NSObject, TDLibManagerProtocol {
         provider.reportNewIncomingCall(with: uuid, update: update) { [weak self] error in
             if let error { self?.logger.log("reportIncoming: \(error)", level: .error) }
         }
+        if #available(iOS 16.1, *) { LiveActivityService.startCall(caller: callerName) }
     }
 
     private func endCall(callId: Int) {
@@ -89,6 +90,7 @@ final class CallService: NSObject, TDLibManagerProtocol {
         provider.reportCall(with: uuid, endedAt: nil, reason: .remoteEnded)
         uuidToCallId[uuid] = nil
         callIdToUUID[callId] = nil
+        if #available(iOS 16.1, *) { LiveActivityService.end() }
     }
 
     // MARK: - TDLibManagerProtocol

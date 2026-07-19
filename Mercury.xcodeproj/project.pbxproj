@@ -182,6 +182,13 @@
 		DDC1C0000000000000000002 /* CheckUnreadAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */; };
 		DDC1C0000000000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		DDC1B0000000000000000006 /* CallService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000005 /* CallService.swift */; };
+		DDC1B0000000000000000008 /* CallActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000007 /* CallActivityAttributes.swift */; };
+		DDC1B000000000000000000A /* LiveActivityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000009 /* LiveActivityService.swift */; };
+		DDC1D0000000000000000015 /* ClawWatchWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1D0000000000000000010 /* ClawWatchWidgetBundle.swift */; };
+		DDC1D0000000000000000016 /* UnreadWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1D0000000000000000011 /* UnreadWidget.swift */; };
+		DDC1D0000000000000000017 /* CallLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1D0000000000000000012 /* CallLiveActivity.swift */; };
+		DDC1D0000000000000000018 /* CallActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000007 /* CallActivityAttributes.swift */; };
+		DDC1D0000000000000000021 /* ClawWatch Widget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = DDC1D0000000000000000002 /* ClawWatch Widget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -191,6 +198,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A07438EB2BD10D2D00945CB5;
 			remoteInfo = "Mercury Watch App";
+		};
+		DDC1D0000000000000000023 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A07438E02BD10D2D00945CB5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DDC1D0000000000000000001;
+			remoteInfo = "ClawWatch Widget";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -204,6 +218,17 @@
 				A07438ED2BD10D2D00945CB5 /* Mercury Watch App.app in Embed Watch Content */,
 			);
 			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDC1D0000000000000000020 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				DDC1D0000000000000000021 /* ClawWatch Widget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -342,6 +367,14 @@
 		DDC1B0000000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000003 /* ChatDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDetailScreen.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000005 /* CallService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallService.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000007 /* CallActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallActivityAttributes.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000009 /* LiveActivityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityService.swift; sourceTree = "<group>"; };
+		DDC1D0000000000000000010 /* ClawWatchWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClawWatchWidgetBundle.swift; sourceTree = "<group>"; };
+		DDC1D0000000000000000011 /* UnreadWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnreadWidget.swift; sourceTree = "<group>"; };
+		DDC1D0000000000000000012 /* CallLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CallLiveActivity.swift; sourceTree = "<group>"; };
+		DDC1D0000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DDC1D0000000000000000014 /* ClawWatch-Widget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "ClawWatch-Widget.entitlements"; sourceTree = "<group>"; };
+		DDC1D0000000000000000002 /* ClawWatch Widget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "ClawWatch Widget.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -371,6 +404,13 @@
 				DDC1A000000000000000000D /* TDLibKit in Frameworks */,
 				DDC1A000000000000000000E /* SwiftOGG in Frameworks */,
 				DDC1A000000000000000000F /* Gzip in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDC1D0000000000000000007 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -540,6 +580,7 @@
 				A07438F02BD10D2D00945CB5 /* Mercury Watch App */,
 				A07438E72BD10D2D00945CB5 /* Products */,
 				DDC1A0000000000000000009 /* ClawWatch iOS */,
+				DDC1D0000000000000000009 /* ClawWatch Widget */,
 			);
 			sourceTree = "<group>";
 		};
@@ -549,6 +590,7 @@
 				A07438E62BD10D2D00945CB5 /* Mercury.app */,
 				A07438EC2BD10D2D00945CB5 /* Mercury Watch App.app */,
 				DDC1A0000000000000000002 /* ClawWatch.app */,
+				DDC1D0000000000000000002 /* ClawWatch Widget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -793,6 +835,8 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B0000000000000000007 /* CallActivityAttributes.swift */,
+				DDC1B0000000000000000009 /* LiveActivityService.swift */,
 				DDC1B0000000000000000005 /* CallService.swift */,
 				DDC1B0000000000000000003 /* ChatDetailScreen.swift */,
 				DDC1B0000000000000000001 /* AppDelegate.swift */,
@@ -805,6 +849,18 @@
 				DDC1A0000000000000000015 /* ClawWatch-iOS.entitlements */,
 			);
 			path = "ClawWatch iOS";
+			sourceTree = "<group>";
+		};
+		DDC1D0000000000000000009 /* ClawWatch Widget */ = {
+			isa = PBXGroup;
+			children = (
+				DDC1D0000000000000000010 /* ClawWatchWidgetBundle.swift */,
+				DDC1D0000000000000000011 /* UnreadWidget.swift */,
+				DDC1D0000000000000000012 /* CallLiveActivity.swift */,
+				DDC1D0000000000000000013 /* Info.plist */,
+				DDC1D0000000000000000014 /* ClawWatch-Widget.entitlements */,
+			);
+			path = "ClawWatch Widget";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -865,10 +921,12 @@
 				DDC1A0000000000000000006 /* Sources */,
 				DDC1A0000000000000000007 /* Frameworks */,
 				DDC1A0000000000000000008 /* Resources */,
+				DDC1D0000000000000000020 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				DDC1D0000000000000000022 /* PBXTargetDependency */,
 			);
 			name = "ClawWatch iOS";
 			packageProductDependencies = (
@@ -879,6 +937,25 @@
 			productName = "ClawWatch iOS";
 			productReference = DDC1A0000000000000000002 /* ClawWatch.app */;
 			productType = "com.apple.product-type.application";
+		};
+		DDC1D0000000000000000001 /* ClawWatch Widget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DDC1D0000000000000000003 /* Build configuration list for PBXNativeTarget "ClawWatch Widget" */;
+			buildPhases = (
+				DDC1D0000000000000000006 /* Sources */,
+				DDC1D0000000000000000007 /* Frameworks */,
+				DDC1D0000000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "ClawWatch Widget";
+			packageProductDependencies = (
+			);
+			productName = "ClawWatch Widget";
+			productReference = DDC1D0000000000000000002 /* ClawWatch Widget.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -923,6 +1000,7 @@
 				A07438E52BD10D2D00945CB5 /* Mercury */,
 				A07438EB2BD10D2D00945CB5 /* Mercury Watch App */,
 				DDC1A0000000000000000001 /* ClawWatch iOS */,
+				DDC1D0000000000000000001 /* ClawWatch Widget */,
 			);
 		};
 /* End PBXProject section */
@@ -952,6 +1030,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				DDC1A000000000000000001B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DDC1D0000000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1077,6 +1162,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B0000000000000000008 /* CallActivityAttributes.swift in Sources */,
+				DDC1B000000000000000000A /* LiveActivityService.swift in Sources */,
 				DDC1B0000000000000000006 /* CallService.swift in Sources */,
 				DDC1C0000000000000000001 /* SendMessageAppIntent.swift in Sources */,
 				DDC1C0000000000000000002 /* CheckUnreadAppIntent.swift in Sources */,
@@ -1120,6 +1207,17 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		DDC1D0000000000000000006 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DDC1D0000000000000000015 /* ClawWatchWidgetBundle.swift in Sources */,
+				DDC1D0000000000000000016 /* UnreadWidget.swift in Sources */,
+				DDC1D0000000000000000017 /* CallLiveActivity.swift in Sources */,
+				DDC1D0000000000000000018 /* CallActivityAttributes.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -1127,6 +1225,11 @@
 			isa = PBXTargetDependency;
 			target = A07438EB2BD10D2D00945CB5 /* Mercury Watch App */;
 			targetProxy = A07438EE2BD10D2D00945CB5 /* PBXContainerItemProxy */;
+		};
+		DDC1D0000000000000000022 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DDC1D0000000000000000001 /* ClawWatch Widget */;
+			targetProxy = DDC1D0000000000000000023 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1412,6 +1515,63 @@
 			};
 			name = Release;
 		};
+		DDC1D0000000000000000004 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ClawWatch Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch.ios.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DDC1D0000000000000000005 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = ADVQS8RXPZ;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = "ClawWatch Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.doctordurant.clawwatch.ios.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1447,6 +1607,15 @@
 			buildConfigurations = (
 				DDC1A0000000000000000004 /* Debug */,
 				DDC1A0000000000000000005 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DDC1D0000000000000000003 /* Build configuration list for PBXNativeTarget "ClawWatch Widget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DDC1D0000000000000000004 /* Debug */,
+				DDC1D0000000000000000005 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
