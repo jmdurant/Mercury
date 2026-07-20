@@ -69,7 +69,7 @@ final class LiveVoiceService: NSObject {
     }
 
     /// The voice server port on the gateway box (single-box default).
-    static let voicePort = 8790
+    static let voicePort = 8795
 
     /// The endpoint actually dialed. Defaults to the node's gateway host on the
     /// voice port (same box) so voice works out of the box; `endpoint` is an

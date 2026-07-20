@@ -33,17 +33,10 @@ struct AgentSettingsScreen: View {
     @State private var silenceTimeout: Double = LiveVoiceService.shared.silenceTimeout
     @State private var showAdvanced = false
 
-    private let voicePort = 8790
-
     /// The voice endpoint implied by the gateway URL — same scheme + host on
-    /// the voice port (shared box). Cloudflare split-hostname setups edit it.
+    /// the voice port (shared box). Cloudflare split-hostname setups override it.
     private var voiceURLFromNodeHost: String? {
-        guard var comps = URLComponents(string: node.gatewayURL),
-              comps.host != nil, comps.scheme?.hasPrefix("ws") == true else { return nil }
-        comps.port = voicePort
-        comps.path = ""
-        comps.query = nil
-        return comps.string
+        LiveVoiceService.voiceURL(fromGateway: node.gatewayURL)
     }
 
     var body: some View {
