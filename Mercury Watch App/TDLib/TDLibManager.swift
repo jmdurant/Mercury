@@ -32,18 +32,27 @@ final class TDLibManager {
         .path
     
     // Delegate
+    // NSHashTable isn't thread-safe: updates arrive on TDLib's background
+    // queue and enumerate the delegates while subscribe/unsubscribe mutate
+    // them from other threads (view models, services). Serialize every access
+    // behind a lock and always hand out an immutable snapshot to iterate.
     private var delegatesObj = NSHashTable<AnyObject>.weakObjects()
+    private let delegatesLock = NSLock()
     private var delegates: [TDLibManagerProtocol] {
+        delegatesLock.lock()
+        defer { delegatesLock.unlock() }
         return delegatesObj.allObjects as? [TDLibManagerProtocol] ?? []
     }
-    
+
     private init() {
         self.manager = TDLibClientManager()
         self.createClient()
     }
-    
+
     public func subscribe(_ delegate: TDLibManagerProtocol) {
+        delegatesLock.lock()
         self.delegatesObj.add(delegate)
+        delegatesLock.unlock()
         if let authorizationState {
             delegate.authorizationStateUpdate(state: authorizationState)
         }
@@ -51,9 +60,11 @@ final class TDLibManager {
             delegate.connectionStateUpdate(state: connectionState)
         }
     }
-    
+
     public func unsubscribe(_ delegate: TDLibManagerProtocol) {
+        delegatesLock.lock()
         self.delegatesObj.remove(delegate)
+        delegatesLock.unlock()
     }
     
     public func close() {

@@ -78,6 +78,16 @@ struct LoginView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(phoneNumber.isEmpty)
+
+            if let error = vm.errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .multilineTextAlignment(.center)
+            }
+            Text("Tip: include your country code, e.g. +1 704…")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
         }
     }
 

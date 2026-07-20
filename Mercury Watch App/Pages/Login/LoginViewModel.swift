@@ -33,7 +33,15 @@ class LoginViewModel: TDLibViewModel {
     }
     
     var isLoading: Bool = true
+    var errorMessage: String? = nil
     var showFullscreenQR: Bool = false
+    // Phone login: the app auto-requests a QR at launch (moving TDLib into
+    // WaitOtherDeviceConfirmation), so a phone submit must first reset the
+    // auth flow back to WaitPhoneNumber. We stash the number and submit it
+    // once that state arrives.
+    private var pendingPhoneNumber: String? = nil
+    private var phoneResetInFlight = false
+    private var watchdog: Task<Void, Never>? = nil
     var showTermsOfService: Bool = !UserDefaults.standard.bool(forKey: "hasAcceptedTermsOfService")
     var qrCodeLink: String? = nil
     var lastInputCta: String? = nil
@@ -110,7 +118,13 @@ class LoginViewModel: TDLibViewModel {
         switch state {
             
         case .authorizationStateWaitPhoneNumber: // Triggered at app start and after each logout
-            if self.state != .phoneNumberLogin {
+            if self.state == .phoneNumberLogin, let pending = self.pendingPhoneNumber {
+                // We reset the flow specifically to submit a phone number —
+                // now that we're in the right state, submit it. (Keep
+                // phoneResetInFlight set so a second "unexpected" fails loudly
+                // instead of looping.)
+                self.submitAuthenticationPhoneNumber(pending)
+            } else if self.state != .phoneNumberLogin {
                 withAnimation {
                     self.isLoading = true
                 }
@@ -168,22 +182,60 @@ class LoginViewModel: TDLibViewModel {
         }
         
         self.isLoading = true
+        self.errorMessage = nil
         self.lastInputCta = phoneNumber
-        
+        self.pendingPhoneNumber = phoneNumber
+        self.state = .phoneNumberLogin   // stops WaitPhoneNumber re-requesting a QR
+
+        // Watchdog: if TDLib neither returns nor delivers a follow-up state
+        // (e.g. it can't reach a data center), don't spin forever.
+        self.watchdog?.cancel()
+        self.watchdog = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(25))
+            if self.isLoading {
+                self.isLoading = false
+                self.errorMessage = "No response from Telegram — check the connection and try again."
+            }
+        }
+
+        submitAuthenticationPhoneNumber(phoneNumber)
+    }
+
+    /// Calls TDLib's setAuthenticationPhoneNumber. If we're mid-QR
+    /// (WaitOtherDeviceConfirmation), TDLib rejects it as "unexpected"; we
+    /// reset the auth flow once (logout → WaitPhoneNumber), and the
+    /// WaitPhoneNumber handler resubmits the stashed number.
+    private func submitAuthenticationPhoneNumber(_ phoneNumber: String) {
         Task {
             do {
                 let result = try await TDLibManager.shared.client?.setAuthenticationPhoneNumber(
                     phoneNumber: phoneNumber,
                     settings: nil
                 )
-                
                 self.logger.log(result)
-                
+                await MainActor.run {
+                    self.pendingPhoneNumber = nil
+                    self.phoneResetInFlight = false
+                }
+
             } catch {
                 self.logger.log(error, level: .error)
-                guard let error = error as? TDLibKit.Error else { return }
-                if error.message == "PHONE_NUMBER_INVALID" {
-                    await MainActor.run {
+                let message = (error as? TDLibKit.Error)?.message ?? String(describing: error)
+
+                if message.localizedCaseInsensitiveContains("unexpected"), !self.phoneResetInFlight {
+                    // Wrong auth state (mid-QR): reset to WaitPhoneNumber and retry once.
+                    self.phoneResetInFlight = true
+                    self.logout()
+                    return
+                }
+
+                await MainActor.run {
+                    self.watchdog?.cancel()
+                    self.isLoading = false
+                    self.pendingPhoneNumber = nil
+                    self.phoneResetInFlight = false
+                    self.errorMessage = message
+                    if message == "PHONE_NUMBER_INVALID" {
                         self.state = .phoneNumberLoginFailure
                     }
                 }
