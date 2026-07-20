@@ -19,11 +19,7 @@ struct LiveVoiceView: View {
     @State private var voice = LiveVoiceService.shared
     @State private var ptt = PTTChannelService.shared
     @State private var node = OpenClawNodeService.shared
-    @State private var endpoint = LiveVoiceService.shared.endpoint
-    @State private var token = LiveVoiceService.shared.voiceToken
     @State private var agentId: String = ""
-    @State private var autoStop = LiveVoiceService.shared.autoStopOnSilence
-    @State private var timeout = LiveVoiceService.shared.silenceTimeout
 
     private var isPerChat: Bool { chatId != nil }
 
@@ -58,7 +54,6 @@ struct LiveVoiceView: View {
                 .disabled(voice.state == .idle && effectiveAgentId.isEmpty)
 
                 pttToggle
-                autoStopConfig
                 agentConfig
                 Spacer()
             }
@@ -103,27 +98,7 @@ struct LiveVoiceView: View {
         return ptt.isTransmitting ? "Transmitting…" : "Joined — press the system PTT button to talk."
     }
 
-    // MARK: - Auto-stop on silence
-
-    private var autoStopConfig: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Toggle("Auto-stop when quiet", isOn: $autoStop)
-                .onChange(of: autoStop) { _, v in voice.autoStopOnSilence = v }
-            if autoStop {
-                HStack {
-                    Slider(value: $timeout, in: 3...30, step: 1)
-                        .onChange(of: timeout) { _, v in voice.silenceTimeout = v }
-                    Text("\(Int(timeout))s")
-                        .font(.caption).monospacedDigit()
-                        .frame(width: 34, alignment: .trailing)
-                }
-                Text("Ends the session after this much silence from both you and the agent.")
-                    .font(.caption2).foregroundStyle(.tertiary)
-            }
-        }
-    }
-
-    // MARK: - Agent + endpoint config
+    // MARK: - Agent selection
 
     private var agentConfig: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -179,21 +154,7 @@ struct LiveVoiceView: View {
                     }
                     .disabled(agentId.isEmpty)
                 }
-            }
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Realtime endpoint").font(.caption).foregroundStyle(.secondary)
-                TextField("ws://box-lan-ip:8790", text: $endpoint)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .onChange(of: endpoint) { _, new in voice.endpoint = new }
-                TextField("token", text: $token)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .onChange(of: token) { _, new in voice.voiceToken = new }
-                Text("The app adds ?token=…&device=…&agent=…. Endpoint, token and agents sync to the watch via iCloud.")
+                Text("Endpoint, token and auto-stop live in Agent settings.")
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }

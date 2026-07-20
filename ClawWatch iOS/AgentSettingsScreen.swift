@@ -18,6 +18,12 @@ struct AgentSettingsScreen: View {
     @State private var nodeToken: String = OpenClawNodeService.shared.token
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
+    @State private var voice = LiveVoiceService.shared
+    @State private var voiceURL: String = LiveVoiceService.shared.endpoint
+    @State private var voiceToken: String = LiveVoiceService.shared.voiceToken
+    @State private var defaultAgent: String = LiveVoiceService.shared.defaultAgentId
+    @State private var autoStop: Bool = LiveVoiceService.shared.autoStopOnSilence
+    @State private var silenceTimeout: Double = LiveVoiceService.shared.silenceTimeout
 
     var body: some View {
         NavigationStack {
@@ -83,6 +89,42 @@ struct AgentSettingsScreen: View {
                     Text("OpenClaw node")
                 } footer: {
                     Text("Registers this phone as an OpenClaw node so the agent can query location, health, and battery directly. First connect needs approval on the gateway (openclaw nodes approve).")
+                }
+
+                Section {
+                    TextField("ws://127.0.0.1:8790", text: $voiceURL)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .onChange(of: voiceURL) { _, v in voice.endpoint = v }
+                    TextField("Voice token", text: $voiceToken)
+                        .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
+
+                    if !node.agents.isEmpty {
+                        Picker("Default agent", selection: $defaultAgent) {
+                            Text("None").tag("")
+                            ForEach(node.agents) { a in Text(a.name).tag(a.id) }
+                        }
+                        .onChange(of: defaultAgent) { _, v in voice.defaultAgentId = v }
+                    } else {
+                        TextField("Default agent id", text: $defaultAgent)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: defaultAgent) { _, v in voice.defaultAgentId = v }
+                    }
+
+                    Toggle("Auto-stop when quiet", isOn: $autoStop)
+                        .onChange(of: autoStop) { _, v in voice.autoStopOnSilence = v }
+                    if autoStop {
+                        HStack {
+                            Slider(value: $silenceTimeout, in: 3...30, step: 1)
+                                .onChange(of: silenceTimeout) { _, v in voice.silenceTimeout = v }
+                            Text("\(Int(silenceTimeout))s").monospacedDigit()
+                                .frame(width: 36, alignment: .trailing)
+                        }
+                    }
+                } header: {
+                    Text("Live voice")
+                } footer: {
+                    Text("Same OpenClaw box as the node, usually port 8790. Agents load once the node is connected. Endpoint, token and default agent sync to the watch via iCloud.")
                 }
 
                 Section {
