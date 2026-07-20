@@ -18,6 +18,8 @@ struct AgentSettingsScreen: View {
     @State private var nodeToken: String = OpenClawNodeService.shared.token
     @State private var deviceName: String = OpenClawNodeService.shared.displayName
     @State private var showResetConfirm = false
+    @State private var showScanner = false
+    @State private var pasteCode = ""
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
     @State private var discovery = NodeDiscoveryService.shared
@@ -91,6 +93,25 @@ struct AgentSettingsScreen: View {
                     if !node.lastEvent.isEmpty {
                         Text(node.lastEvent).font(.caption).foregroundStyle(.secondary)
                     }
+
+                    // Preferred: scan the QR from `openclaw qr` (carries the URL
+                    // + a scoped bootstrap token — no raw admin token needed).
+                    Button {
+                        showScanner = true
+                    } label: {
+                        Label("Scan setup QR", systemImage: "qrcode.viewfinder")
+                    }
+                    HStack {
+                        TextField("or paste setup code", text: $pasteCode)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        Button("Apply") {
+                            if node.applySetupCode(pasteCode) {
+                                nodeURL = node.gatewayURL; pasteCode = ""
+                            }
+                        }
+                        .disabled(pasteCode.isEmpty)
+                    }
+
                     TextField("ws://127.0.0.1:18789", text: $nodeURL)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .onChange(of: nodeURL) { _, v in node.gatewayURL = v }
@@ -213,6 +234,18 @@ struct AgentSettingsScreen: View {
                 }
             }
             .navigationTitle("Agent Access")
+            .sheet(isPresented: $showScanner) {
+                NavigationStack {
+                    QRScannerView { code in
+                        if node.applySetupCode(code) { nodeURL = node.gatewayURL }
+                        showScanner = false
+                    }
+                    .ignoresSafeArea()
+                    .navigationTitle("Scan setup QR")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { showScanner = false } } }
+                }
+            }
             .confirmationDialog("Reset OpenClaw Setup?", isPresented: $showResetConfirm, titleVisibility: .visible) {
                 Button("Reset everything", role: .destructive) {
                     node.resetSetup()

@@ -6,6 +6,8 @@
 	<dict/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>ClawWatch scans the OpenClaw setup QR code to pair with your gateway.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>ClawWatch finds and connects to your OpenClaw gateway on the local network.</string>
 	<key>NSBonjourServices</key>

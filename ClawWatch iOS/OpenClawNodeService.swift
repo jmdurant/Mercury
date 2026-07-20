@@ -71,10 +71,53 @@ final class OpenClawNodeService: NSObject {
         get { syncedString("ocGatewayURL") }
         set { setSynced("ocGatewayURL", newValue) }
     }
-    /// bootstrap/connect token from the gateway config (auth.token)
+    /// Raw gateway auth token (auth.token) — the master secret. Synced.
     var token: String {
         get { syncedString("ocGatewayToken") }
         set { setSynced("ocGatewayToken", newValue) }
+    }
+
+    // Pairing credentials are LOCAL to each device (identity is per-device).
+    /// Scoped, single-use token from a scanned setup QR (auth.bootstrapToken).
+    var bootstrapToken: String {
+        get { UserDefaults.standard.string(forKey: "ocBootstrapToken") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "ocBootstrapToken") }
+    }
+    /// Persistent per-device token issued by the gateway on approval.
+    var deviceToken: String {
+        get { UserDefaults.standard.string(forKey: "ocDeviceToken") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "ocDeviceToken") }
+    }
+    var lastRequestId: String = ""
+
+    /// The credential to authenticate with, preferring the strongest we have.
+    private var activeCredential: String {
+        if !deviceToken.isEmpty { return deviceToken }
+        if !bootstrapToken.isEmpty { return bootstrapToken }
+        return token
+    }
+    /// The connect-frame auth field name matching activeCredential.
+    private var activeAuthField: String {
+        if !deviceToken.isEmpty { return "deviceToken" }
+        if !bootstrapToken.isEmpty { return "bootstrapToken" }
+        return "token"
+    }
+
+    /// Decode a scanned/pasted setup code (base64url JSON {url, bootstrapToken})
+    /// and apply it. Clears any old device token so we re-pair cleanly.
+    @discardableResult
+    func applySetupCode(_ raw: String) -> Bool {
+        let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        var b64 = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        while b64.count % 4 != 0 { b64 += "=" }
+        guard let data = Data(base64Encoded: b64),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let url = obj["url"] as? String, url.hasPrefix("ws") else { return false }
+        gatewayURL = url
+        bootstrapToken = (obj["bootstrapToken"] as? String) ?? ""
+        deviceToken = ""
+        lastEvent = "Setup code applied — connect to pair"
+        return true
     }
     /// Reconnect the node automatically once the user has enabled it (synced).
     var isAutoConnect: Bool {
@@ -149,7 +192,7 @@ final class OpenClawNodeService: NSObject {
     private func v3Payload(deviceId: String, signedAtMs: Int64, nonce: String) -> String {
         [
             "v3", deviceId, clientId, "node", "node", "",
-            String(signedAtMs), token, nonce, platformName, deviceFamilyName,
+            String(signedAtMs), activeCredential, nonce, platformName, deviceFamilyName,
         ].joined(separator: "|")
     }
 
@@ -184,6 +227,7 @@ final class OpenClawNodeService: NSObject {
         LiveVoiceService.shared.stop()
         let keys = [
             "ocGatewayURL", "ocGatewayToken", "ocAutoConnect", "ocDeviceName",
+            "ocBootstrapToken", "ocDeviceToken",
             "liveVoiceEndpoint", "liveVoiceToken", "liveVoiceDefaultAgent",
             "liveVoiceAgentMap", "liveVoiceAutoStop", "liveVoiceSilenceTimeout",
             "cfAccessClientId", "cfAccessClientSecret",
@@ -239,22 +283,37 @@ final class OpenClawNodeService: NSObject {
             if (obj["ok"] as? Bool) == true {
                 status = .connected
                 lastEvent = "Connected as node"
+                // Capture the device token issued on approval; it replaces the
+                // one-time bootstrap token for all future connects.
+                if let issued = ((obj["payload"] as? [String: Any])?["auth"] as? [String: Any])?["token"] as? String,
+                   !issued.isEmpty {
+                    deviceToken = issued
+                    bootstrapToken = ""
+                }
                 fetchAgents()   // roster comes over a separate operator connection
             } else {
-                // Surface the gateway's actual rejection instead of always
-                // assuming "pending pairing".
                 let errObj = obj["error"] as? [String: Any]
-                let code = errObj?["code"] as? String
-                let msg = (errObj?["message"] as? String)
-                    ?? (obj["error"] as? String)
-                let detail = [msg, code.map { "[\($0)]" }].compactMap { $0 }.joined(separator: " ")
-                let hay = (detail).lowercased()
-                if hay.isEmpty || hay.contains("pair") || hay.contains("approv") || hay.contains("pending") {
+                let code = (errObj?["code"] as? String)
+                    ?? ((errObj?["details"] as? [String: Any])?["code"] as? String)
+                let msg = (errObj?["message"] as? String) ?? (obj["error"] as? String) ?? ""
+                let details = errObj?["details"] as? [String: Any]
+                if let rid = details?["requestId"] as? String { lastRequestId = rid }
+                let c = (code ?? "").uppercased()
+
+                if c.contains("BOOTSTRAP") {
+                    // Single-use token spent/expired — need a fresh scan.
+                    bootstrapToken = ""
+                    status = .error
+                    lastEvent = "Setup code expired — scan a fresh QR"
+                } else if c.contains("PAIRING") || c == "NOT_PAIRED"
+                            || msg.lowercased().contains("pair") || msg.lowercased().contains("approv") {
                     status = .pending
-                    lastEvent = detail.isEmpty ? "Pending pairing approval" : "Pending: \(detail)"
+                    lastEvent = lastRequestId.isEmpty
+                        ? "Pending approval on the gateway"
+                        : "Pending — approve request \(lastRequestId.prefix(8))"
                 } else {
                     status = .error
-                    lastEvent = "Gateway rejected: \(detail)"
+                    lastEvent = "Gateway rejected: \(msg)\(code.map { " [\($0)]" } ?? "")"
                 }
             }
         } else if type == "res", let ok = obj["ok"] as? Bool, ok == false,
@@ -411,7 +470,7 @@ final class OpenClawNodeService: NSObject {
                 "signedAt": signedAtMs,
                 "nonce": nonce,
             ],
-            "auth": ["token": token],
+            "auth": [activeAuthField: activeCredential],
         ]
         send(type: "req", body: ["id": "connect", "method": "connect", "params": params])
     }
