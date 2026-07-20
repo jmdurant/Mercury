@@ -25,6 +25,20 @@ struct AgentSettingsScreen: View {
     @State private var autoStop: Bool = LiveVoiceService.shared.autoStopOnSilence
     @State private var silenceTimeout: Double = LiveVoiceService.shared.silenceTimeout
 
+    private let voicePort = 8790
+
+    /// The voice endpoint implied by the gateway URL — same scheme + host on
+    /// the voice port. Works for a shared host (LAN / same box); Cloudflare
+    /// setups with a separate voice hostname would edit it afterward.
+    private var voiceURLFromNodeHost: String? {
+        guard var comps = URLComponents(string: node.gatewayURL),
+              comps.host != nil, comps.scheme?.hasPrefix("ws") == true else { return nil }
+        comps.port = voicePort
+        comps.path = ""
+        comps.query = nil
+        return comps.string
+    }
+
     var body: some View {
         NavigationStack {
             Form {
@@ -95,6 +109,15 @@ struct AgentSettingsScreen: View {
                     TextField("ws://127.0.0.1:8790", text: $voiceURL)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .onChange(of: voiceURL) { _, v in voice.endpoint = v }
+                    if let derived = voiceURLFromNodeHost, derived != voiceURL {
+                        Button {
+                            voiceURL = derived
+                            voice.endpoint = derived
+                        } label: {
+                            Label("Use node host (:8790)", systemImage: "arrow.down.doc")
+                                .font(.caption)
+                        }
+                    }
                     TextField("Voice token", text: $voiceToken)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
