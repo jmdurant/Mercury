@@ -29,5 +29,15 @@ struct MercuryShortcuts: AppShortcutsProvider {
             shortTitle: "Check Messages",
             systemImageName: "message.badge.fill"
         )
+        AppShortcut(
+            intent: TalkToAgentAppIntent(),
+            phrases: [
+                "Talk to my \(.applicationName) agent",
+                "Start \(.applicationName) voice",
+                "Talk to \(.applicationName)"
+            ],
+            shortTitle: "Talk to Agent",
+            systemImageName: "waveform"
+        )
     }
 }

@@ -132,6 +132,14 @@ final class LiveVoiceService: NSObject {
     /// The agent for the session currently being opened.
     private var activeAgentId: String = ""
 
+    // Auto-stop on silence: ends the session after a stretch with neither the
+    // user speaking nor the agent replying (matches how dictation gives up on
+    // quiet). Resets on either side making sound, so it won't cut off a reply.
+    var autoStopOnSilence = true
+    private let silenceTimeout: TimeInterval = 8
+    private let voiceRMSThreshold: Float = 0.02
+    private var lastActivityAt = Date()
+
     /// Appends ?token=…&device=…&agent=… to the configured base endpoint.
     private func connectURL() -> URL? {
         guard var comps = URLComponents(string: endpoint),
@@ -172,6 +180,7 @@ final class LiveVoiceService: NSObject {
 
         do {
             try startCapture()
+            lastActivityAt = Date()
             state = .live
         } catch {
             logger.log("Voice capture failed: \(error)", level: .error)
@@ -286,11 +295,40 @@ final class LiveVoiceService: NSObject {
     }
 
     private func sendCaptured(_ buffer: AVAudioPCMBuffer) {
+        if autoStopOnSilence {
+            if rms(of: buffer) > voiceRMSThreshold {
+                lastActivityAt = Date()
+            } else if Date().timeIntervalSince(lastActivityAt) > silenceTimeout {
+                DispatchQueue.main.async { [weak self] in
+                    guard let self, self.state == .live else { return }
+                    self.logger.log("Auto-stopping: \(Int(self.silenceTimeout))s of silence")
+                    self.stop()
+                }
+                return
+            }
+        }
         guard let converted = convert(buffer, to: uploadFormat),
               let data = pcmData(from: converted) else { return }
         socket?.send(.data(data)) { [weak self] error in
             if let error { self?.logger.log("Voice send: \(error)", level: .error) }
         }
+    }
+
+    /// Root-mean-square level of a capture buffer (0…1), for silence detection.
+    private func rms(of buffer: AVAudioPCMBuffer) -> Float {
+        let frames = Int(buffer.frameLength)
+        guard frames > 0 else { return 0 }
+        var sum: Float = 0
+        if let ch = buffer.floatChannelData {
+            let p = ch[0]
+            for i in 0..<frames { sum += p[i] * p[i] }
+        } else if let ch = buffer.int16ChannelData {
+            let p = ch[0]
+            for i in 0..<frames { let v = Float(p[i]) / 32768; sum += v * v }
+        } else {
+            return 0
+        }
+        return (sum / Float(frames)).squareRoot()
     }
 
     private func receiveLoop() {
@@ -314,6 +352,7 @@ final class LiveVoiceService: NSObject {
 
     private func playIncoming(_ data: Data) {
         guard let buffer = pcmBuffer(from: data, format: playbackFormat) else { return }
+        lastActivityAt = Date()   // agent is replying — not silence
         playerNode.scheduleBuffer(buffer, completionHandler: nil)
     }
 
