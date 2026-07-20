@@ -32,9 +32,13 @@ final class ChatDetailStore: TDLibManagerProtocol {
     private var recorder: RecorderService?
     private var recURL: URL?
 
+    // Agent live voice — only offered in assistant chats
+    let isAssistantChat: Bool
+
     init(chatId: Int64) {
         self.chatId = chatId
         self.isPTTChat = PTTStore.isPTTChat(chatId)
+        self.isAssistantChat = AutoResponderStore.isAssistantChat(chatId)
         TDLibManager.shared.subscribe(self)
     }
     deinit { TDLibManager.shared.unsubscribe(self) }
@@ -122,6 +126,7 @@ struct ChatDetailScreen: View {
     @State private var store: ChatDetailStore
     @State private var draft = ""
     @State private var pickedItem: PhotosPickerItem?
+    @State private var showLiveVoice = false
 
     private let quickReplies = ["👍", "On my way", "Thanks!", "Give me a minute", "Call you soon"]
 
@@ -155,7 +160,20 @@ struct ChatDetailScreen: View {
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showLiveVoice) {
+            LiveVoiceView(isPresented: $showLiveVoice, chatId: store.chatId, agentLabel: title)
+        }
         .toolbar {
+            if store.isAssistantChat {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showLiveVoice = true
+                    } label: {
+                        Image(systemName: "waveform.circle")
+                    }
+                    .accessibilityLabel("Live voice with \(title)")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
                     store.togglePTT()

@@ -97,20 +97,59 @@ final class LiveVoiceService: NSObject {
     private let deviceParam = "phone"
     #endif
 
-    /// Appends ?token=…&device=… to the configured base endpoint.
+    // MARK: - Agent routing
+
+    /// The agent the global Live Voice button talks to, sent as ?agent=<id>.
+    /// Synced from the phone to the watch via iCloud KV.
+    var defaultAgentId: String {
+        get {
+            NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceDefaultAgent")
+                ?? UserDefaults.standard.string(forKey: "liveVoiceDefaultAgent") ?? ""
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "liveVoiceDefaultAgent")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(newValue, forKey: "liveVoiceDefaultAgent")
+        }
+    }
+
+    /// Per-chat agent ids (assistant chat -> agent id), synced as JSON.
+    private func agentMap() -> [String: String] {
+        let raw = NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceAgentMap")
+            ?? UserDefaults.standard.string(forKey: "liveVoiceAgentMap") ?? "{}"
+        return (try? JSONDecoder().decode([String: String].self, from: Data(raw.utf8))) ?? [:]
+    }
+    func agentId(forChat chatId: Int64) -> String { agentMap()[String(chatId)] ?? "" }
+    func setAgentId(_ id: String, forChat chatId: Int64) {
+        var map = agentMap()
+        map[String(chatId)] = id
+        let raw = String(decoding: (try? JSONEncoder().encode(map)) ?? Data("{}".utf8), as: UTF8.self)
+        NSUbiquitousKeyValueStore.default.set(raw, forKey: "liveVoiceAgentMap")
+        NSUbiquitousKeyValueStore.default.synchronize()
+        UserDefaults.standard.set(raw, forKey: "liveVoiceAgentMap")
+    }
+
+    /// The agent for the session currently being opened.
+    private var activeAgentId: String = ""
+
+    /// Appends ?token=…&device=…&agent=… to the configured base endpoint.
     private func connectURL() -> URL? {
         guard var comps = URLComponents(string: endpoint),
               comps.scheme?.hasPrefix("ws") == true else { return nil }
         var items = comps.queryItems ?? []
         if !voiceToken.isEmpty { items.append(URLQueryItem(name: "token", value: voiceToken)) }
         items.append(URLQueryItem(name: "device", value: deviceParam))
+        if !activeAgentId.isEmpty { items.append(URLQueryItem(name: "agent", value: activeAgentId)) }
         comps.queryItems = items
         return comps.url
     }
 
     // MARK: - Lifecycle
 
-    func start() {
+    /// Starts a live session. Pass an agent id to talk to a specific agent
+    /// (e.g. from an assistant chat); omit it to use the default agent.
+    func start(agentId: String? = nil) {
+        self.activeAgentId = (agentId?.isEmpty == false ? agentId! : defaultAgentId)
         guard state == .idle, let url = connectURL() else {
             state = .error
             return
