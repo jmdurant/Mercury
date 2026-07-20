@@ -16,6 +16,8 @@ struct AgentSettingsScreen: View {
     @State private var node = OpenClawNodeService.shared
     @State private var nodeURL: String = OpenClawNodeService.shared.gatewayURL
     @State private var nodeToken: String = OpenClawNodeService.shared.token
+    @State private var remoteURL: String = OpenClawNodeService.shared.remoteURL
+    @State private var remoteVoiceURL: String = LiveVoiceService.shared.remoteEndpoint
     @State private var deviceName: String = OpenClawNodeService.shared.displayName
     @State private var showResetConfirm = false
     @State private var showScanner = false
@@ -146,6 +148,15 @@ struct AgentSettingsScreen: View {
                         TextField("Device name (nodes list)", text: $deviceName)
                             .onChange(of: deviceName) { _, v in node.displayName = v }
 
+                        Text("Away-from-home fallback (Cloudflare tunnel)")
+                            .font(.caption2).foregroundStyle(.secondary)
+                        TextField("Remote gateway URL (wss://gateway.…)", text: $remoteURL)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: remoteURL) { _, v in node.remoteURL = v }
+                        TextField("Remote voice URL (wss://clawvoice.…)", text: $remoteVoiceURL)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: remoteVoiceURL) { _, v in voice.remoteEndpoint = v }
+
                         TextField("Voice endpoint override (optional)", text: $voiceURL)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: voiceURL) { _, v in voice.endpoint = v }
@@ -256,6 +267,7 @@ struct AgentSettingsScreen: View {
                 Button("Reset everything", role: .destructive) {
                     node.resetSetup()
                     nodeURL = ""; nodeToken = ""; deviceName = node.displayName
+                    remoteURL = ""; remoteVoiceURL = ""
                     voiceURL = ""; voiceToken = ""; defaultAgent = ""
                     cfId = ""; cfSecret = ""
                 }

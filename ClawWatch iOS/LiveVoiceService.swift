@@ -68,15 +68,32 @@ final class LiveVoiceService: NSObject {
         }
     }
 
+    /// Off-network voice endpoint (e.g. wss://clawvoice.vr2fit.com) used when
+    /// the node connected over its tunnel fallback rather than the LAN. Synced.
+    var remoteEndpoint: String {
+        get {
+            NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceRemote")
+                ?? UserDefaults.standard.string(forKey: "liveVoiceRemote") ?? ""
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "liveVoiceRemote")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(newValue, forKey: "liveVoiceRemote")
+        }
+    }
+
     /// The voice server port on the gateway box (single-box default).
     static let voicePort = 8795
 
-    /// The endpoint actually dialed. Defaults to the node's gateway host on the
-    /// voice port (same box) so voice works out of the box; `endpoint` is an
-    /// explicit override when the voice server lives elsewhere (e.g. a split
-    /// Cloudflare hostname). Both the override and the node URL sync via iCloud.
+    /// The endpoint actually dialed, in priority order:
+    /// 1. `endpoint` — an explicit manual override, always wins.
+    /// 2. `remoteEndpoint` — when the node connected via its tunnel (away).
+    /// 3. derived from the node's gateway host on the voice port (home, one box).
     var effectiveEndpoint: String {
         if !endpoint.isEmpty { return endpoint }
+        if OpenClawNodeService.shared.connectedViaRemote, !remoteEndpoint.isEmpty {
+            return remoteEndpoint
+        }
         return Self.voiceURL(fromGateway: OpenClawNodeService.shared.gatewayURL) ?? ""
     }
 

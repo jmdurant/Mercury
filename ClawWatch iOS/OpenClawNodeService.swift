@@ -72,6 +72,16 @@ final class OpenClawNodeService: NSObject {
         get { syncedString("ocGatewayURL") }
         set { setSynced("ocGatewayURL", newValue) }
     }
+    /// Off-network fallback: a public tunnel gateway URL (e.g.
+    /// wss://gateway.vr2fit.com). When the LAN gateway can't be found on the
+    /// network, connect dials this instead. Synced.
+    var remoteURL: String {
+        get { syncedString("ocRemoteURL") }
+        set { setSynced("ocRemoteURL", newValue) }
+    }
+    /// True when the current/last connection went out over `remoteURL` (the
+    /// tunnel) rather than the LAN — lets live voice pick its remote endpoint.
+    private(set) var connectedViaRemote = false
     /// Raw gateway auth token (auth.token) — the master secret. Synced.
     var token: String {
         get { syncedString("ocGatewayToken") }
@@ -265,11 +275,18 @@ final class OpenClawNodeService: NSObject {
     func start() {
         guard status == .idle || status == .error else { return }
         pendingRetries = 0
+        // Re-resolve the LAN endpoint on every fresh connect so home↔away
+        // switching is reliable (a stale endpoint from home won't connect away
+        // and would otherwise block the tunnel fallback). The pending-approval
+        // retry loop reuses the endpoint via redial()/dial() directly.
+        discoveredEndpoint = nil
         dial()
     }
 
     private func dial() {
-        guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else {
+        let lan = URL(string: gatewayURL).flatMap { $0.scheme?.hasPrefix("ws") == true ? $0 : nil }
+        let remote = URL(string: remoteURL).flatMap { $0.scheme?.hasPrefix("ws") == true ? $0 : nil }
+        guard lan != nil || remote != nil else {
             status = .error
             lastEvent = gatewayURL.isEmpty ? "No gateway URL set" : "Bad gateway URL: \(gatewayURL)"
             return
@@ -277,20 +294,41 @@ final class OpenClawNodeService: NSObject {
         status = .connecting
         isAutoConnect = true
         gotChallenge = false
+        connectedViaRemote = false
 
-        // A raw-IP LAN dial is aborted by iOS Local Network privacy. If we don't
-        // already hold a live Bonjour endpoint (e.g. paired via QR, or relaunched
-        // with only a persisted URL), resolve it over mDNS first, then dial that.
-        if discoveredEndpoint == nil, let host = url.host, Self.isPrivateLANHost(host) {
+        // Already hold a live LAN Bonjour endpoint → use it (fast home path).
+        if discoveredEndpoint != nil, let lan {
+            openWebSocket(url: lan); return
+        }
+
+        // LAN gateway is a private host: a raw-IP dial is aborted by iOS Local
+        // Network privacy, so resolve the Bonjour endpoint over mDNS. If it's not
+        // found (we're away), fall back to the tunnel URL.
+        if let lan, let host = lan.host, Self.isPrivateLANHost(host) {
             lastEvent = "Finding \(host) on the network…"
             NodeDiscoveryService.shared.resolveEndpoint(forHost: host) { [weak self] ep, tls in
                 guard let self, self.status == .connecting else { return }
-                if let ep { self.discoveredEndpoint = ep; self.discoveredTls = tls }
-                self.openWebSocket(url: url)
+                if let ep {
+                    self.discoveredEndpoint = ep; self.discoveredTls = tls
+                    self.openWebSocket(url: lan)
+                } else if let remote {
+                    self.connectedViaRemote = true
+                    self.lastEvent = "Not on home network — using tunnel \(remote.host ?? "")…"
+                    self.openWebSocket(url: remote)
+                } else {
+                    self.openWebSocket(url: lan)   // last resort; will surface the error
+                }
             }
             return
         }
-        openWebSocket(url: url)
+
+        // LAN URL is a public host (or none) → dial it, else the tunnel.
+        if let lan {
+            openWebSocket(url: lan)
+        } else if let remote {
+            connectedViaRemote = true
+            openWebSocket(url: remote)
+        }
     }
 
     /// True for hosts on the local network (private IPv4 or an mDNS `.local`
@@ -334,6 +372,11 @@ final class OpenClawNodeService: NSObject {
                 // Keep the "waiting for approval" state and retry automatically
                 // instead of flipping to an error.
                 self.schedulePendingRetry()
+            case .error:
+                // A gateway verdict (bootstrap expired, rejected, …) already set
+                // a specific message. The socket then closes — don't clobber the
+                // real reason with a generic "closed / socket 57" line.
+                return
             default:
                 self.status = .error
                 let stage = self.gotChallenge ? "after handshake" : "before handshake"
@@ -365,9 +408,9 @@ final class OpenClawNodeService: NSObject {
         stop()
         LiveVoiceService.shared.stop()
         let keys = [
-            "ocGatewayURL", "ocGatewayToken", "ocAutoConnect", "ocDeviceName",
+            "ocGatewayURL", "ocRemoteURL", "ocGatewayToken", "ocAutoConnect", "ocDeviceName",
             "ocBootstrapToken", "ocDeviceToken",
-            "liveVoiceEndpoint", "liveVoiceToken", "liveVoiceDefaultAgent",
+            "liveVoiceEndpoint", "liveVoiceRemote", "liveVoiceToken", "liveVoiceDefaultAgent",
             "liveVoiceAgentMap", "liveVoiceAutoStop", "liveVoiceSilenceTimeout",
             "cfAccessClientId", "cfAccessClientSecret",
         ]
@@ -405,12 +448,25 @@ final class OpenClawNodeService: NSObject {
                 status = .connected
                 pendingRetries = 0
                 lastEvent = "Connected as node"
-                // Capture the device token issued on approval; it replaces the
-                // one-time bootstrap token for all future connects.
-                if let issued = ((obj["payload"] as? [String: Any])?["auth"] as? [String: Any])?["token"] as? String,
-                   !issued.isEmpty {
+                // Capture the persistent device token issued on approval; it
+                // replaces the one-time bootstrap token for all future connects.
+                // The gateway has put it under payload.auth.token in practice,
+                // but check the other plausible spots too so a reconnect never
+                // has to fall back to a spent bootstrap token.
+                let payload = obj["payload"] as? [String: Any]
+                let auth = payload?["auth"] as? [String: Any]
+                let issued = (auth?["token"] as? String)
+                    ?? (auth?["deviceToken"] as? String)
+                    ?? (payload?["deviceToken"] as? String)
+                    ?? ((payload?["device"] as? [String: Any])?["token"] as? String)
+                if let issued, !issued.isEmpty {
                     deviceToken = issued
                     bootstrapToken = ""
+                    NSLog("OPENCLAW captured device token (\(issued.count) chars)")
+                } else {
+                    let authKeys = auth.map { Array($0.keys) } ?? []
+                    let payloadKeys = payload.map { Array($0.keys) } ?? []
+                    NSLog("OPENCLAW hello-ok had NO device token; auth keys=\(authKeys) payload keys=\(payloadKeys)")
                 }
                 fetchAgents()   // roster comes over a separate operator connection
             } else {
