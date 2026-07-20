@@ -103,18 +103,34 @@ final class OpenClawNodeService: NSObject {
         return "token"
     }
 
-    /// Decode a scanned/pasted setup code (base64url JSON {url, bootstrapToken})
-    /// and apply it. Clears any old device token so we re-pair cleanly.
-    @discardableResult
-    func applySetupCode(_ raw: String) -> Bool {
+    /// Decode a base64url setup code into its parts (no side effects).
+    static func decodeSetupCode(_ raw: String) -> (url: String, bootstrapToken: String)? {
         let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         var b64 = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
         while b64.count % 4 != 0 { b64 += "=" }
         guard let data = Data(base64Encoded: b64),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let url = obj["url"] as? String, url.hasPrefix("ws") else { return false }
+              let url = obj["url"] as? String, url.hasPrefix("ws") else { return nil }
+        return (url, (obj["bootstrapToken"] as? String) ?? "")
+    }
+
+    /// Apply a pairing directly (used for the phone→watch hand-off over
+    /// WatchConnectivity). Clears the old device token so it re-pairs.
+    func applyPairing(url: String, bootstrapToken: String) {
+        guard url.hasPrefix("ws") else { return }
         gatewayURL = url
-        bootstrapToken = (obj["bootstrapToken"] as? String) ?? ""
+        self.bootstrapToken = bootstrapToken
+        deviceToken = ""
+        lastEvent = "Paired from iPhone — connecting…"
+    }
+
+    /// Decode a scanned/pasted setup code (base64url JSON {url, bootstrapToken})
+    /// and apply it. Clears any old device token so we re-pair cleanly.
+    @discardableResult
+    func applySetupCode(_ raw: String) -> Bool {
+        guard let (url, bt) = Self.decodeSetupCode(raw) else { return false }
+        gatewayURL = url
+        bootstrapToken = bt
         deviceToken = ""
         lastEvent = "Setup code applied — connect to pair"
         return true

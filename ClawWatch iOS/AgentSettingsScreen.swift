@@ -20,6 +20,8 @@ struct AgentSettingsScreen: View {
     @State private var showResetConfirm = false
     @State private var showScanner = false
     @State private var pasteCode = ""
+    @State private var showWatchScanner = false
+    @State private var watchPairStatus = ""
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
     @State private var discovery = NodeDiscoveryService.shared
@@ -232,6 +234,19 @@ struct AgentSettingsScreen: View {
                 } footer: {
                     Text("Clears the gateway URL, tokens, agents, voice config, and this device's identity. You'll reconfigure and re-approve the node.")
                 }
+
+                Section {
+                    Button {
+                        showWatchScanner = true
+                    } label: {
+                        Label("Pair Watch (scan its QR)", systemImage: "applewatch.radiowaves.left.and.right")
+                    }
+                    if !watchPairStatus.isEmpty {
+                        Text(watchPairStatus).font(.caption).foregroundStyle(.secondary)
+                    }
+                } footer: {
+                    Text("The watch has no camera — scan a second setup code here and the phone sends it to the watch, which then pairs on its own. Approve the watch separately on the gateway.")
+                }
             }
             .navigationTitle("Agent Access")
             .sheet(isPresented: $showScanner) {
@@ -244,6 +259,25 @@ struct AgentSettingsScreen: View {
                     .navigationTitle("Scan setup QR")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { showScanner = false } } }
+                }
+            }
+            .sheet(isPresented: $showWatchScanner) {
+                NavigationStack {
+                    QRScannerView { code in
+                        if let (url, bt) = OpenClawNodeService.decodeSetupCode(code), !bt.isEmpty {
+                            let sent = WatchBridge.shared.sendPairingToWatch(url: url, bootstrapToken: bt)
+                            watchPairStatus = sent
+                                ? "Sent to watch — open ClawWatch on the watch, then approve it on the gateway."
+                                : "Couldn't reach the watch app. Make sure it's installed."
+                        } else {
+                            watchPairStatus = "That QR isn't an OpenClaw setup code."
+                        }
+                        showWatchScanner = false
+                    }
+                    .ignoresSafeArea()
+                    .navigationTitle("Scan the watch's QR")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Cancel") { showWatchScanner = false } } }
                 }
             }
             .confirmationDialog("Reset OpenClaw Setup?", isPresented: $showResetConfirm, titleVisibility: .visible) {

@@ -43,6 +43,17 @@ final class WatchBridge: NSObject, WCSessionDelegate {
             })
         }
     }
+
+    /// Hand a pairing ({url, bootstrapToken}) to the watch so it can pair
+    /// without a camera. Queued via transferUserInfo — delivered whenever the
+    /// watch app next runs, even if it isn't reachable right now.
+    @discardableResult
+    func sendPairingToWatch(url: String, bootstrapToken: String) -> Bool {
+        guard let session, session.activationState == .activated,
+              session.isPaired, session.isWatchAppInstalled else { return false }
+        session.transferUserInfo(["type": "pair", "url": url, "bootstrapToken": bootstrapToken])
+        return true
+    }
     #endif
 
     // MARK: - WCSessionDelegate
@@ -59,6 +70,18 @@ final class WatchBridge: NSObject, WCSessionDelegate {
         }
         #else
         replyHandler([:])
+        #endif
+    }
+
+    func session(_ session: WCSession, didReceiveUserInfo userInfo: [String: Any] = [:]) {
+        #if os(watchOS)
+        guard userInfo["type"] as? String == "pair",
+              let url = userInfo["url"] as? String,
+              let bt = userInfo["bootstrapToken"] as? String else { return }
+        Task { @MainActor in
+            OpenClawNodeService.shared.applyPairing(url: url, bootstrapToken: bt)
+            OpenClawNodeService.shared.start()
+        }
         #endif
     }
 
