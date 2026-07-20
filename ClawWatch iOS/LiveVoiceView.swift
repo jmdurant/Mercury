@@ -22,6 +22,8 @@ struct LiveVoiceView: View {
     @State private var endpoint = LiveVoiceService.shared.endpoint
     @State private var token = LiveVoiceService.shared.voiceToken
     @State private var agentId: String = ""
+    @State private var autoStop = LiveVoiceService.shared.autoStopOnSilence
+    @State private var timeout = LiveVoiceService.shared.silenceTimeout
 
     private var isPerChat: Bool { chatId != nil }
 
@@ -56,6 +58,7 @@ struct LiveVoiceView: View {
                 .disabled(voice.state == .idle && effectiveAgentId.isEmpty)
 
                 pttToggle
+                autoStopConfig
                 agentConfig
                 Spacer()
             }
@@ -98,6 +101,26 @@ struct LiveVoiceView: View {
         if let err = ptt.lastError { return err }
         if !ptt.isJoined { return "Join to talk with the system PTT button — even in the background or on the lock screen." }
         return ptt.isTransmitting ? "Transmitting…" : "Joined — press the system PTT button to talk."
+    }
+
+    // MARK: - Auto-stop on silence
+
+    private var autoStopConfig: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle("Auto-stop when quiet", isOn: $autoStop)
+                .onChange(of: autoStop) { _, v in voice.autoStopOnSilence = v }
+            if autoStop {
+                HStack {
+                    Slider(value: $timeout, in: 3...30, step: 1)
+                        .onChange(of: timeout) { _, v in voice.silenceTimeout = v }
+                    Text("\(Int(timeout))s")
+                        .font(.caption).monospacedDigit()
+                        .frame(width: 34, alignment: .trailing)
+                }
+                Text("Ends the session after this much silence from both you and the agent.")
+                    .font(.caption2).foregroundStyle(.tertiary)
+            }
+        }
     }
 
     // MARK: - Agent + endpoint config

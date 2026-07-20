@@ -135,8 +135,32 @@ final class LiveVoiceService: NSObject {
     // Auto-stop on silence: ends the session after a stretch with neither the
     // user speaking nor the agent replying (matches how dictation gives up on
     // quiet). Resets on either side making sound, so it won't cut off a reply.
-    var autoStopOnSilence = true
-    private let silenceTimeout: TimeInterval = 8
+    // Both settings sync phone→watch via iCloud KV.
+    var autoStopOnSilence: Bool {
+        get {
+            (NSUbiquitousKeyValueStore.default.object(forKey: "liveVoiceAutoStop") as? Bool)
+                ?? (UserDefaults.standard.object(forKey: "liveVoiceAutoStop") as? Bool) ?? true
+        }
+        set {
+            NSUbiquitousKeyValueStore.default.set(newValue, forKey: "liveVoiceAutoStop")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(newValue, forKey: "liveVoiceAutoStop")
+        }
+    }
+    /// Seconds of silence before auto-stop (clamped 3…30).
+    var silenceTimeout: TimeInterval {
+        get {
+            let stored = (NSUbiquitousKeyValueStore.default.object(forKey: "liveVoiceSilenceTimeout") as? Double)
+                ?? (UserDefaults.standard.object(forKey: "liveVoiceSilenceTimeout") as? Double) ?? 8
+            return min(30, max(3, stored))
+        }
+        set {
+            let clamped = min(30, max(3, newValue))
+            NSUbiquitousKeyValueStore.default.set(clamped, forKey: "liveVoiceSilenceTimeout")
+            NSUbiquitousKeyValueStore.default.synchronize()
+            UserDefaults.standard.set(clamped, forKey: "liveVoiceSilenceTimeout")
+        }
+    }
     private let voiceRMSThreshold: Float = 0.02
     private var lastActivityAt = Date()
 
