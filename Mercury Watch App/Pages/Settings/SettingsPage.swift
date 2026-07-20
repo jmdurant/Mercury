@@ -113,10 +113,26 @@ struct SettingsPage: View {
                     if node.status == .idle || node.status == .error { node.start() } else { node.stop() }
                 }
                 .font(.caption)
+
+                // Standalone setup: discover the gateway on Wi-Fi
+                let discovery = NodeDiscoveryService.shared
+                Button {
+                    discovery.isBrowsing ? discovery.stop() : discovery.start()
+                } label: {
+                    Text(discovery.isBrowsing ? "Searching…" : "Find on network").font(.caption)
+                }
+                ForEach(discovery.gateways) { gw in
+                    Button {
+                        node.gatewayURL = gw.url
+                        discovery.stop()
+                    } label: {
+                        Text(gw.name).font(.caption2)
+                    }
+                }
             } header: {
                 Text("OpenClaw node")
             } footer: {
-                Text("Config syncs automatically from iPhone via iCloud. The watch connects while in the foreground.")
+                Text("Config syncs from iPhone via iCloud. Standalone, tap Find on network to discover the gateway on Wi-Fi. Connects while in the foreground.")
             }
 
             Section {

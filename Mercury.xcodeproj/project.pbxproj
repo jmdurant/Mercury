@@ -210,6 +210,7 @@
 		DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */ = {isa = PBXBuildFile; fileRef = P00PTT022D14000000000002 /* PTTService.swift */; };
 		DDC1B0000000000000000018 /* PTTChannelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000017 /* PTTChannelService.swift */; };
 		DDC1B000000000000000001A /* NodeDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000019 /* NodeDiscoveryService.swift */; };
+		DDC1C0000000000000000097 /* NodeDiscoveryService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000019 /* NodeDiscoveryService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1204,6 +1205,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1C0000000000000000097 /* NodeDiscoveryService.swift in Sources (watch) */,
 				DDC1C0000000000000000092 /* LiveVoiceService.swift in Sources (watch) */,
 				DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */,
 				DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */,
