@@ -17,6 +17,7 @@ struct AgentSettingsScreen: View {
     @State private var nodeURL: String = OpenClawNodeService.shared.gatewayURL
     @State private var nodeToken: String = OpenClawNodeService.shared.token
     @State private var deviceName: String = OpenClawNodeService.shared.displayName
+    @State private var showResetConfirm = false
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
     @State private var discovery = NodeDiscoveryService.shared
@@ -202,8 +203,27 @@ struct AgentSettingsScreen: View {
                         }
                     }
                 }
+
+                Section {
+                    Button("Reset OpenClaw Setup", role: .destructive) {
+                        showResetConfirm = true
+                    }
+                } footer: {
+                    Text("Clears the gateway URL, tokens, agents, voice config, and this device's identity. You'll reconfigure and re-approve the node.")
+                }
             }
             .navigationTitle("Agent Access")
+            .confirmationDialog("Reset OpenClaw Setup?", isPresented: $showResetConfirm, titleVisibility: .visible) {
+                Button("Reset everything", role: .destructive) {
+                    node.resetSetup()
+                    nodeURL = ""; nodeToken = ""; deviceName = node.displayName
+                    voiceURL = ""; voiceToken = ""; defaultAgent = ""
+                    cfId = ""; cfSecret = ""
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("This unpairs this device from the gateway and clears all config.")
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") { isPresented = false }

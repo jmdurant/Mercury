@@ -14,6 +14,8 @@ struct SettingsPage: View {
     var vm = SettingsViewModel.init
 
     @State private var voiceAgentId = LiveVoiceService.shared.defaultAgentId
+    @State private var deviceName = OpenClawNodeService.shared.displayName
+    @State private var showResetConfirm = false
     
     var body: some View {
         ScrollView {
@@ -129,6 +131,21 @@ struct SettingsPage: View {
                         Text(gw.name).font(.caption2)
                     }
                 }
+
+                TextField("Device name", text: $deviceName)
+                    .font(.caption2)
+                    .onChange(of: deviceName) { _, v in node.displayName = v }
+
+                Button("Reset Setup", role: .destructive) { showResetConfirm = true }
+                    .font(.caption)
+                    .confirmationDialog("Reset OpenClaw setup?", isPresented: $showResetConfirm, titleVisibility: .visible) {
+                        Button("Reset everything", role: .destructive) {
+                            node.resetSetup()
+                            deviceName = node.displayName
+                            voiceAgentId = ""
+                        }
+                        Button("Cancel", role: .cancel) {}
+                    }
             } header: {
                 Text("OpenClaw node")
             } footer: {

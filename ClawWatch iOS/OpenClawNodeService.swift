@@ -176,6 +176,30 @@ final class OpenClawNodeService: NSObject {
         status = .idle
     }
 
+    /// Wipe all OpenClaw + voice setup and this device's identity, and
+    /// disconnect. Use when a half-finished setup is in a bad state. The
+    /// gateway will treat this device as new (needs re-approval) next connect.
+    func resetSetup() {
+        stop()
+        LiveVoiceService.shared.stop()
+        let keys = [
+            "ocGatewayURL", "ocGatewayToken", "ocAutoConnect", "ocDeviceName",
+            "liveVoiceEndpoint", "liveVoiceToken", "liveVoiceDefaultAgent",
+            "liveVoiceAgentMap", "liveVoiceAutoStop", "liveVoiceSilenceTimeout",
+            "cfAccessClientId", "cfAccessClientSecret",
+        ]
+        for key in keys {
+            UserDefaults.standard.removeObject(forKey: key)
+            NSUbiquitousKeyValueStore.default.removeObject(forKey: key)
+        }
+        NSUbiquitousKeyValueStore.default.synchronize()
+        KeychainService.delete(key: "ocNodePrivateKey")   // new identity next time
+        agents = []
+        agentsDefaultId = ""
+        status = .idle
+        lastEvent = "Reset — reconfigure and re-approve on the gateway"
+    }
+
     // MARK: - Frame receive loop
 
     private func receive() {
