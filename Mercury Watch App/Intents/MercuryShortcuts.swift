@@ -39,5 +39,14 @@ struct MercuryShortcuts: AppShortcutsProvider {
             shortTitle: "Talk to Agent",
             systemImageName: "waveform"
         )
+        AppShortcut(
+            intent: PushToTalkAgentIntent(),
+            phrases: [
+                "Push to talk with \(.applicationName)",
+                "Arm \(.applicationName) push to talk"
+            ],
+            shortTitle: "Push-to-Talk",
+            systemImageName: "dot.radiowaves.left.and.right"
+        )
     }
 }

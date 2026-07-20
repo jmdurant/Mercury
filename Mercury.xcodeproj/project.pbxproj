@@ -109,6 +109,7 @@
 		F00VID012D0E000000000001 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00VID002D0E000000000001 /* VideoPlayerView.swift */; };
 		G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT002D0F000000000001 /* SendMessageAppIntent.swift */; };
 		G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */; };
+		G00INT072D0F000000000006 /* PushToTalkAgentIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT062D0F000000000006 /* PushToTalkAgentIntent.swift */; };
 		G00INT052D0F000000000004 /* TalkToAgentAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000004 /* TalkToAgentAppIntent.swift */; };
 		G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = H00BKG002D10000000000001 /* BackgroundSyncService.swift */; };
@@ -181,6 +182,7 @@
 		DDC1B0000000000000000004 /* ChatDetailScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000003 /* ChatDetailScreen.swift */; };
 		DDC1C0000000000000000001 /* SendMessageAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT002D0F000000000001 /* SendMessageAppIntent.swift */; };
 		DDC1C0000000000000000002 /* CheckUnreadAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */; };
+		DDC1C0000000000000000096 /* PushToTalkAgentIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT062D0F000000000006 /* PushToTalkAgentIntent.swift */; };
 		DDC1C0000000000000000095 /* TalkToAgentAppIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000004 /* TalkToAgentAppIntent.swift */; };
 		DDC1C0000000000000000003 /* MercuryShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = G00INT042D0F000000000003 /* MercuryShortcuts.swift */; };
 		DDC1B0000000000000000006 /* CallService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000005 /* CallService.swift */; };
@@ -359,6 +361,7 @@
 		F00VID002D0E000000000001 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
 		G00INT002D0F000000000001 /* SendMessageAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendMessageAppIntent.swift; sourceTree = "<group>"; };
 		G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CheckUnreadAppIntent.swift; sourceTree = "<group>"; };
+		G00INT062D0F000000000006 /* PushToTalkAgentIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushToTalkAgentIntent.swift; sourceTree = "<group>"; };
 		G00INT042D0F000000000004 /* TalkToAgentAppIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TalkToAgentAppIntent.swift; sourceTree = "<group>"; };
 		G00INT042D0F000000000003 /* MercuryShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MercuryShortcuts.swift; sourceTree = "<group>"; };
 		H00BKG002D10000000000001 /* BackgroundSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundSyncService.swift; sourceTree = "<group>"; };
@@ -603,6 +606,7 @@
 			children = (
 				G00INT002D0F000000000001 /* SendMessageAppIntent.swift */,
 				G00INT022D0F000000000002 /* CheckUnreadAppIntent.swift */,
+				G00INT062D0F000000000006 /* PushToTalkAgentIntent.swift */,
 				G00INT042D0F000000000004 /* TalkToAgentAppIntent.swift */,
 				G00INT042D0F000000000003 /* MercuryShortcuts.swift */,
 			);
@@ -1211,6 +1215,7 @@
 				F00VID012D0E000000000001 /* VideoPlayerView.swift in Sources */,
 				G00INT012D0F000000000001 /* SendMessageAppIntent.swift in Sources */,
 				G00INT032D0F000000000002 /* CheckUnreadAppIntent.swift in Sources */,
+				G00INT072D0F000000000006 /* PushToTalkAgentIntent.swift in Sources */,
 				G00INT052D0F000000000004 /* TalkToAgentAppIntent.swift in Sources */,
 				G00INT052D0F000000000003 /* MercuryShortcuts.swift in Sources */,
 				H00BKG012D10000000000001 /* BackgroundSyncService.swift in Sources */,
@@ -1330,6 +1335,7 @@
 				DDC1B0000000000000000006 /* CallService.swift in Sources */,
 				DDC1C0000000000000000001 /* SendMessageAppIntent.swift in Sources */,
 				DDC1C0000000000000000002 /* CheckUnreadAppIntent.swift in Sources */,
+				DDC1C0000000000000000096 /* PushToTalkAgentIntent.swift in Sources */,
 				DDC1C0000000000000000095 /* TalkToAgentAppIntent.swift in Sources */,
 				DDC1C0000000000000000003 /* MercuryShortcuts.swift in Sources */,
 				DDC1B0000000000000000004 /* ChatDetailScreen.swift in Sources */,
