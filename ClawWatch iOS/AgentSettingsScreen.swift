@@ -16,6 +16,7 @@ struct AgentSettingsScreen: View {
     @State private var node = OpenClawNodeService.shared
     @State private var nodeURL: String = OpenClawNodeService.shared.gatewayURL
     @State private var nodeToken: String = OpenClawNodeService.shared.token
+    @State private var deviceName: String = OpenClawNodeService.shared.displayName
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
     @State private var discovery = NodeDiscoveryService.shared
@@ -95,6 +96,8 @@ struct AgentSettingsScreen: View {
                     TextField("Gateway token", text: $nodeToken)
                         .autocorrectionDisabled().textInputAutocapitalization(.never)
                         .onChange(of: nodeToken) { _, v in node.token = v }
+                    TextField("Device name (shown in nodes list)", text: $deviceName)
+                        .onChange(of: deviceName) { _, v in node.displayName = v }
                     Button(node.status == .connected || node.status == .connecting || node.status == .pending
                            ? "Disconnect Node" : "Connect as Node") {
                         if node.status == .idle || node.status == .error { node.start() }

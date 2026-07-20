@@ -101,12 +101,23 @@ final class OpenClawNodeService: NSObject {
     #if os(watchOS)
     private let platformName = "watchos"
     private let deviceFamilyName = "watch"
-    private let displayName = "ClawWatch Watch"
+    private let defaultDisplayName = "ClawWatch Watch"
     #else
     private let platformName = "ios"
     private let deviceFamilyName = "phone"
-    private let displayName = "ClawWatch iPhone"
+    private let defaultDisplayName = "ClawWatch iPhone"
     #endif
+
+    /// Friendly name shown in `openclaw nodes list` and the approval prompt.
+    /// Local to each device (deliberately NOT iCloud-synced) so the phone and
+    /// watch keep distinct names.
+    var displayName: String {
+        get { UserDefaults.standard.string(forKey: "ocDeviceName") ?? defaultDisplayName }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+            UserDefaults.standard.set(trimmed.isEmpty ? defaultDisplayName : trimmed, forKey: "ocDeviceName")
+        }
+    }
 
     // MARK: - Persistent device identity (Ed25519)
 
@@ -206,10 +217,28 @@ final class OpenClawNodeService: NSObject {
                 lastEvent = "Connected as node"
                 fetchAgents()   // roster comes over a separate operator connection
             } else {
-                // A first-time node lands in pending pairing until approved.
-                status = .pending
-                lastEvent = "Pending pairing approval"
+                // Surface the gateway's actual rejection instead of always
+                // assuming "pending pairing".
+                let errObj = obj["error"] as? [String: Any]
+                let code = errObj?["code"] as? String
+                let msg = (errObj?["message"] as? String)
+                    ?? (obj["error"] as? String)
+                let detail = [msg, code.map { "[\($0)]" }].compactMap { $0 }.joined(separator: " ")
+                let hay = (detail).lowercased()
+                if hay.isEmpty || hay.contains("pair") || hay.contains("approv") || hay.contains("pending") {
+                    status = .pending
+                    lastEvent = detail.isEmpty ? "Pending pairing approval" : "Pending: \(detail)"
+                } else {
+                    status = .error
+                    lastEvent = "Gateway rejected: \(detail)"
+                }
             }
+        } else if type == "res", let ok = obj["ok"] as? Bool, ok == false,
+                  (obj["id"] as? String) != "agents.list" {
+            // Any other failed response — show it rather than swallow it.
+            let msg = (obj["error"] as? [String: Any])?["message"] as? String
+                ?? "\(obj["error"] ?? "error")"
+            lastEvent = "Gateway: \(msg)"
         }
     }
 
