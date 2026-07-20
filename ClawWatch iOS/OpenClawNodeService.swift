@@ -84,6 +84,7 @@ final class OpenClawNodeService: NSObject {
     }
 
     private let clientId = "node-host"
+    private let operatorClientId = "openclaw-ios"   // official iOS client id
     private let protocolVersion = 4
     private let commands = [
         "health.snapshot", "location.get", "battery.get", "device.info",
@@ -158,6 +159,7 @@ final class OpenClawNodeService: NSObject {
     func stop() {
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
+        closeOperator()
         status = .idle
     }
 
@@ -199,21 +201,108 @@ final class OpenClawNodeService: NSObject {
             if (obj["ok"] as? Bool) == true {
                 status = .connected
                 lastEvent = "Connected as node"
-                requestAgents()
+                fetchAgents()   // roster comes over a separate operator connection
             } else {
                 // A first-time node lands in pending pairing until approved.
                 status = .pending
                 lastEvent = "Pending pairing approval"
             }
-        } else if type == "res", let id = obj["id"] as? String, id == "agents.list" {
-            handleAgentsList(obj)
         }
     }
 
-    /// Ask the gateway for its configured agents so the voice picker can list
-    /// them instead of the user typing ids.
-    private func requestAgents() {
-        send(type: "req", body: ["id": "agents.list", "method": "agents.list", "params": [:]])
+    // MARK: - Agent roster (operator connection)
+    //
+    // agents.list is operator-scoped — a node role is refused. So we open a
+    // short-lived second connection as an operator (client id openclaw-ios,
+    // scope operator.read, which is auto-granted with the shared token), fetch
+    // the roster, and close it. Verified against a live gateway.
+
+    private var operatorSocket: URLSessionWebSocketTask?
+
+    func fetchAgents() {
+        guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else { return }
+        operatorSocket?.cancel(with: .goingAway, reason: nil)
+        operatorSocket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        operatorSocket?.resume()
+        receiveOperator()
+    }
+
+    private func receiveOperator() {
+        operatorSocket?.receive { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success(.string(let text)): self.handleOperatorFrame(text)
+            case .success(.data(let data)): self.handleOperatorFrame(String(decoding: data, as: UTF8.self))
+            case .failure: return
+            }
+            self.receiveOperator()
+        }
+    }
+
+    private func handleOperatorFrame(_ text: String) {
+        guard let obj = try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]
+        else { return }
+        let type = obj["type"] as? String
+        if type == "event", (obj["event"] as? String) == "connect.challenge",
+           let payload = obj["payload"] as? [String: Any], let nonce = payload["nonce"] as? String {
+            sendOperatorConnect(nonce: nonce)
+        } else if type == "res", (obj["id"] as? String) == "connect" {
+            if (obj["ok"] as? Bool) == true {
+                sendOperator(body: ["id": "agents.list", "method": "agents.list", "params": [:]])
+            } else {
+                lastEvent = "Agent list unavailable — enter ids manually"
+                closeOperator()
+            }
+        } else if type == "res", (obj["id"] as? String) == "agents.list" {
+            handleAgentsList(obj)
+            closeOperator()   // one-shot fetch
+        }
+    }
+
+    private func sendOperatorConnect(nonce: String) {
+        let identity = loadOrCreateIdentity()
+        let signedAtMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let scopes = "operator.read"
+        let payload = [
+            "v3", identity.deviceId, operatorClientId, "ui", "operator", scopes,
+            String(signedAtMs), token, nonce, platformName, deviceFamilyName,
+        ].joined(separator: "|")
+        guard let signature = try? identity.privateKey.signature(for: Data(payload.utf8)) else {
+            closeOperator(); return
+        }
+        let params: [String: Any] = [
+            "minProtocol": protocolVersion,
+            "maxProtocol": protocolVersion,
+            "client": [
+                "id": operatorClientId, "displayName": displayName, "version": "1.0.0",
+                "platform": platformName, "deviceFamily": deviceFamilyName,
+                "mode": "ui", "instanceId": identity.deviceId,
+            ],
+            "role": "operator",
+            "scopes": ["operator.read"],
+            "device": [
+                "id": identity.deviceId,
+                "publicKey": base64url(identity.privateKey.publicKey.rawRepresentation),
+                "signature": base64url(signature),
+                "signedAt": signedAtMs,
+                "nonce": nonce,
+            ],
+            "auth": ["token": token],
+        ]
+        sendOperator(body: ["id": "connect", "method": "connect", "params": params])
+    }
+
+    private func sendOperator(body: [String: Any]) {
+        var frame = body
+        frame["type"] = "req"
+        guard let data = try? JSONSerialization.data(withJSONObject: frame),
+              let text = String(data: data, encoding: .utf8) else { return }
+        operatorSocket?.send(.string(text)) { _ in }
+    }
+
+    private func closeOperator() {
+        operatorSocket?.cancel(with: .goingAway, reason: nil)
+        operatorSocket = nil
     }
 
     private func handleAgentsList(_ obj: [String: Any]) {
