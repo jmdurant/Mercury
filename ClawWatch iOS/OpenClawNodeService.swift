@@ -22,6 +22,16 @@ final class OpenClawNodeService: NSObject {
     var status: Status = .idle
     var lastEvent: String = ""
 
+    /// An agent advertised by the gateway (agents.list). `id` is the value the
+    /// live-voice channel sends as ?agent=.
+    struct OCAgent: Identifiable, Hashable {
+        let id: String
+        let name: String
+    }
+    /// Agents fetched from the gateway once connected (empty until then).
+    var agents: [OCAgent] = []
+    var agentsDefaultId: String = ""
+
     override init() {
         super.init()
         NSUbiquitousKeyValueStore.default.synchronize()
@@ -189,12 +199,41 @@ final class OpenClawNodeService: NSObject {
             if (obj["ok"] as? Bool) == true {
                 status = .connected
                 lastEvent = "Connected as node"
+                requestAgents()
             } else {
                 // A first-time node lands in pending pairing until approved.
                 status = .pending
                 lastEvent = "Pending pairing approval"
             }
+        } else if type == "res", let id = obj["id"] as? String, id == "agents.list" {
+            handleAgentsList(obj)
         }
+    }
+
+    /// Ask the gateway for its configured agents so the voice picker can list
+    /// them instead of the user typing ids.
+    private func requestAgents() {
+        send(type: "req", body: ["id": "agents.list", "method": "agents.list", "params": [:]])
+    }
+
+    private func handleAgentsList(_ obj: [String: Any]) {
+        guard (obj["ok"] as? Bool) == true, let payload = obj["payload"] as? [String: Any] else {
+            // Likely a scope restriction (agents.list is a management method).
+            lastEvent = "Agent list unavailable — enter ids manually"
+            return
+        }
+        agentsDefaultId = payload["defaultId"] as? String ?? ""
+        let list = payload["agents"] as? [[String: Any]] ?? []
+        agents = list.compactMap { entry in
+            guard let id = entry["id"] as? String else { return nil }
+            let identity = entry["identity"] as? [String: Any]
+            let base = (entry["name"] as? String) ?? (identity?["name"] as? String) ?? id
+            if let emoji = identity?["emoji"] as? String, !emoji.isEmpty {
+                return OCAgent(id: id, name: "\(emoji) \(base)")
+            }
+            return OCAgent(id: id, name: base)
+        }
+        lastEvent = "Loaded \(agents.count) agent\(agents.count == 1 ? "" : "s")"
     }
 
     // MARK: - Connect (signed)

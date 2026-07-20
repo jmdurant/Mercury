@@ -18,6 +18,7 @@ struct LiveVoiceView: View {
 
     @State private var voice = LiveVoiceService.shared
     @State private var ptt = PTTChannelService.shared
+    @State private var node = OpenClawNodeService.shared
     @State private var endpoint = LiveVoiceService.shared.endpoint
     @State private var token = LiveVoiceService.shared.voiceToken
     @State private var agentId: String = ""
@@ -106,6 +107,34 @@ struct LiveVoiceView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(isPerChat ? "Agent id for \(agentLabel)" : "Default agent id")
                     .font(.caption).foregroundStyle(.secondary)
+
+                // Agents advertised by the gateway (if the node is connected)
+                if !node.agents.isEmpty {
+                    Menu {
+                        ForEach(node.agents) { agent in
+                            Button {
+                                agentId = agent.id
+                            } label: {
+                                Label(agent.name, systemImage: agent.id == agentId ? "checkmark" : "person.circle")
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "person.2.wave.2")
+                            Text(node.agents.first { $0.id == agentId }?.name
+                                 ?? (agentId.isEmpty ? "Choose an agent" : agentId))
+                            Spacer()
+                            Image(systemName: "chevron.up.chevron.down").font(.caption2)
+                        }
+                        .font(.subheadline)
+                    }
+                } else {
+                    Text(node.status == .connected
+                         ? "No agents advertised — enter an id below."
+                         : "Connect the OpenClaw node (Agent settings) to list agents, or enter an id.")
+                        .font(.caption2).foregroundStyle(.tertiary)
+                }
+
                 TextField("agent id (what your server expects)", text: $agentId)
                     .textFieldStyle(.roundedBorder)
                     .autocorrectionDisabled()
