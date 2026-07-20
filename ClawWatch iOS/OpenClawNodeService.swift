@@ -145,9 +145,11 @@ final class OpenClawNodeService: NSObject {
     // MARK: - Lifecycle
 
     func start() {
-        guard status == .idle || status == .error,
-              let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else {
-            status = .error; return
+        guard status == .idle || status == .error else { return }
+        guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else {
+            status = .error
+            lastEvent = gatewayURL.isEmpty ? "No gateway URL set" : "Bad gateway URL: \(gatewayURL)"
+            return
         }
         status = .connecting
         isAutoConnect = true
@@ -176,6 +178,7 @@ final class OpenClawNodeService: NSObject {
             case .failure(let error):
                 self.logger.log("node socket: \(error)", level: .error)
                 self.status = .error
+                self.lastEvent = "Connection failed: \(error.localizedDescription)"
                 return
             @unknown default: break
             }
