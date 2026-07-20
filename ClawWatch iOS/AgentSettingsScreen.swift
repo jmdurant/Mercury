@@ -2,8 +2,8 @@
 //  AgentSettingsScreen.swift
 //  ClawWatch iOS
 //
-//  Trust controls for the AI agent channel: per-category consent, an
-//  optional shared-secret token, and a reviewable audit log.
+//  Trust controls for the AI agent channel, node/voice setup, and pairing.
+//  Everyday controls up top; fallback + niche fields live under "Advanced".
 //
 
 import SwiftUI
@@ -31,12 +31,12 @@ struct AgentSettingsScreen: View {
     @State private var defaultAgent: String = LiveVoiceService.shared.defaultAgentId
     @State private var autoStop: Bool = LiveVoiceService.shared.autoStopOnSilence
     @State private var silenceTimeout: Double = LiveVoiceService.shared.silenceTimeout
+    @State private var showAdvanced = false
 
     private let voicePort = 8790
 
     /// The voice endpoint implied by the gateway URL — same scheme + host on
-    /// the voice port. Works for a shared host (LAN / same box); Cloudflare
-    /// setups with a separate voice hostname would edit it afterward.
+    /// the voice port (shared box). Cloudflare split-hostname setups edit it.
     private var voiceURLFromNodeHost: String? {
         guard var comps = URLComponents(string: node.gatewayURL),
               comps.host != nil, comps.scheme?.hasPrefix("ws") == true else { return nil }
@@ -49,6 +49,7 @@ struct AgentSettingsScreen: View {
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: Consent
                 Section {
                     ForEach(AutoResponderStore.Consent.allCases) { c in
                         Toggle(c.label, isOn: Binding(
@@ -62,45 +63,13 @@ struct AgentSettingsScreen: View {
                     Text("Controls which data and actions designated assistant chats can request.")
                 }
 
-                Section {
-                    TextField("Optional shared secret", text: $token)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                    Button("Save Token") {
-                        AutoResponderStore.token = token.isEmpty ? nil : token
-                    }
-                } header: {
-                    Text("Command token")
-                } footer: {
-                    Text("When set, commands must be sent as \"#\(token.isEmpty ? "token" : token) status\". Prevents a hijacked chat from querying you.")
-                }
-
-                Section {
-                    Toggle("Push arrival/departure", isOn: Binding(
-                        get: { AutoResponderStore.isContextPushEnabled },
-                        set: {
-                            AutoResponderStore.isContextPushEnabled = $0
-                            if $0 { ContextPushService.shared.start() }
-                            else { ContextPushService.shared.stop() }
-                        }
-                    ))
-                } header: {
-                    Text("Proactive context")
-                } footer: {
-                    Text("Sends a note to assistant chats when you arrive at or leave a place, so the agent has context without polling.")
-                }
-
+                // MARK: Node (primary setup)
                 Section {
                     LabeledContent("Status", value: node.status.rawValue)
                     if !node.lastEvent.isEmpty {
                         Text(node.lastEvent).font(.caption).foregroundStyle(.secondary)
                     }
-
-                    // Preferred: scan the QR from `openclaw qr` (carries the URL
-                    // + a scoped bootstrap token — no raw admin token needed).
-                    Button {
-                        showScanner = true
-                    } label: {
+                    Button { showScanner = true } label: {
                         Label("Scan setup QR", systemImage: "qrcode.viewfinder")
                     }
                     HStack {
@@ -113,22 +82,11 @@ struct AgentSettingsScreen: View {
                         }
                         .disabled(pasteCode.isEmpty)
                     }
-
-                    TextField("ws://127.0.0.1:18789", text: $nodeURL)
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
-                        .onChange(of: nodeURL) { _, v in node.gatewayURL = v }
-                    TextField("Gateway token", text: $nodeToken)
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
-                        .onChange(of: nodeToken) { _, v in node.token = v }
-                    TextField("Device name (shown in nodes list)", text: $deviceName)
-                        .onChange(of: deviceName) { _, v in node.displayName = v }
                     Button(node.status == .connected || node.status == .connecting || node.status == .pending
                            ? "Disconnect Node" : "Connect as Node") {
                         if node.status == .idle || node.status == .error { node.start() }
                         else { node.stop() }
                     }
-
-                    // Bonjour discovery on the local network
                     Button {
                         discovery.isBrowsing ? discovery.stop() : discovery.start()
                     } label: {
@@ -137,42 +95,22 @@ struct AgentSettingsScreen: View {
                     }
                     ForEach(discovery.gateways) { gw in
                         Button {
-                            nodeURL = gw.url
-                            node.gatewayURL = gw.url
-                            discovery.stop()
+                            nodeURL = gw.url; node.gatewayURL = gw.url; discovery.stop()
                         } label: {
-                            HStack {
-                                Image(systemName: "dot.radiowaves.left.and.right")
-                                VStack(alignment: .leading) {
-                                    Text(gw.name).font(.caption)
-                                    Text(gw.url).font(.caption2).foregroundStyle(.secondary)
-                                }
+                            VStack(alignment: .leading) {
+                                Text(gw.name).font(.caption)
+                                Text(gw.url).font(.caption2).foregroundStyle(.secondary)
                             }
                         }
                     }
                 } header: {
                     Text("OpenClaw node")
                 } footer: {
-                    Text("Registers this phone as an OpenClaw node so the agent can query location, health, and battery directly. First connect needs approval on the gateway (openclaw nodes approve).")
+                    Text("Scan the QR from `openclaw qr`, or Find on network. First connect needs approval on the gateway.")
                 }
 
+                // MARK: Live voice (knobs)
                 Section {
-                    TextField("ws://127.0.0.1:8790", text: $voiceURL)
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
-                        .onChange(of: voiceURL) { _, v in voice.endpoint = v }
-                    if let derived = voiceURLFromNodeHost, derived != voiceURL {
-                        Button {
-                            voiceURL = derived
-                            voice.endpoint = derived
-                        } label: {
-                            Label("Use node host (:8790)", systemImage: "arrow.down.doc")
-                                .font(.caption)
-                        }
-                    }
-                    TextField("Voice token", text: $voiceToken)
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
-                        .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
-
                     if !node.agents.isEmpty {
                         Picker("Default agent", selection: $defaultAgent) {
                             Text("None").tag("")
@@ -184,7 +122,6 @@ struct AgentSettingsScreen: View {
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: defaultAgent) { _, v in voice.defaultAgentId = v }
                     }
-
                     Toggle("Auto-stop when quiet", isOn: $autoStop)
                         .onChange(of: autoStop) { _, v in voice.autoStopOnSilence = v }
                     if autoStop {
@@ -198,21 +135,62 @@ struct AgentSettingsScreen: View {
                 } header: {
                     Text("Live voice")
                 } footer: {
-                    Text("Same OpenClaw box as the node, usually port 8790. Agents load once the node is connected. Endpoint, token and default agent sync to the watch via iCloud.")
+                    Text("Agents load once the node is connected.")
                 }
 
+                // MARK: Advanced (fallbacks + niche, collapsed)
                 Section {
-                    TextField("CF-Access-Client-Id", text: $cfId)
-                        .autocorrectionDisabled().textInputAutocapitalization(.never)
-                        .onChange(of: cfId) { _, v in CloudflareAccess.clientId = v }
-                    SecureField("CF-Access-Client-Secret", text: $cfSecret)
-                        .onChange(of: cfSecret) { _, v in CloudflareAccess.clientSecret = v }
-                } header: {
-                    Text("Cloudflare Access (optional)")
+                    DisclosureGroup("Advanced", isExpanded: $showAdvanced) {
+                        Text("Connection — normally filled by scan / Find on network")
+                            .font(.caption2).foregroundStyle(.secondary)
+                        TextField("ws://127.0.0.1:18789", text: $nodeURL)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: nodeURL) { _, v in node.gatewayURL = v }
+                        TextField("Gateway token", text: $nodeToken)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: nodeToken) { _, v in node.token = v }
+                        TextField("Device name (nodes list)", text: $deviceName)
+                            .onChange(of: deviceName) { _, v in node.displayName = v }
+
+                        TextField("Voice endpoint (ws://…:8790)", text: $voiceURL)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: voiceURL) { _, v in voice.endpoint = v }
+                        if let derived = voiceURLFromNodeHost, derived != voiceURL {
+                            Button {
+                                voiceURL = derived; voice.endpoint = derived
+                            } label: {
+                                Label("Use node host (:8790)", systemImage: "arrow.down.doc").font(.caption)
+                            }
+                        }
+                        TextField("Voice token", text: $voiceToken)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
+
+                        TextField("CF-Access-Client-Id", text: $cfId)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                            .onChange(of: cfId) { _, v in CloudflareAccess.clientId = v }
+                        SecureField("CF-Access-Client-Secret", text: $cfSecret)
+                            .onChange(of: cfSecret) { _, v in CloudflareAccess.clientSecret = v }
+
+                        TextField("Command token (optional)", text: $token)
+                            .autocorrectionDisabled().textInputAutocapitalization(.never)
+                        Button("Save command token") {
+                            AutoResponderStore.token = token.isEmpty ? nil : token
+                        }
+
+                        Toggle("Push arrival/departure", isOn: Binding(
+                            get: { AutoResponderStore.isContextPushEnabled },
+                            set: {
+                                AutoResponderStore.isContextPushEnabled = $0
+                                if $0 { ContextPushService.shared.start() }
+                                else { ContextPushService.shared.stop() }
+                            }))
+                    }
                 } footer: {
-                    Text("For a gateway behind Cloudflare Tunnel + Access. Leave blank for a plain tunnel or LAN. Syncs to the watch via iCloud and applies to both the node and voice connections.")
+                    Text("Manual URLs/tokens, Cloudflare Access, the Telegram command token, and proactive context.")
                 }
 
+                // MARK: Activity
                 Section("Recent agent activity") {
                     if log.isEmpty {
                         Text("No activity yet").foregroundStyle(.secondary)
@@ -221,31 +199,28 @@ struct AgentSettingsScreen: View {
                             Text(entry).font(.system(.caption, design: .monospaced))
                         }
                         Button("Clear Log", role: .destructive) {
-                            AutoResponderStore.clearAudit()
-                            log = []
+                            AutoResponderStore.clearAudit(); log = []
                         }
                     }
                 }
 
+                // MARK: Pair watch
                 Section {
-                    Button("Reset OpenClaw Setup", role: .destructive) {
-                        showResetConfirm = true
-                    }
-                } footer: {
-                    Text("Clears the gateway URL, tokens, agents, voice config, and this device's identity. You'll reconfigure and re-approve the node.")
-                }
-
-                Section {
-                    Button {
-                        showWatchScanner = true
-                    } label: {
+                    Button { showWatchScanner = true } label: {
                         Label("Pair Watch (scan its QR)", systemImage: "applewatch.radiowaves.left.and.right")
                     }
                     if !watchPairStatus.isEmpty {
                         Text(watchPairStatus).font(.caption).foregroundStyle(.secondary)
                     }
                 } footer: {
-                    Text("The watch has no camera — scan a second setup code here and the phone sends it to the watch, which then pairs on its own. Approve the watch separately on the gateway.")
+                    Text("The watch has no camera — scan a second setup code here and the phone sends it to the watch, which pairs on its own. Approve the watch separately on the gateway.")
+                }
+
+                // MARK: Reset
+                Section {
+                    Button("Reset OpenClaw Setup", role: .destructive) { showResetConfirm = true }
+                } footer: {
+                    Text("Clears the gateway URL, tokens, agents, voice config, and this device's identity. You'll reconfigure and re-approve.")
                 }
             }
             .navigationTitle("Agent Access")
