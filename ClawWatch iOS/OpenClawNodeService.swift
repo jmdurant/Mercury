@@ -515,6 +515,15 @@ final class OpenClawNodeService: NSObject {
     private var operatorWS: WSClient?
 
     func fetchAgents() {
+        // agents.list is operator-scoped: it needs the raw gateway admin token
+        // (which auto-grants operator.read). The node's device token is bound to
+        // the node identity/role and is rejected here (AUTH_DEVICE_TOKEN_MISMATCH),
+        // so don't even open the connection without a raw token — just let the
+        // user type agent ids manually.
+        guard !token.isEmpty else {
+            lastEvent = "Add the gateway token (Advanced) to auto-list agents — or enter ids manually."
+            return
+        }
         guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else { return }
         closeOperator()
         let client = WSClient()
@@ -553,7 +562,7 @@ final class OpenClawNodeService: NSObject {
         let scopes = "operator.read"
         let payload = [
             "v3", identity.deviceId, operatorClientId, "ui", "operator", scopes,
-            String(signedAtMs), activeCredential, nonce, platformName, deviceFamilyName,
+            String(signedAtMs), token, nonce, platformName, deviceFamilyName,
         ].joined(separator: "|")
         guard let signature = try? identity.privateKey.signature(for: Data(payload.utf8)) else {
             closeOperator(); return
@@ -575,7 +584,7 @@ final class OpenClawNodeService: NSObject {
                 "signedAt": signedAtMs,
                 "nonce": nonce,
             ],
-            "auth": [activeAuthField: activeCredential],
+            "auth": ["token": token],
         ]
         sendOperator(body: ["id": "connect", "method": "connect", "params": params])
     }
