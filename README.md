@@ -231,6 +231,16 @@ Shared entitlements: App Group `group.com.doctordurant.clawwatch`, iCloud key-va
 
 Open `Mercury.xcodeproj`, select the **ClawWatch iOS** scheme (or **Mercury Watch App**), and build. First build resolves the Swift packages (TDLibKit and friends).
 
+**Device builds (`xcodebuild`) need `EXCLUDED_ARCHS=armv7k`.** The iPhone app embeds the watch app, so a device build also compiles the watch slice; TDLib can't link the 32-bit `armv7k` (Series 3) architecture, and TDLibKit's package manifest still lists it. Pass the flag on the command line — it's the only place that reaches the Swift-package build (project/target settings don't propagate to SPM targets):
+
+```bash
+xcodebuild -project Mercury.xcodeproj -scheme "ClawWatch iOS" \
+  -destination "id=<device-udid>" -allowProvisioningUpdates \
+  EXCLUDED_ARCHS=armv7k build
+```
+
+Xcode GUI builds to a paired 64-bit watch don't hit this. Note also that the **Critical Alerts** entitlement is removed by default — it needs per-account approval from Apple; re-add `com.apple.developer.usernotifications.critical-alerts` once granted.
+
 ---
 
 ## Security
