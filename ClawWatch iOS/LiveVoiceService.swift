@@ -70,6 +70,8 @@ final class LiveVoiceService: NSObject {
 
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
+    // Retained so ARC can't dealloc the session and cancel the task.
+    private let urlSession = URLSession(configuration: .default)
     private var socket: URLSessionWebSocketTask?
     private let logger = LoggerService(LiveVoiceService.self)
 
@@ -198,7 +200,7 @@ final class LiveVoiceService: NSObject {
         #endif
         configureSession()
 
-        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
         socket?.resume()
         receiveLoop()
 
@@ -237,7 +239,7 @@ final class LiveVoiceService: NSObject {
     func pttConnect(agentId: String?) {
         self.activeAgentId = (agentId?.isEmpty == false ? agentId! : defaultAgentId)
         guard socket == nil, let url = connectURL() else { return }
-        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
         socket?.resume()
         receiveLoop()
         state = .live

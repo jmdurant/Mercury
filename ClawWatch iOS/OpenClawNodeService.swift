@@ -153,6 +153,9 @@ final class OpenClawNodeService: NSObject {
         "watch.heart", "watch.temp", "watch.o2", "watch.rings", "watch.health",
     ]
 
+    // Must be retained: a URLSession deallocated by ARC cancels its tasks,
+    // which showed up as a post-handshake "Socket is not connected".
+    private let urlSession = URLSession(configuration: .default)
     private var socket: URLSessionWebSocketTask?
     private let logger = LoggerService(OpenClawNodeService.self)
     private let locationManager = CLLocationManager()
@@ -223,10 +226,19 @@ final class OpenClawNodeService: NSObject {
         }
         status = .connecting
         isAutoConnect = true
-        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        gotChallenge = false
+        // Debug: show exactly what we're dialing + which credential/headers.
+        let cred = deviceToken.isEmpty ? (bootstrapToken.isEmpty ? "raw-token" : "bootstrap") : "device-token"
+        let cf = CloudflareAccess.isConfigured ? " +CF-Access" : ""
+        lastEvent = "Dialing \(url.host ?? "?"):\(url.port ?? 0) [\(cred)]\(cf)"
+        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
         socket?.resume()
         receive()
     }
+
+    /// Debug: whether we ever received connect.challenge (i.e. the WebSocket
+    /// upgrade actually completed) before a failure.
+    private var gotChallenge = false
 
     func stop() {
         socket?.cancel(with: .goingAway, reason: nil)
@@ -273,7 +285,9 @@ final class OpenClawNodeService: NSObject {
             case .failure(let error):
                 self.logger.log("node socket: \(error)", level: .error)
                 self.status = .error
-                self.lastEvent = "Connection failed: \(error.localizedDescription)"
+                let ns = error as NSError
+                let stage = self.gotChallenge ? "after handshake" : "before handshake (never upgraded)"
+                self.lastEvent = "Fail \(stage): \(error.localizedDescription) [\(ns.domain) \(ns.code)]"
                 return
             @unknown default: break
             }
@@ -290,6 +304,7 @@ final class OpenClawNodeService: NSObject {
             if event == "connect.challenge",
                let payload = obj["payload"] as? [String: Any],
                let nonce = payload["nonce"] as? String {
+                gotChallenge = true
                 sendConnect(nonce: nonce)
             } else if event == "node.invoke.request",
                       let payload = obj["payload"] as? [String: Any] {
@@ -353,7 +368,7 @@ final class OpenClawNodeService: NSObject {
     func fetchAgents() {
         guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else { return }
         operatorSocket?.cancel(with: .goingAway, reason: nil)
-        operatorSocket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        operatorSocket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
         operatorSocket?.resume()
         receiveOperator()
     }
