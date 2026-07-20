@@ -153,14 +153,17 @@ struct AgentSettingsScreen: View {
                         TextField("Device name (nodes list)", text: $deviceName)
                             .onChange(of: deviceName) { _, v in node.displayName = v }
 
-                        TextField("Voice endpoint (ws://…:8790)", text: $voiceURL)
+                        TextField("Voice endpoint override (optional)", text: $voiceURL)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: voiceURL) { _, v in voice.endpoint = v }
-                        if let derived = voiceURLFromNodeHost, derived != voiceURL {
+                        if voiceURL.isEmpty {
+                            Text("Using node host: \(voice.effectiveEndpoint.isEmpty ? "—" : voice.effectiveEndpoint)")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        } else if let derived = voiceURLFromNodeHost, derived != voiceURL {
                             Button {
-                                voiceURL = derived; voice.endpoint = derived
+                                voiceURL = ""; voice.endpoint = ""
                             } label: {
-                                Label("Use node host (:8790)", systemImage: "arrow.down.doc").font(.caption)
+                                Label("Reset to node host", systemImage: "arrow.uturn.backward").font(.caption)
                             }
                         }
                         TextField("Voice token", text: $voiceToken)

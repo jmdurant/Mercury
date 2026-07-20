@@ -62,6 +62,53 @@ final class NodeDiscoveryService {
         isBrowsing = false
     }
 
+    /// One-shot: find the gateway advertising `host` and hand back its live
+    /// Bonjour endpoint. Lets a connect that only has a raw-IP URL (from a QR
+    /// scan, or a persisted URL after relaunch) still dial the endpoint — which
+    /// iOS Local Network privacy allows — instead of the raw IP, which it aborts.
+    /// Runs its own browser so it doesn't disturb the UI's `gateways` list.
+    func resolveEndpoint(forHost host: String, timeout: TimeInterval = 3,
+                         completion: @escaping (NWEndpoint?, Bool) -> Void) {
+        let browser = NWBrowser(
+            for: .bonjourWithTXTRecord(type: "_openclaw-gw._tcp", domain: "local."),
+            using: NWParameters())
+        var probes: [NWConnection] = []
+        var finished = false
+        func finish(_ endpoint: NWEndpoint?, _ tls: Bool) {
+            guard !finished else { return }
+            finished = true
+            probes.forEach { $0.cancel() }
+            browser.cancel()
+            DispatchQueue.main.async { completion(endpoint, tls) }
+        }
+        browser.browseResultsChangedHandler = { results, _ in
+            for result in results {
+                guard case .service = result.endpoint else { continue }
+                var tls = false
+                if case let .bonjour(txt) = result.metadata, txt["gatewayTls"] == "1" { tls = true }
+                let probe = NWConnection(to: result.endpoint, using: .tcp)
+                probes.append(probe)
+                probe.stateUpdateHandler = { state in
+                    switch state {
+                    case .ready:
+                        if case let .hostPort(h, _)? = probe.currentPath?.remoteEndpoint {
+                            let hs = "\(h)".split(separator: "%").first.map(String.init) ?? "\(h)"
+                            if hs == host { finish(result.endpoint, tls) }
+                        }
+                        probe.cancel()
+                    case .failed, .cancelled:
+                        break
+                    default:
+                        break
+                    }
+                }
+                probe.start(queue: .main)
+            }
+        }
+        browser.start(queue: .main)
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout) { finish(nil, false) }
+    }
+
     /// Resolve a discovered service to a host:port URL via a short-lived
     /// connection (NWBrowser gives a service endpoint, not a host).
     private func resolve(_ result: NWBrowser.Result) {

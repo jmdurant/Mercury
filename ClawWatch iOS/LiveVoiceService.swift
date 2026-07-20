@@ -68,6 +68,28 @@ final class LiveVoiceService: NSObject {
         }
     }
 
+    /// The voice server port on the gateway box (single-box default).
+    static let voicePort = 8790
+
+    /// The endpoint actually dialed. Defaults to the node's gateway host on the
+    /// voice port (same box) so voice works out of the box; `endpoint` is an
+    /// explicit override when the voice server lives elsewhere (e.g. a split
+    /// Cloudflare hostname). Both the override and the node URL sync via iCloud.
+    var effectiveEndpoint: String {
+        if !endpoint.isEmpty { return endpoint }
+        return Self.voiceURL(fromGateway: OpenClawNodeService.shared.gatewayURL) ?? ""
+    }
+
+    /// Derive `ws[s]://host:8790` from the node's gateway URL (same scheme+host).
+    static func voiceURL(fromGateway gatewayURL: String) -> String? {
+        guard var comps = URLComponents(string: gatewayURL),
+              comps.host != nil, comps.scheme?.hasPrefix("ws") == true else { return nil }
+        comps.port = voicePort
+        comps.path = ""
+        comps.query = nil
+        return comps.string
+    }
+
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     // Retained so ARC can't dealloc the session and cancel the task.
@@ -173,7 +195,7 @@ final class LiveVoiceService: NSObject {
 
     /// Appends ?token=…&device=…&agent=… to the configured base endpoint.
     private func connectURL() -> URL? {
-        guard var comps = URLComponents(string: endpoint),
+        guard var comps = URLComponents(string: effectiveEndpoint),
               comps.scheme?.hasPrefix("ws") == true else { return nil }
         var items = comps.queryItems ?? []
         if !voiceToken.isEmpty { items.append(URLQueryItem(name: "token", value: voiceToken)) }

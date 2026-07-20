@@ -277,10 +277,41 @@ final class OpenClawNodeService: NSObject {
         status = .connecting
         isAutoConnect = true
         gotChallenge = false
+
+        // A raw-IP LAN dial is aborted by iOS Local Network privacy. If we don't
+        // already hold a live Bonjour endpoint (e.g. paired via QR, or relaunched
+        // with only a persisted URL), resolve it over mDNS first, then dial that.
+        if discoveredEndpoint == nil, let host = url.host, Self.isPrivateLANHost(host) {
+            lastEvent = "Finding \(host) on the network…"
+            NodeDiscoveryService.shared.resolveEndpoint(forHost: host) { [weak self] ep, tls in
+                guard let self, self.status == .connecting else { return }
+                if let ep { self.discoveredEndpoint = ep; self.discoveredTls = tls }
+                self.openWebSocket(url: url)
+            }
+            return
+        }
+        openWebSocket(url: url)
+    }
+
+    /// True for hosts on the local network (private IPv4 or an mDNS `.local`
+    /// name) — the ones a direct dial gets aborted for and mDNS can resolve.
+    static func isPrivateLANHost(_ host: String) -> Bool {
+        if host.hasSuffix(".local") { return true }
+        let parts = host.split(separator: ".")
+        guard parts.count == 4, parts.allSatisfy({ Int($0) != nil }),
+              let a = Int(parts[0]), let b = Int(parts[1]) else { return false }
+        if a == 10 { return true }
+        if a == 192 && b == 168 { return true }
+        if a == 172 && (16...31).contains(b) { return true }
+        return false
+    }
+
+    private func openWebSocket(url: URL) {
         // Debug: show exactly what we're dialing + which credential/headers.
         let cred = deviceToken.isEmpty ? (bootstrapToken.isEmpty ? "raw-token" : "bootstrap") : "device-token"
         let cf = CloudflareAccess.isConfigured ? " +CF-Access" : ""
-        lastEvent = "Dialing \(url.host ?? "?"):\(url.port ?? 0) [\(cred)]\(cf)"
+        let via = discoveredEndpoint != nil ? "endpoint" : "\(url.host ?? "?"):\(url.port ?? 0)"
+        lastEvent = "Dialing \(via) [\(cred)]\(cf)"
 
         let client = WSClient()
         ws = client
