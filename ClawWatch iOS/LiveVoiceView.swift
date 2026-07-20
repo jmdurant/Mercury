@@ -17,6 +17,7 @@ struct LiveVoiceView: View {
     var agentLabel: String = ""
 
     @State private var voice = LiveVoiceService.shared
+    @State private var ptt = PTTChannelService.shared
     @State private var endpoint = LiveVoiceService.shared.endpoint
     @State private var token = LiveVoiceService.shared.voiceToken
     @State private var agentId: String = ""
@@ -53,6 +54,7 @@ struct LiveVoiceView: View {
                 .controlSize(.large)
                 .disabled(voice.state == .idle && effectiveAgentId.isEmpty)
 
+                pttToggle
                 agentConfig
                 Spacer()
             }
@@ -67,6 +69,34 @@ struct LiveVoiceView: View {
         .onAppear {
             agentId = isPerChat ? voice.agentId(forChat: chatId!) : voice.defaultAgentId
         }
+    }
+
+    // MARK: - System Push-to-Talk
+
+    private var pttToggle: some View {
+        VStack(spacing: 4) {
+            Toggle("System Push-to-Talk", isOn: Binding(
+                get: { ptt.isJoined },
+                set: { on in
+                    if on {
+                        ptt.join(agentId: effectiveAgentId,
+                                 agentName: isPerChat ? agentLabel : "Agent")
+                    } else {
+                        ptt.leave()
+                    }
+                }))
+            .disabled(effectiveAgentId.isEmpty)
+            Text(pttHint)
+                .font(.caption2)
+                .foregroundStyle(ptt.isTransmitting ? Color.green : Color.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var pttHint: String {
+        if let err = ptt.lastError { return err }
+        if !ptt.isJoined { return "Join to talk with the system PTT button — even in the background or on the lock screen." }
+        return ptt.isTransmitting ? "Transmitting…" : "Joined — press the system PTT button to talk."
     }
 
     // MARK: - Agent + endpoint config

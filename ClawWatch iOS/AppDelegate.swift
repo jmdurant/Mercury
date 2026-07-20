@@ -45,6 +45,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // WatchConnectivity relay (fetch watch-exclusive sensors)
         WatchBridge.shared.activate()
 
+        // Create the Push to Talk channel manager early so the system can
+        // restore a joined channel after relaunch.
+        Task { await PTTChannelService.shared.prepare() }
+
         return true
     }
 

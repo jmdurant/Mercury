@@ -27,6 +27,7 @@
 		<string>voip</string>
 		<string>audio</string>
 		<string>location</string>
+		<string>push-to-talk</string>
 	</array>
 	<key>BGTaskSchedulerPermittedIdentifiers</key>
 	<array>

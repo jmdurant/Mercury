@@ -181,6 +181,63 @@ final class LiveVoiceService: NSObject {
         state = .idle
     }
 
+    // MARK: - Push to Talk hooks (iOS)
+    //
+    // PushToTalk (PTChannelManager) owns the audio session, so these open the
+    // socket and drive capture without configuring/activating audio here —
+    // the framework calls resume/pause via its didActivate/didDeactivate.
+
+    #if os(iOS)
+    /// Open the socket for a PTT channel bound to an agent (no audio yet).
+    func pttConnect(agentId: String?) {
+        self.activeAgentId = (agentId?.isEmpty == false ? agentId! : defaultAgentId)
+        guard socket == nil, let url = connectURL() else { return }
+        socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
+        socket?.resume()
+        receiveLoop()
+        state = .live
+    }
+
+    /// Start streaming the mic — the PTT audio session is already active.
+    func pttResumeAudio() {
+        let input = engine.inputNode
+        try? input.setVoiceProcessingEnabled(true)
+        if playerNode.engine == nil {
+            engine.attach(playerNode)
+            engine.connect(playerNode, to: engine.mainMixerNode, format: playbackFormat)
+        }
+        let inputFormat = input.outputFormat(forBus: 0)
+        input.removeTap(onBus: 0)
+        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
+            self?.sendCaptured(buffer)
+        }
+        engine.prepare()
+        try? engine.start()
+        playerNode.play()
+    }
+
+    /// Stop streaming the mic (transmission ended / session deactivated).
+    func pttPauseAudio() {
+        engine.inputNode.removeTap(onBus: 0)
+        engine.stop()
+        playerNode.stop()
+    }
+
+    func pttDisconnect() {
+        pttPauseAudio()
+        socket?.cancel(with: .goingAway, reason: nil)
+        socket = nil
+        state = .idle
+    }
+
+    /// The ephemeral PTT push token — hand to the voice server so it can push
+    /// us when the agent has audio (background receive).
+    func registerPTTPushToken(_ hex: String) {
+        logger.log("PTT ephemeral push token: \(hex)")
+        // TODO(server): POST to the voice server's PTT push endpoint.
+    }
+    #endif
+
     // MARK: - Audio
 
     private func configureSession() {
