@@ -144,6 +144,12 @@ final class LiveVoiceService: NSObject {
         return comps.url
     }
 
+    #if os(watchOS)
+    // Keeps the app running when the wrist drops so the live session survives
+    // (chained self-care extended runtime sessions — same keeper PTT uses).
+    private let runtimeSession = PTTRuntimeSession()
+    #endif
+
     // MARK: - Lifecycle
 
     /// Starts a live session. Pass an agent id to talk to a specific agent
@@ -155,6 +161,9 @@ final class LiveVoiceService: NSObject {
             return
         }
         state = .connecting
+        #if os(watchOS)
+        runtimeSession.start()   // survive wrist-down for the session
+        #endif
         configureSession()
 
         socket = URLSession(configuration: .default).webSocketTask(with: CloudflareAccess.request(url))
@@ -178,6 +187,9 @@ final class LiveVoiceService: NSObject {
         socket?.cancel(with: .goingAway, reason: nil)
         socket = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        #if os(watchOS)
+        runtimeSession.stop()
+        #endif
         state = .idle
     }
 

@@ -12,6 +12,8 @@ struct SettingsPage: View {
     @State
     @Mockable(mockInit: SettingsViewModelMock.init)
     var vm = SettingsViewModel.init
+
+    @State private var voiceAgentId = LiveVoiceService.shared.defaultAgentId
     
     var body: some View {
         ScrollView {
@@ -119,16 +121,31 @@ struct SettingsPage: View {
 
             Section {
                 let voice = LiveVoiceService.shared
+                let node = OpenClawNodeService.shared
                 Text("Voice: \(voice.state.rawValue)").font(.caption)
+
+                // Agent picker — fed by the gateway roster (node connected)
+                if !node.agents.isEmpty {
+                    Picker("Agent", selection: $voiceAgentId) {
+                        ForEach(node.agents) { agent in
+                            Text(agent.name).tag(agent.id)
+                        }
+                    }
+                    .font(.caption)
+                    .onChange(of: voiceAgentId) { _, id in voice.defaultAgentId = id }
+                } else if !voice.defaultAgentId.isEmpty {
+                    Text("Agent: \(voice.defaultAgentId)").font(.caption2).foregroundStyle(.secondary)
+                }
+
                 Button(voice.state == .live || voice.state == .connecting ? "End" : "Talk to Agent") {
                     if voice.state == .live || voice.state == .connecting { voice.stop() }
-                    else { voice.start() }
+                    else { voice.start(agentId: voiceAgentId.isEmpty ? nil : voiceAgentId) }
                 }
                 .font(.caption)
             } header: {
                 Text("Live voice")
             } footer: {
-                Text("Streams to your agent's voice endpoint (set on iPhone, synced via iCloud). Foreground only.")
+                Text("Talks to the selected agent (roster synced from your gateway). Stays connected while the session runs, even when your wrist drops.")
             }
 
             Section("Recent agent activity") {
