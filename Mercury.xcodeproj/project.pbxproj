@@ -204,6 +204,8 @@
 		DDC1B0000000000000000031 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000030 /* QRScannerView.swift */; };
 		DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
 		DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000013 /* OpenClawNodeService.swift */; };
+		DDC1B0000000000000000022 /* WSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000021 /* WSClient.swift */; };
+		DDC1C0000000000000000098 /* WSClient.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000021 /* WSClient.swift */; };
 		DDC1B0000000000000000016 /* WatchBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
 		DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000015 /* WatchBridge.swift */; };
 		DDC1C0000000000000000092 /* LiveVoiceService.swift in Sources (watch) */ = {isa = PBXBuildFile; fileRef = DDC1B000000000000000000F /* LiveVoiceService.swift */; };
@@ -429,6 +431,7 @@
 		DDC1B0000000000000000011 /* LiveVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveVoiceView.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000030 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000013 /* OpenClawNodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawNodeService.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000021 /* WSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WSClient.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000015 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000017 /* PTTChannelService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTChannelService.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000019 /* NodeDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeDiscoveryService.swift; sourceTree = "<group>"; };
@@ -916,6 +919,7 @@
 				DDC1B0000000000000000017 /* PTTChannelService.swift */,
 				DDC1B0000000000000000015 /* WatchBridge.swift */,
 				DDC1B0000000000000000013 /* OpenClawNodeService.swift */,
+				DDC1B0000000000000000021 /* WSClient.swift */,
 				DDC1B000000000000000000F /* LiveVoiceService.swift */,
 				DDC1B0000000000000000011 /* LiveVoiceView.swift */,
 				DDC1B0000000000000000030 /* QRScannerView.swift */,
@@ -1212,6 +1216,7 @@
 				DDC1C0000000000000000092 /* LiveVoiceService.swift in Sources (watch) */,
 				DDC1C0000000000000000091 /* WatchBridge.swift in Sources (watch) */,
 				DDC1C0000000000000000090 /* OpenClawNodeService.swift in Sources (watch) */,
+				DDC1C0000000000000000098 /* WSClient.swift in Sources (watch) */,
 				9B0B6CBC2CD679A600BB6A94 /* StepView.swift in Sources */,
 				A080D8E22CDC0B1800920564 /* VoiceNoteView.swift in Sources */,
 				A04ABE5A2CE015F800641BC1 /* VoiceNoteRecordSubpage.swift in Sources */,
@@ -1335,6 +1340,7 @@
 				DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */,
 				DDC1B0000000000000000016 /* WatchBridge.swift in Sources */,
 				DDC1B0000000000000000014 /* OpenClawNodeService.swift in Sources */,
+				DDC1B0000000000000000022 /* WSClient.swift in Sources */,
 				DDC1B0000000000000000010 /* LiveVoiceService.swift in Sources */,
 				DDC1B0000000000000000012 /* LiveVoiceView.swift in Sources */,
 				DDC1B0000000000000000031 /* QRScannerView.swift in Sources */,

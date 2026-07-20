@@ -95,7 +95,8 @@ struct AgentSettingsScreen: View {
                     }
                     ForEach(discovery.gateways) { gw in
                         Button {
-                            nodeURL = gw.url; node.gatewayURL = gw.url; discovery.stop()
+                            node.useDiscovered(endpoint: gw.endpoint, tls: gw.tls, url: gw.url)
+                            nodeURL = gw.url; discovery.stop()
                         } label: {
                             VStack(alignment: .leading) {
                                 Text(gw.name).font(.caption)

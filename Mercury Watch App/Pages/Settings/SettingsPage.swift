@@ -125,7 +125,7 @@ struct SettingsPage: View {
                 }
                 ForEach(discovery.gateways) { gw in
                     Button {
-                        node.gatewayURL = gw.url
+                        node.useDiscovered(endpoint: gw.endpoint, tls: gw.tls, url: gw.url)
                         discovery.stop()
                     } label: {
                         Text(gw.name).font(.caption2)

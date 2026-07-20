@@ -12,6 +12,7 @@
 import Foundation
 import CryptoKit
 import CoreLocation
+import Network
 
 @Observable
 final class OpenClawNodeService: NSObject {
@@ -153,10 +154,54 @@ final class OpenClawNodeService: NSObject {
         "watch.heart", "watch.temp", "watch.o2", "watch.rings", "watch.health",
     ]
 
-    // Must be retained: a URLSession deallocated by ARC cancels its tasks,
-    // which showed up as a post-handshake "Socket is not connected".
-    private let urlSession = URLSession(configuration: .default)
-    private var socket: URLSessionWebSocketTask?
+    private var ws: WSClient?
+
+    /// The live Bonjour endpoint from "Find on network", if the user connected
+    /// that way. Dialing this endpoint survives iOS Local Network privacy;
+    /// re-dialing its raw IP does not. Ephemeral — valid while the mDNS entry
+    /// lives; cleared on reset.
+    private var discoveredEndpoint: NWEndpoint?
+    private var discoveredTls = false
+
+    // While pending approval, redial on a timer so the node connects on its own
+    // once the operator runs `openclaw nodes approve` — no need to tap Connect.
+    private var pendingRetryScheduled = false
+    private var pendingRetries = 0
+    private let maxPendingRetries = 40          // ~3.5 min at 5s intervals
+    private let pendingRetryInterval: TimeInterval = 5
+
+    private func schedulePendingRetry() {
+        guard status == .pending, !pendingRetryScheduled else { return }
+        guard pendingRetries < maxPendingRetries else {
+            lastEvent = "Still waiting — approve this device on the gateway, then tap Connect."
+            return
+        }
+        pendingRetryScheduled = true
+        pendingRetries += 1
+        DispatchQueue.main.asyncAfter(deadline: .now() + pendingRetryInterval) { [weak self] in
+            guard let self else { return }
+            self.pendingRetryScheduled = false
+            guard self.status == .pending else { return }
+            self.ws?.close(); self.ws = nil
+            self.dial()
+        }
+    }
+
+    /// Called when the user taps a gateway found via "Find on network". Keeps
+    /// the URL string for display/persistence AND the live endpoint to dial.
+    func useDiscovered(endpoint: NWEndpoint, tls: Bool, url: String) {
+        discoveredEndpoint = endpoint
+        discoveredTls = tls
+        gatewayURL = url
+    }
+
+    /// Cloudflare Access headers for the WebSocket upgrade, when configured.
+    private var cfHeaders: [(String, String)] {
+        CloudflareAccess.isConfigured
+            ? [("CF-Access-Client-Id", CloudflareAccess.clientId),
+               ("CF-Access-Client-Secret", CloudflareAccess.clientSecret)]
+            : []
+    }
     private let logger = LoggerService(OpenClawNodeService.self)
     private let locationManager = CLLocationManager()
 
@@ -219,6 +264,11 @@ final class OpenClawNodeService: NSObject {
 
     func start() {
         guard status == .idle || status == .error else { return }
+        pendingRetries = 0
+        dial()
+    }
+
+    private func dial() {
         guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else {
             status = .error
             lastEvent = gatewayURL.isEmpty ? "No gateway URL set" : "Bad gateway URL: \(gatewayURL)"
@@ -231,9 +281,39 @@ final class OpenClawNodeService: NSObject {
         let cred = deviceToken.isEmpty ? (bootstrapToken.isEmpty ? "raw-token" : "bootstrap") : "device-token"
         let cf = CloudflareAccess.isConfigured ? " +CF-Access" : ""
         lastEvent = "Dialing \(url.host ?? "?"):\(url.port ?? 0) [\(cred)]\(cf)"
-        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
-        socket?.resume()
-        receive()
+
+        let client = WSClient()
+        ws = client
+        client.onOpen = { [weak self] in
+            guard let self, self.status == .connecting else { return }
+            self.lastEvent = "Socket open — awaiting challenge"
+        }
+        client.onWaiting = { [weak self] reason in
+            guard let self, self.status == .connecting else { return }
+            self.lastEvent = "Waiting (route not ready): \(reason)"
+        }
+        client.onText = { [weak self] text in self?.handleFrame(text) }
+        client.onClose = { [weak self] reason in
+            guard let self else { return }
+            switch self.status {
+            case .idle:
+                return
+            case .pending:
+                // Expected: the gateway drops us until the device is approved.
+                // Keep the "waiting for approval" state and retry automatically
+                // instead of flipping to an error.
+                self.schedulePendingRetry()
+            default:
+                self.status = .error
+                let stage = self.gotChallenge ? "after handshake" : "before handshake"
+                self.lastEvent = "Closed \(stage): \(reason ?? "connection closed")"
+            }
+        }
+        if let ep = discoveredEndpoint {
+            client.connect(endpoint: ep, tls: discoveredTls, headers: cfHeaders)
+        } else {
+            client.connect(url: url, headers: cfHeaders)
+        }
     }
 
     /// Debug: whether we ever received connect.challenge (i.e. the WebSocket
@@ -241,8 +321,8 @@ final class OpenClawNodeService: NSObject {
     private var gotChallenge = false
 
     func stop() {
-        socket?.cancel(with: .goingAway, reason: nil)
-        socket = nil
+        ws?.close()
+        ws = nil
         closeOperator()
         status = .idle
     }
@@ -266,34 +346,13 @@ final class OpenClawNodeService: NSObject {
         }
         NSUbiquitousKeyValueStore.default.synchronize()
         KeychainService.delete(key: "ocNodePrivateKey")   // new identity next time
+        discoveredEndpoint = nil
         agents = []
         agentsDefaultId = ""
         status = .idle
         lastEvent = "Reset — reconfigure and re-approve on the gateway"
     }
 
-    // MARK: - Frame receive loop
-
-    private func receive() {
-        socket?.receive { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(.string(let text)):
-                self.handleFrame(text)
-            case .success(.data(let data)):
-                self.handleFrame(String(decoding: data, as: UTF8.self))
-            case .failure(let error):
-                self.logger.log("node socket: \(error)", level: .error)
-                self.status = .error
-                let ns = error as NSError
-                let stage = self.gotChallenge ? "after handshake" : "before handshake (never upgraded)"
-                self.lastEvent = "Fail \(stage): \(error.localizedDescription) [\(ns.domain) \(ns.code)]"
-                return
-            @unknown default: break
-            }
-            if self.status != .idle { self.receive() }
-        }
-    }
 
     private func handleFrame(_ text: String) {
         guard let obj = try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]
@@ -313,6 +372,7 @@ final class OpenClawNodeService: NSObject {
         } else if type == "res", let id = obj["id"] as? String, id == "connect" {
             if (obj["ok"] as? Bool) == true {
                 status = .connected
+                pendingRetries = 0
                 lastEvent = "Connected as node"
                 // Capture the device token issued on approval; it replaces the
                 // one-time bootstrap token for all future connects.
@@ -340,8 +400,10 @@ final class OpenClawNodeService: NSObject {
                             || msg.lowercased().contains("pair") || msg.lowercased().contains("approv") {
                     status = .pending
                     lastEvent = lastRequestId.isEmpty
-                        ? "Pending approval on the gateway"
-                        : "Pending — approve request \(lastRequestId.prefix(8))"
+                        ? "Waiting for approval on the gateway — it'll connect automatically once approved."
+                        : "Waiting for approval on the gateway (request \(lastRequestId.prefix(8))) — approve it with `openclaw nodes approve` and this connects automatically."
+                    // Keep retrying so approval alone completes the pairing.
+                    schedulePendingRetry()
                 } else {
                     status = .error
                     lastEvent = "Gateway rejected: \(msg)\(code.map { " [\($0)]" } ?? "")"
@@ -363,25 +425,18 @@ final class OpenClawNodeService: NSObject {
     // scope operator.read, which is auto-granted with the shared token), fetch
     // the roster, and close it. Verified against a live gateway.
 
-    private var operatorSocket: URLSessionWebSocketTask?
+    private var operatorWS: WSClient?
 
     func fetchAgents() {
         guard let url = URL(string: gatewayURL), url.scheme?.hasPrefix("ws") == true else { return }
-        operatorSocket?.cancel(with: .goingAway, reason: nil)
-        operatorSocket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
-        operatorSocket?.resume()
-        receiveOperator()
-    }
-
-    private func receiveOperator() {
-        operatorSocket?.receive { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(.string(let text)): self.handleOperatorFrame(text)
-            case .success(.data(let data)): self.handleOperatorFrame(String(decoding: data, as: UTF8.self))
-            case .failure: return
-            }
-            self.receiveOperator()
+        closeOperator()
+        let client = WSClient()
+        operatorWS = client
+        client.onText = { [weak self] text in self?.handleOperatorFrame(text) }
+        if let ep = discoveredEndpoint {
+            client.connect(endpoint: ep, tls: discoveredTls, headers: cfHeaders)
+        } else {
+            client.connect(url: url, headers: cfHeaders)
         }
     }
 
@@ -411,7 +466,7 @@ final class OpenClawNodeService: NSObject {
         let scopes = "operator.read"
         let payload = [
             "v3", identity.deviceId, operatorClientId, "ui", "operator", scopes,
-            String(signedAtMs), token, nonce, platformName, deviceFamilyName,
+            String(signedAtMs), activeCredential, nonce, platformName, deviceFamilyName,
         ].joined(separator: "|")
         guard let signature = try? identity.privateKey.signature(for: Data(payload.utf8)) else {
             closeOperator(); return
@@ -433,7 +488,7 @@ final class OpenClawNodeService: NSObject {
                 "signedAt": signedAtMs,
                 "nonce": nonce,
             ],
-            "auth": ["token": token],
+            "auth": [activeAuthField: activeCredential],
         ]
         sendOperator(body: ["id": "connect", "method": "connect", "params": params])
     }
@@ -443,12 +498,12 @@ final class OpenClawNodeService: NSObject {
         frame["type"] = "req"
         guard let data = try? JSONSerialization.data(withJSONObject: frame),
               let text = String(data: data, encoding: .utf8) else { return }
-        operatorSocket?.send(.string(text)) { _ in }
+        operatorWS?.sendText(text)
     }
 
     private func closeOperator() {
-        operatorSocket?.cancel(with: .goingAway, reason: nil)
-        operatorSocket = nil
+        operatorWS?.close()
+        operatorWS = nil
     }
 
     private func handleAgentsList(_ obj: [String: Any]) {
@@ -595,8 +650,6 @@ final class OpenClawNodeService: NSObject {
         frame["type"] = type
         guard let data = try? JSONSerialization.data(withJSONObject: frame),
               let text = String(data: data, encoding: .utf8) else { return }
-        socket?.send(.string(text)) { [weak self] error in
-            if let error { self?.logger.log("node send: \(error)", level: .error) }
-        }
+        ws?.sendText(text)
     }
 }

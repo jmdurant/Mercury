@@ -71,8 +71,13 @@ final class LiveVoiceService: NSObject {
     private let engine = AVAudioEngine()
     private let playerNode = AVAudioPlayerNode()
     // Retained so ARC can't dealloc the session and cancel the task.
-    private let urlSession = URLSession(configuration: .default)
-    private var socket: URLSessionWebSocketTask?
+    private var ws: WSClient?
+    private var cfHeaders: [(String, String)] {
+        CloudflareAccess.isConfigured
+            ? [("CF-Access-Client-Id", CloudflareAccess.clientId),
+               ("CF-Access-Client-Secret", CloudflareAccess.clientSecret)]
+            : []
+    }
     private let logger = LoggerService(LiveVoiceService.self)
 
     private let uploadFormat = AVAudioFormat(
@@ -200,9 +205,7 @@ final class LiveVoiceService: NSObject {
         #endif
         configureSession()
 
-        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
-        socket?.resume()
-        receiveLoop()
+        openSocket(url)
 
         do {
             try startCapture()
@@ -219,8 +222,8 @@ final class LiveVoiceService: NSObject {
         engine.inputNode.removeTap(onBus: 0)
         engine.stop()
         playerNode.stop()
-        socket?.cancel(with: .goingAway, reason: nil)
-        socket = nil
+        ws?.close()
+        ws = nil
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         #if os(watchOS)
         runtimeSession.stop()
@@ -238,10 +241,8 @@ final class LiveVoiceService: NSObject {
     /// Open the socket for a PTT channel bound to an agent (no audio yet).
     func pttConnect(agentId: String?) {
         self.activeAgentId = (agentId?.isEmpty == false ? agentId! : defaultAgentId)
-        guard socket == nil, let url = connectURL() else { return }
-        socket = urlSession.webSocketTask(with: CloudflareAccess.request(url))
-        socket?.resume()
-        receiveLoop()
+        guard ws == nil, let url = connectURL() else { return }
+        openSocket(url)
         state = .live
     }
 
@@ -272,8 +273,8 @@ final class LiveVoiceService: NSObject {
 
     func pttDisconnect() {
         pttPauseAudio()
-        socket?.cancel(with: .goingAway, reason: nil)
-        socket = nil
+        ws?.close()
+        ws = nil
         state = .idle
     }
 
@@ -335,9 +336,7 @@ final class LiveVoiceService: NSObject {
         }
         guard let converted = convert(buffer, to: uploadFormat),
               let data = pcmData(from: converted) else { return }
-        socket?.send(.data(data)) { [weak self] error in
-            if let error { self?.logger.log("Voice send: \(error)", level: .error) }
-        }
+        ws?.sendData(data)
     }
 
     /// Root-mean-square level of a capture buffer (0…1), for silence detection.
@@ -357,23 +356,17 @@ final class LiveVoiceService: NSObject {
         return (sum / Float(frames)).squareRoot()
     }
 
-    private func receiveLoop() {
-        socket?.receive { [weak self] result in
-            guard let self else { return }
-            switch result {
-            case .success(.data(let data)):
-                self.playIncoming(data)
-            case .success(.string):
-                break
-            case .failure(let error):
-                self.logger.log("Voice receive: \(error)", level: .error)
-                self.state = .error
-                return
-            @unknown default:
-                break
-            }
-            if self.state != .idle { self.receiveLoop() }
+    /// Open the WebSocket (Network.framework) and wire incoming audio.
+    private func openSocket(_ url: URL) {
+        let client = WSClient()
+        ws = client
+        client.onData = { [weak self] data in self?.playIncoming(data) }
+        client.onClose = { [weak self] reason in
+            guard let self, self.state != .idle else { return }
+            if let reason { self.logger.log("Voice socket closed: \(reason)", level: .error) }
+            self.state = .error
         }
+        client.connect(url: url, headers: cfHeaders)
     }
 
     private func playIncoming(_ data: Data) {

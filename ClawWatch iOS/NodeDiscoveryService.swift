@@ -20,9 +20,11 @@ final class NodeDiscoveryService {
     static let shared = NodeDiscoveryService()
 
     struct Gateway: Identifiable, Hashable {
-        let id: String     // Bonjour instance name
+        let id: String       // Bonjour instance name
         let name: String
-        let url: String    // ws:// or wss:// host:port
+        let url: String      // ws:// or wss:// host:port (for display + persistence)
+        let endpoint: NWEndpoint  // the live Bonjour service endpoint to dial
+        let tls: Bool
     }
 
     var gateways: [Gateway] = []
@@ -76,7 +78,8 @@ final class NodeDiscoveryService {
                 if case let .hostPort(host, port)? = connection.currentPath?.remoteEndpoint {
                     let h = "\(host)".split(separator: "%").first.map(String.init) ?? "\(host)"
                     let url = "\(tls ? "wss" : "ws")://\(h):\(port.rawValue)"
-                    let gateway = Gateway(id: name, name: name, url: url)
+                    let gateway = Gateway(id: name, name: name, url: url,
+                                          endpoint: result.endpoint, tls: tls)
                     DispatchQueue.main.async {
                         if !self.gateways.contains(gateway) { self.gateways.append(gateway) }
                     }
