@@ -18,6 +18,7 @@ struct AgentSettingsScreen: View {
     @State private var nodeToken: String = OpenClawNodeService.shared.token
     @State private var cfId: String = CloudflareAccess.clientId
     @State private var cfSecret: String = CloudflareAccess.clientSecret
+    @State private var discovery = NodeDiscoveryService.shared
     @State private var voice = LiveVoiceService.shared
     @State private var voiceURL: String = LiveVoiceService.shared.endpoint
     @State private var voiceToken: String = LiveVoiceService.shared.voiceToken
@@ -98,6 +99,29 @@ struct AgentSettingsScreen: View {
                            ? "Disconnect Node" : "Connect as Node") {
                         if node.status == .idle || node.status == .error { node.start() }
                         else { node.stop() }
+                    }
+
+                    // Bonjour discovery on the local network
+                    Button {
+                        discovery.isBrowsing ? discovery.stop() : discovery.start()
+                    } label: {
+                        Label(discovery.isBrowsing ? "Searching…" : "Find on network",
+                              systemImage: "wifi.router")
+                    }
+                    ForEach(discovery.gateways) { gw in
+                        Button {
+                            nodeURL = gw.url
+                            node.gatewayURL = gw.url
+                            discovery.stop()
+                        } label: {
+                            HStack {
+                                Image(systemName: "dot.radiowaves.left.and.right")
+                                VStack(alignment: .leading) {
+                                    Text(gw.name).font(.caption)
+                                    Text(gw.url).font(.caption2).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                 } header: {
                     Text("OpenClaw node")

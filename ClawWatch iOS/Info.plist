@@ -6,6 +6,12 @@
 	<dict/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>ClawWatch finds and connects to your OpenClaw gateway on the local network.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_openclaw-gw._tcp</string>
+	</array>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>

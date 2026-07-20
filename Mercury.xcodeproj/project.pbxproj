@@ -209,6 +209,7 @@
 		DDC1C0000000000000000093 /* PTTStore.swift in Sources (ios) */ = {isa = PBXBuildFile; fileRef = P00PTT002D14000000000001 /* PTTStore.swift */; };
 		DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */ = {isa = PBXBuildFile; fileRef = P00PTT022D14000000000002 /* PTTService.swift */; };
 		DDC1B0000000000000000018 /* PTTChannelService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000017 /* PTTChannelService.swift */; };
+		DDC1B000000000000000001A /* NodeDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDC1B0000000000000000019 /* NodeDiscoveryService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -427,6 +428,7 @@
 		DDC1B0000000000000000013 /* OpenClawNodeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenClawNodeService.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000015 /* WatchBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchBridge.swift; sourceTree = "<group>"; };
 		DDC1B0000000000000000017 /* PTTChannelService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTTChannelService.swift; sourceTree = "<group>"; };
+		DDC1B0000000000000000019 /* NodeDiscoveryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodeDiscoveryService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -907,6 +909,7 @@
 		DDC1A0000000000000000009 /* ClawWatch iOS */ = {
 			isa = PBXGroup;
 			children = (
+				DDC1B0000000000000000019 /* NodeDiscoveryService.swift */,
 				DDC1B0000000000000000017 /* PTTChannelService.swift */,
 				DDC1B0000000000000000015 /* WatchBridge.swift */,
 				DDC1B0000000000000000013 /* OpenClawNodeService.swift */,
@@ -1321,6 +1324,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DDC1B000000000000000001A /* NodeDiscoveryService.swift in Sources */,
 				DDC1B0000000000000000018 /* PTTChannelService.swift in Sources */,
 				DDC1C0000000000000000093 /* PTTStore.swift in Sources (ios) */,
 				DDC1C0000000000000000094 /* PTTService.swift in Sources (ios) */,
