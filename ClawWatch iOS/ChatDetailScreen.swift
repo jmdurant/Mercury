@@ -44,8 +44,14 @@ final class ChatDetailStore: TDLibManagerProtocol {
     deinit { TDLibManager.shared.unsubscribe(self) }
 
     func updateHandler(update: Update) {
-        if case .updateNewMessage(let m) = update, m.message.chatId == chatId {
+        switch update {
+        case .updateNewMessage(let m) where m.message.chatId == chatId:
             Task { @MainActor in append(m.message) }
+        case .updateMessageContent(let u) where u.chatId == chatId:
+            // Streaming agent replies (and edits) change content in place.
+            Task { @MainActor in updateContent(messageId: u.messageId, content: u.newContent) }
+        default:
+            break
         }
     }
     func connectionStateUpdate(state: ConnectionState) {}
@@ -53,6 +59,16 @@ final class ChatDetailStore: TDLibManagerProtocol {
 
     @MainActor private func append(_ m: Message) {
         messages.append(row(from: m))
+    }
+
+    @MainActor private func updateContent(messageId: Int64, content: MessageContent) {
+        guard let idx = messages.firstIndex(where: { $0.id == messageId }) else { return }
+        let old = messages[idx]
+        messages[idx] = MessageRow(
+            id: old.id,
+            text: String(content.description.characters),
+            isOutgoing: old.isOutgoing,
+            buttonRows: old.buttonRows)   // reply markup isn't in a content edit
     }
 
     private func row(from m: Message) -> MessageRow {
