@@ -175,6 +175,56 @@ final class LiveVoiceService: NSObject {
         UserDefaults.standard.set(raw, forKey: "liveVoiceAgentMap")
     }
 
+    // MARK: - Registered agents (from manually-labeled chats)
+    //
+    // When the gateway roster (agents.list) isn't available, the picker is built
+    // from agents the user has designated by labeling chats. id -> display name.
+
+    private func registeredMap() -> [String: String] {
+        let raw = NSUbiquitousKeyValueStore.default.string(forKey: "liveVoiceRegisteredAgents")
+            ?? UserDefaults.standard.string(forKey: "liveVoiceRegisteredAgents") ?? "{}"
+        return (try? JSONDecoder().decode([String: String].self, from: Data(raw.utf8))) ?? [:]
+    }
+    /// (id, name) pairs for the picker, sorted by name.
+    var registeredAgents: [(id: String, name: String)] {
+        registeredMap().map { ($0.key, $0.value) }.sorted { $0.name.lowercased() < $1.name.lowercased() }
+    }
+    func registerAgent(id: String, name: String) {
+        guard !id.isEmpty else { return }
+        var map = registeredMap()
+        map[id] = name
+        let raw = String(decoding: (try? JSONEncoder().encode(map)) ?? Data("{}".utf8), as: UTF8.self)
+        NSUbiquitousKeyValueStore.default.set(raw, forKey: "liveVoiceRegisteredAgents")
+        NSUbiquitousKeyValueStore.default.synchronize()
+        UserDefaults.standard.set(raw, forKey: "liveVoiceRegisteredAgents")
+    }
+    func unregisterAgent(id: String) {
+        var map = registeredMap()
+        map[id] = nil
+        let raw = String(decoding: (try? JSONEncoder().encode(map)) ?? Data("{}".utf8), as: UTF8.self)
+        NSUbiquitousKeyValueStore.default.set(raw, forKey: "liveVoiceRegisteredAgents")
+        NSUbiquitousKeyValueStore.default.synchronize()
+        UserDefaults.standard.set(raw, forKey: "liveVoiceRegisteredAgents")
+    }
+
+    /// A stable agent id derived from a chat title (e.g. "Nurse Claw 🩺" ->
+    /// "nurse-claw"), used as the default when labeling a chat as an agent.
+    static func defaultAgentId(fromTitle title: String) -> String {
+        let lowered = title.lowercased()
+        var out = ""
+        var lastDash = false
+        for ch in lowered {
+            if ch.isLetter || ch.isNumber {
+                out.append(ch); lastDash = false
+            } else if ch == " " || ch == "-" || ch == "_" {
+                if !out.isEmpty && !lastDash { out.append("-"); lastDash = true }
+            }
+            // emoji/punctuation dropped
+        }
+        while out.hasSuffix("-") { out.removeLast() }
+        return out
+    }
+
     /// The agent for the session currently being opened.
     private var activeAgentId: String = ""
 

@@ -112,10 +112,11 @@ struct LiveVoiceView: View {
                 Text(isPerChat ? "Agent id for \(agentLabel)" : "Default agent id")
                     .font(.caption).foregroundStyle(.secondary)
 
-                // Agents advertised by the gateway (if the node is connected)
-                if !node.agents.isEmpty {
+                // Agents from the gateway roster (if available) merged with the
+                // ones you've designated by labeling chats.
+                if !pickerAgents.isEmpty {
                     Menu {
-                        ForEach(node.agents) { agent in
+                        ForEach(pickerAgents) { agent in
                             Button {
                                 agentId = agent.id
                             } label: {
@@ -125,7 +126,7 @@ struct LiveVoiceView: View {
                     } label: {
                         HStack {
                             Image(systemName: "person.2.wave.2")
-                            Text(node.agents.first { $0.id == agentId }?.name
+                            Text(pickerAgents.first { $0.id == agentId }?.name
                                  ?? (agentId.isEmpty ? "Choose an agent" : agentId))
                             Spacer()
                             Image(systemName: "chevron.up.chevron.down").font(.caption2)
@@ -133,9 +134,7 @@ struct LiveVoiceView: View {
                         .font(.subheadline)
                     }
                 } else {
-                    Text(node.status == .connected
-                         ? "No agents advertised — enter an id below."
-                         : "Connect the OpenClaw node (Agent settings) to list agents, or enter an id.")
+                    Text("Label a chat as an agent (chat list), or enter an id below.")
                         .font(.caption2).foregroundStyle(.tertiary)
                 }
 
@@ -164,6 +163,15 @@ struct LiveVoiceView: View {
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }
+    }
+
+    /// Gateway roster (if connected) merged with agents you've registered by
+    /// labeling chats. De-duplicated by id, roster names preferred.
+    private var pickerAgents: [OpenClawNodeService.OCAgent] {
+        var byId: [String: OpenClawNodeService.OCAgent] = [:]
+        for a in voice.registeredAgents { byId[a.id] = .init(id: a.id, name: a.name) }
+        for a in node.agents { byId[a.id] = a }   // roster wins on name
+        return byId.values.sorted { $0.name.lowercased() < $1.name.lowercased() }
     }
 
     private var effectiveAgentId: String {
