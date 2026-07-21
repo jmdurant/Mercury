@@ -535,6 +535,14 @@ final class OpenClawNodeService: NSObject {
             let emoji = (entry["identityEmoji"] as? String) ?? (identity?["emoji"] as? String) ?? ""
             return OCAgent(id: id, name: emoji.isEmpty ? base : "\(emoji) \(base)")
         }
+        // Adopt the gateway's default agent so live voice / system PTT is enabled
+        // out of the box (no manual pick). Only when the user hasn't chosen one,
+        // and only if the default id is actually in the roster.
+        if LiveVoiceService.shared.defaultAgentId.isEmpty,
+           !agentsDefaultId.isEmpty,
+           agents.contains(where: { $0.id == agentsDefaultId }) {
+            LiveVoiceService.shared.defaultAgentId = agentsDefaultId
+        }
         lastEvent = agents.isEmpty
             ? "Connected — no agents configured"
             : "Loaded \(agents.count) agent\(agents.count == 1 ? "" : "s")"
