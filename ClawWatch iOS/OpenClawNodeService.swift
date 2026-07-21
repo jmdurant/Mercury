@@ -516,6 +516,16 @@ final class OpenClawNodeService: NSObject {
         send(type: "req", body: ["id": "agents.list", "method": "agents.list", "params": [:]])
     }
 
+    /// The agent whose display name matches a chat title (ignoring emoji,
+    /// spacing and case) — so a Telegram chat named after an agent auto-routes
+    /// to it without a manual per-chat toggle.
+    func agent(forChatTitle title: String) -> OCAgent? {
+        func norm(_ s: String) -> String { s.lowercased().filter { $0.isLetter || $0.isNumber } }
+        let t = norm(title)
+        guard !t.isEmpty else { return nil }
+        return agents.first { norm($0.name) == t }
+    }
+
     private func handleAgentsList(_ obj: [String: Any]) {
         guard (obj["ok"] as? Bool) != false else {
             let msg = (obj["error"] as? [String: Any])?["message"] as? String ?? "unavailable"

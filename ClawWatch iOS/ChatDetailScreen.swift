@@ -127,6 +127,13 @@ struct ChatDetailScreen: View {
     @State private var draft = ""
     @State private var pickedItem: PhotosPickerItem?
     @State private var showLiveVoice = false
+    @State private var node = OpenClawNodeService.shared
+
+    /// A chat is a live-voice target if it's explicitly an assistant chat, or
+    /// its title matches an agent from the gateway roster (auto-routing).
+    private var isVoiceChat: Bool {
+        store.isAssistantChat || node.agent(forChatTitle: title) != nil
+    }
 
     private let quickReplies = ["👍", "On my way", "Thanks!", "Give me a minute", "Call you soon"]
 
@@ -164,7 +171,7 @@ struct ChatDetailScreen: View {
             LiveVoiceView(isPresented: $showLiveVoice, chatId: store.chatId, agentLabel: title)
         }
         .toolbar {
-            if store.isAssistantChat {
+            if isVoiceChat {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showLiveVoice = true

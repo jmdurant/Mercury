@@ -66,7 +66,13 @@ struct LiveVoiceView: View {
             }
         }
         .onAppear {
-            agentId = isPerChat ? voice.agentId(forChat: chatId!) : voice.defaultAgentId
+            if isPerChat {
+                let stored = voice.agentId(forChat: chatId!)
+                // Fall back to the agent whose name matches this chat's title.
+                agentId = stored.isEmpty ? (node.agent(forChatTitle: agentLabel)?.id ?? "") : stored
+            } else {
+                agentId = voice.defaultAgentId
+            }
         }
     }
 
