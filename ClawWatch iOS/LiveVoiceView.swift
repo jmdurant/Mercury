@@ -41,7 +41,7 @@ struct LiveVoiceView: View {
                     if voice.state == .live || voice.state == .connecting {
                         voice.stop()
                     } else {
-                        voice.start(agentId: isPerChat ? agentId : nil)
+                        voice.start(agentId: agentId)
                     }
                 } label: {
                     Label(voice.state == .live ? "End" : "Talk",
@@ -133,19 +133,15 @@ struct LiveVoiceView: View {
                         }
                         .font(.subheadline)
                     }
+                    // No manual box needed when the dropdown has agents.
                 } else {
                     Text("Label a chat as an agent (chat list), or enter an id below.")
                         .font(.caption2).foregroundStyle(.tertiary)
+                    TextField("agent id (what your server expects)", text: $agentId)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
                 }
-
-                TextField("agent id (what your server expects)", text: $agentId)
-                    .textFieldStyle(.roundedBorder)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    .onChange(of: agentId) { _, new in
-                        if let chatId { voice.setAgentId(new, forChat: chatId) }
-                        else { voice.defaultAgentId = new }
-                    }
                 if isPerChat {
                     Button {
                         voice.defaultAgentId = agentId
@@ -162,6 +158,10 @@ struct LiveVoiceView: View {
                 Text("Endpoint, token and auto-stop live in Agent settings.")
                     .font(.caption2).foregroundStyle(.tertiary)
             }
+            .onChange(of: agentId) { _, new in
+                if let chatId { voice.setAgentId(new, forChat: chatId) }
+                else { voice.defaultAgentId = new }
+            }
         }
     }
 
@@ -174,9 +174,8 @@ struct LiveVoiceView: View {
         return byId.values.sorted { $0.name.lowercased() < $1.name.lowercased() }
     }
 
-    private var effectiveAgentId: String {
-        isPerChat ? agentId : voice.defaultAgentId
-    }
+    /// The reactive local selection drives enablement + start for both modes.
+    private var effectiveAgentId: String { agentId }
 
     private var agentDescription: String {
         if isPerChat {

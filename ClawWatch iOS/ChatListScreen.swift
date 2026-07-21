@@ -77,6 +77,11 @@ final class ChatListStore: TDLibManagerProtocol {
     }
 }
 
+extension Color {
+    /// Carolina blue — the accent for agent chats.
+    static let carolina = Color(red: 0.29, green: 0.61, blue: 0.83)
+}
+
 /// Pinned chats (local to this device).
 enum PinStore {
     private static let key = "pinnedChatIds"
@@ -179,7 +184,7 @@ struct ChatListScreen: View {
                         } label: {
                             Label(agentChats.contains(row.id) ? "Not agent" : "Agent",
                                   systemImage: agentChats.contains(row.id) ? "person.crop.circle.badge.xmark" : "brain")
-                        }.tint(.purple)
+                        }.tint(.carolina)
                     }
                     .contextMenu {
                         Button {
@@ -209,8 +214,10 @@ struct ChatListScreen: View {
     }
 
     private func rowLabel(_ row: ChatRow) -> some View {
-        HStack(spacing: 12) {
-            initialsCircle(row.title, agent: agentChats.contains(row.id))
+        let isAgent = agentChats.contains(row.id)
+        let agentId = LiveVoiceService.shared.agentId(forChat: row.id)
+        return HStack(spacing: 12) {
+            initialsCircle(row.title, agent: isAgent)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(row.title).font(.headline).lineLimit(1)
@@ -218,8 +225,8 @@ struct ChatListScreen: View {
                         Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.secondary)
                     }
                 }
-                if agentChats.contains(row.id), case let aid = LiveVoiceService.shared.agentId(forChat: row.id), !aid.isEmpty {
-                    Text("agent: \(aid)").font(.caption2).foregroundStyle(.purple)
+                if isAgent && !agentId.isEmpty {
+                    Text("agent: \(agentId)").font(.caption2).foregroundStyle(Color.carolina)
                 } else {
                     Text(row.subtitle).font(.subheadline)
                         .foregroundStyle(.secondary).lineLimit(1)
@@ -274,7 +281,7 @@ struct ChatListScreen: View {
         let initials = title.split(separator: " ").prefix(2)
             .compactMap { $0.first }.map(String.init).joined()
         return Circle()
-            .fill((agent ? Color.purple : Color.blue).gradient)
+            .fill((agent ? Color.carolina : Color.blue).gradient)
             .frame(width: 44, height: 44)
             .overlay(
                 Group {
