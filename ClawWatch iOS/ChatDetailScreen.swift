@@ -128,6 +128,7 @@ struct ChatDetailScreen: View {
     @State private var pickedItem: PhotosPickerItem?
     @State private var showLiveVoice = false
     @State private var node = OpenClawNodeService.shared
+    @State private var didInitialScroll = false
 
     /// A chat is a live-voice target if it's explicitly an assistant chat, or
     /// its title matches an agent from the gateway roster (auto-routing).
@@ -144,24 +145,32 @@ struct ChatDetailScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ScrollView {
-                LazyVStack(spacing: 6) {
-                    ForEach(store.messages) { row in
-                        VStack(alignment: row.isOutgoing ? .trailing : .leading, spacing: 4) {
-                            HStack {
-                                if row.isOutgoing { Spacer(minLength: 40) }
-                                Text(row.text)
-                                    .padding(8)
-                                    .background(row.isOutgoing ? Color.blue : Color(.secondarySystemBackground),
-                                                in: RoundedRectangle(cornerRadius: 14))
-                                    .foregroundStyle(row.isOutgoing ? .white : .primary)
-                                if !row.isOutgoing { Spacer(minLength: 40) }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 6) {
+                        ForEach(store.messages) { row in
+                            VStack(alignment: row.isOutgoing ? .trailing : .leading, spacing: 4) {
+                                HStack {
+                                    if row.isOutgoing { Spacer(minLength: 40) }
+                                    Text(row.text)
+                                        .padding(8)
+                                        .background(row.isOutgoing ? Color.blue : Color(.secondarySystemBackground),
+                                                    in: RoundedRectangle(cornerRadius: 14))
+                                        .foregroundStyle(row.isOutgoing ? .white : .primary)
+                                    if !row.isOutgoing { Spacer(minLength: 40) }
+                                }
+                                inlineButtons(for: row)
                             }
-                            inlineButtons(for: row)
+                            .id(row.id)
                         }
                     }
+                    .padding()
                 }
-                .padding()
+                .onChange(of: store.messages.count) { _, _ in
+                    scrollToBottom(proxy, animated: didInitialScroll)
+                    didInitialScroll = true
+                }
+                .onAppear { scrollToBottom(proxy, animated: false) }
             }
             composeBar
         }
@@ -214,6 +223,18 @@ struct ChatDetailScreen: View {
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
             Task { await sendPickedPhoto(item) }
+        }
+    }
+
+    /// Scroll to the newest message. Jumps on open, animates on new messages.
+    private func scrollToBottom(_ proxy: ScrollViewProxy, animated: Bool) {
+        guard let last = store.messages.last?.id else { return }
+        DispatchQueue.main.async {
+            if animated {
+                withAnimation(.easeOut(duration: 0.2)) { proxy.scrollTo(last, anchor: .bottom) }
+            } else {
+                proxy.scrollTo(last, anchor: .bottom)
+            }
         }
     }
 
