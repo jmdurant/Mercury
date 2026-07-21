@@ -154,6 +154,7 @@ final class OpenClawNodeService: NSObject {
     }
 
     private let clientId = "node-host"
+    private let operatorClientId = "openclaw-ios"   // official iOS client id
     private let protocolVersion = 4
     private let commands = [
         "health.snapshot", "location.get", "battery.get", "device.info",
@@ -171,6 +172,9 @@ final class OpenClawNodeService: NSObject {
     /// lives; cleared on reset.
     private var discoveredEndpoint: NWEndpoint?
     private var discoveredTls = false
+    /// The URL the node actually connected to (LAN or tunnel) — reused for the
+    /// operator/agents.list connection so it follows the same transport.
+    private var activeURL: URL?
 
     // While pending approval, redial on a timer so the node connects on its own
     // once the operator runs `openclaw nodes approve` — no need to tap Connect.
@@ -344,6 +348,11 @@ final class OpenClawNodeService: NSObject {
     }
 
     private func openWebSocket(url: URL) {
+        // Remember the actual target so the operator (agents.list) connection
+        // follows the same transport — LAN endpoint or tunnel URL, not always
+        // the raw LAN IP in gatewayURL (which iOS aborts when we're on tunnel).
+        activeURL = url
+
         // Debug: show exactly what we're dialing + which credential/headers.
         let cred = deviceToken.isEmpty ? (bootstrapToken.isEmpty ? "raw-token" : "bootstrap") : "device-token"
         let cf = CloudflareAccess.isConfigured ? " +CF-Access" : ""
@@ -396,6 +405,7 @@ final class OpenClawNodeService: NSObject {
     func stop() {
         ws?.close()
         ws = nil
+        closeOperator()
         status = .idle
     }
 
@@ -494,9 +504,8 @@ final class OpenClawNodeService: NSObject {
                     lastEvent = "Gateway rejected: \(msg)\(code.map { " [\($0)]" } ?? "")"
                 }
             }
-        } else if type == "res", (obj["id"] as? String) == "agents.list" {
-            handleAgentsList(obj)
-        } else if type == "res", let ok = obj["ok"] as? Bool, ok == false {
+        } else if type == "res", let ok = obj["ok"] as? Bool, ok == false,
+                  (obj["id"] as? String) != "agents.list" {
             // Any other failed response — show it rather than swallow it.
             let msg = (obj["error"] as? [String: Any])?["message"] as? String
                 ?? "\(obj["error"] ?? "error")"
@@ -506,14 +515,111 @@ final class OpenClawNodeService: NSObject {
 
     // MARK: - Agent roster
     //
-    // agents.list is requested over the SAME node connection: the paired device
-    // token already carries operator.read, so there's no separate operator
-    // connection and no raw admin token needed. Fired right after connect; the
-    // response comes back as res id=agents.list (handled in handleFrame).
+    // agents.list is OPERATOR-scoped and the gateway refuses it on a node-role
+    // connection ("unauthorized role: node") — the role check runs before scope.
+    // So we open a short-lived SECOND connection with role=operator, presenting
+    // the paired DEVICE token as a bearer `auth.token` (exactly what the CLI's
+    // `--token <deviceToken>` does — auth.deviceToken instead enforces the node
+    // binding and is rejected as AUTH_DEVICE_TOKEN_MISMATCH). No admin token.
+
+    private var operatorWS: WSClient?
 
     func fetchAgents() {
-        guard status == .connected else { return }
-        send(type: "req", body: ["id": "agents.list", "method": "agents.list", "params": [:]])
+        // The gateway refuses agents.list on a node-role connection and rejects
+        // the paired device token on an operator connection (verified live:
+        // AUTH_DEVICE_TOKEN_MISMATCH / AUTH_TOKEN_MISMATCH). Only the raw gateway
+        // token authorises operator.read — so only attempt it when one is set;
+        // otherwise leave agent ids to manual entry rather than erroring.
+        guard !operatorCredential.isEmpty else {
+            lastEvent = "Connected — enter agent ids manually (auto-list needs the gateway token, or a gateway policy change)."
+            return
+        }
+        // Follow the same transport the node used (LAN endpoint or tunnel URL),
+        // NOT the raw LAN IP in gatewayURL — otherwise this aborts on tunnel.
+        let target = activeURL ?? URL(string: gatewayURL)
+        closeOperator()
+        let client = WSClient()
+        operatorWS = client
+        client.onText = { [weak self] text in self?.handleOperatorFrame(text) }
+        if let ep = discoveredEndpoint {
+            client.connect(endpoint: ep, tls: discoveredTls, headers: cfHeaders)
+        } else if let target, target.scheme?.hasPrefix("ws") == true {
+            client.connect(url: target, headers: cfHeaders)
+        }
+    }
+
+    /// The credential for the operator connection. Only the raw gateway token
+    /// works here — the device token is rejected (mismatch) — so this is empty
+    /// unless the user has entered a gateway token in Advanced.
+    private var operatorCredential: String { token }
+
+    private func handleOperatorFrame(_ text: String) {
+        guard let obj = try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any]
+        else { return }
+        let type = obj["type"] as? String
+        if type == "event", (obj["event"] as? String) == "connect.challenge",
+           let payload = obj["payload"] as? [String: Any], let nonce = payload["nonce"] as? String {
+            sendOperatorConnect(nonce: nonce)
+        } else if type == "res", (obj["id"] as? String) == "connect" {
+            if (obj["ok"] as? Bool) == true {
+                sendOperator(body: ["id": "agents.list", "method": "agents.list", "params": [:]])
+            } else {
+                let msg = (obj["error"] as? [String: Any])?["message"] as? String ?? "unavailable"
+                lastEvent = "Agent list: \(msg) — enter ids manually"
+                closeOperator()
+            }
+        } else if type == "res", (obj["id"] as? String) == "agents.list" {
+            handleAgentsList(obj)
+            closeOperator()   // one-shot fetch
+        }
+    }
+
+    private func sendOperatorConnect(nonce: String) {
+        let identity = loadOrCreateIdentity()
+        let signedAtMs = Int64(Date().timeIntervalSince1970 * 1000)
+        let cred = operatorCredential
+        // Sign the v3 payload with the SAME token we present as the bearer, so
+        // the gateway's signature reconstruction matches.
+        let payload = [
+            "v3", identity.deviceId, operatorClientId, "ui", "operator", "operator.read",
+            String(signedAtMs), cred, nonce, platformName, deviceFamilyName,
+        ].joined(separator: "|")
+        guard let signature = try? identity.privateKey.signature(for: Data(payload.utf8)) else {
+            closeOperator(); return
+        }
+        let params: [String: Any] = [
+            "minProtocol": protocolVersion,
+            "maxProtocol": protocolVersion,
+            "client": [
+                "id": operatorClientId, "displayName": displayName, "version": "1.0.0",
+                "platform": platformName, "deviceFamily": deviceFamilyName,
+                "mode": "ui", "instanceId": identity.deviceId,
+            ],
+            "role": "operator",
+            "scopes": ["operator.read"],
+            "device": [
+                "id": identity.deviceId,
+                "publicKey": base64url(identity.privateKey.publicKey.rawRepresentation),
+                "signature": base64url(signature),
+                "signedAt": signedAtMs,
+                "nonce": nonce,
+            ],
+            "auth": ["token": cred],   // device token as a bearer (like the CLI)
+        ]
+        sendOperator(body: ["id": "connect", "method": "connect", "params": params])
+    }
+
+    private func sendOperator(body: [String: Any]) {
+        var frame = body
+        frame["type"] = "req"
+        guard let data = try? JSONSerialization.data(withJSONObject: frame),
+              let text = String(data: data, encoding: .utf8) else { return }
+        operatorWS?.sendText(text)
+    }
+
+    private func closeOperator() {
+        operatorWS?.close()
+        operatorWS = nil
     }
 
     /// The agent whose display name matches a chat title (ignoring emoji,
