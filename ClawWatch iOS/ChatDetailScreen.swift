@@ -177,6 +177,7 @@ struct ChatDetailScreen: View {
     @State private var showLiveVoice = false
     @State private var node = OpenClawNodeService.shared
     @State private var didInitialScroll = false
+    @State private var isNearBottom = true
 
     /// A chat is a live-voice target if it's explicitly an assistant chat, or
     /// its title matches an agent from the gateway roster (auto-routing).
@@ -216,13 +217,20 @@ struct ChatDetailScreen: View {
                 }
                 .defaultScrollAnchor(.bottom)   // lay out anchored to newest (no top-first flash)
                 .opacity(didInitialScroll ? 1 : 0)
-                // Follow a streaming reply: the newest message's text grows in
-                // place (no count change), so scroll as it does.
+                .onScrollGeometryChange(for: Bool.self) { geo in
+                    geo.contentOffset.y + geo.containerSize.height >= geo.contentSize.height - 120
+                } action: { _, near in isNearBottom = near }
+                // Follow a streaming reply (newest message grows in place, no
+                // count change) — but only if you're already at the bottom, so
+                // scrolling up to read a long response isn't yanked back down.
                 .onChange(of: store.messages.last?.text) { _, _ in
-                    if didInitialScroll { scrollToBottom(proxy, animated: true) }
+                    if didInitialScroll && isNearBottom { scrollToBottom(proxy, animated: true) }
                 }
                 .onChange(of: store.messages.count) { _, _ in
-                    scrollToBottom(proxy, animated: didInitialScroll)
+                    // Always follow your own sent messages; otherwise only when near bottom.
+                    if !didInitialScroll || isNearBottom || store.messages.last?.isOutgoing == true {
+                        scrollToBottom(proxy, animated: didInitialScroll)
+                    }
                     store.markNewestRead()   // clear unread as messages arrive
                     if !didInitialScroll {
                         // Reveal once positioned at the bottom, killing the jump.
