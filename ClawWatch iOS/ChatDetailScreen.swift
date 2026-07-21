@@ -111,9 +111,23 @@ final class ChatDetailStore: TDLibManagerProtocol {
                 if sendService == nil { sendService = SendMessageService(chat: chat) }
                 autoDelete = AutoDeleteOption.from(seconds: chat.messageAutoDeleteTime)
             }
-            let history = try await TDLibManager.shared.client?.getChatHistory(
-                chatId: chatId, fromMessageId: 0, limit: 40, offset: 0, onlyLocal: false)
-            messages = (history?.messages ?? []).reversed().map { row(from: $0) }
+            // getChatHistory returns a TDLib-chosen count that can be far smaller
+            // than `limit` — on the first open of a chat it's often just the last
+            // message. Page older (fromMessageId = oldest so far) until we have a
+            // screenful or reach the top; otherwise the thread only fills in on a
+            // second open.
+            var collected: [Message] = []
+            var fromMessageId: Int64 = 0
+            for _ in 0..<10 {
+                let history = try await TDLibManager.shared.client?.getChatHistory(
+                    chatId: chatId, fromMessageId: fromMessageId, limit: 40, offset: 0, onlyLocal: false)
+                let batch = history?.messages ?? []
+                if batch.isEmpty { break }
+                collected.append(contentsOf: batch)
+                guard collected.count < 30, let oldest = batch.last?.id, oldest != 0 else { break }
+                fromMessageId = oldest
+            }
+            messages = collected.reversed().map { row(from: $0) }
         } catch {
             LoggerService(ChatDetailStore.self).log(error, level: .error)
         }
