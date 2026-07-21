@@ -198,12 +198,25 @@ struct ChatDetailScreen: View {
                     }
                     .padding()
                 }
+                .defaultScrollAnchor(.bottom)   // lay out anchored to newest (no top-first flash)
+                .opacity(didInitialScroll ? 1 : 0)
                 .onChange(of: store.messages.count) { _, _ in
                     scrollToBottom(proxy, animated: didInitialScroll)
-                    didInitialScroll = true
                     store.markNewestRead()   // clear unread as messages arrive
+                    if !didInitialScroll {
+                        // Reveal once positioned at the bottom, killing the jump.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                            withAnimation(.easeIn(duration: 0.12)) { didInitialScroll = true }
+                        }
+                    }
                 }
-                .onAppear { scrollToBottom(proxy, animated: false) }
+                .onAppear {
+                    scrollToBottom(proxy, animated: false)
+                    // Fallback reveal (e.g. empty chat where count never changes).
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                        if !didInitialScroll { withAnimation(.easeIn(duration: 0.12)) { didInitialScroll = true } }
+                    }
+                }
             }
             composeBar
         }
