@@ -216,6 +216,11 @@ struct ChatDetailScreen: View {
                 }
                 .defaultScrollAnchor(.bottom)   // lay out anchored to newest (no top-first flash)
                 .opacity(didInitialScroll ? 1 : 0)
+                // Follow a streaming reply: the newest message's text grows in
+                // place (no count change), so scroll as it does.
+                .onChange(of: store.messages.last?.text) { _, _ in
+                    if didInitialScroll { scrollToBottom(proxy, animated: true) }
+                }
                 .onChange(of: store.messages.count) { _, _ in
                     scrollToBottom(proxy, animated: didInitialScroll)
                     store.markNewestRead()   // clear unread as messages arrive
