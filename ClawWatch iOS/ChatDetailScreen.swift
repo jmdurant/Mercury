@@ -118,6 +118,24 @@ final class ChatDetailStore: TDLibManagerProtocol {
             LoggerService(ChatDetailStore.self).log(error, level: .error)
         }
     }
+
+    // MARK: - Read state (clears the unread badge)
+
+    func openChat() {
+        Task.detached { try? await TDLibManager.shared.client?.openChat(chatId: self.chatId) }
+    }
+    func closeChat() {
+        Task.detached { try? await TDLibManager.shared.client?.closeChat(chatId: self.chatId) }
+    }
+    /// Mark the newest message seen — TDLib advances the read pointer over all
+    /// older messages too, so this clears the whole unread count.
+    func markNewestRead() {
+        guard let last = messages.last?.id else { return }
+        Task.detached {
+            try? await TDLibManager.shared.client?.viewMessages(
+                chatId: self.chatId, forceRead: true, messageIds: [last], source: nil)
+        }
+    }
 }
 
 struct ChatDetailScreen: View {
@@ -169,6 +187,7 @@ struct ChatDetailScreen: View {
                 .onChange(of: store.messages.count) { _, _ in
                     scrollToBottom(proxy, animated: didInitialScroll)
                     didInitialScroll = true
+                    store.markNewestRead()   // clear unread as messages arrive
                 }
                 .onAppear { scrollToBottom(proxy, animated: false) }
             }
@@ -220,6 +239,8 @@ struct ChatDetailScreen: View {
             }
         }
         .task { await store.load() }
+        .onAppear { store.openChat() }
+        .onDisappear { store.closeChat() }
         .onChange(of: pickedItem) { _, item in
             guard let item else { return }
             Task { await sendPickedPhoto(item) }

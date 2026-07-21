@@ -41,9 +41,18 @@ struct ChatDetailPage: View {
                         messageList()
                             .onAppear { vm.onMessageListAppear(proxy) }
                             .padding(.vertical, 2)
-                        
+
                     }
                     .defaultScrollAnchor(.bottom)
+                    // Land on the newest message on open, and follow new
+                    // messages. Keyed on the last id so "Load more" (which
+                    // prepends older messages) doesn't scroll to the bottom.
+                    .onChange(of: vm.messages.last?.id) { _, _ in
+                        guard let last = vm.messages.last?.id else { return }
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            proxy.scrollTo(last, anchor: .bottom)
+                        }
+                    }
                 }
             }
             .toolbar {
