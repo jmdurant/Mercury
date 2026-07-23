@@ -11,6 +11,7 @@ import SwiftUI
 struct AgentSettingsScreen: View {
 
     @Binding var isPresented: Bool
+    @AppStorage("appAppearance") private var appearance: AppAppearance = .system
     @State private var token: String = AutoResponderStore.token ?? ""
     @State private var log: [String] = AutoResponderStore.auditLog()
     @State private var node = OpenClawNodeService.shared
@@ -44,6 +45,20 @@ struct AgentSettingsScreen: View {
     var body: some View {
         NavigationStack {
             Form {
+                // MARK: Appearance
+                Section {
+                    Picker(selection: $appearance) {
+                        ForEach(AppAppearance.allCases) { a in
+                            Label(a.label, systemImage: a.symbol).tag(a)
+                        }
+                    } label: {
+                        Label("Appearance", systemImage: "moon.stars")
+                    }
+                    .pickerStyle(.menu)
+                } footer: {
+                    Text("Choose Light, Dark, or follow the system setting.")
+                }
+
                 // MARK: Consent
                 Section {
                     ForEach(AutoResponderStore.Consent.allCases) { c in
