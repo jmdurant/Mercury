@@ -254,6 +254,78 @@ struct MercurySentMessageQuery: EntityQuery {
     }
 }
 
+struct PendingMercuryDraft: Codable {
+    private static let defaults = UserDefaults(
+        suiteName: "group.com.doctordurant.clawwatch"
+    )
+    private static let key = "pendingMercuryDraft"
+
+    let recipientNames: [String]
+    let body: String
+
+    static func save(_ draft: PendingMercuryDraft) {
+        defaults?.set(try? JSONEncoder().encode(draft), forKey: key)
+    }
+
+    static func consume() -> PendingMercuryDraft? {
+        guard let data = defaults?.data(forKey: key) else { return nil }
+        defaults?.removeObject(forKey: key)
+        return try? JSONDecoder().decode(PendingMercuryDraft.self, from: data)
+    }
+}
+
+@AppIntent(schema: .messages.draftMessage)
+struct DraftMessageAppIntent: AppIntent {
+    static var title: LocalizedStringResource = "Draft Mercury Message"
+    static var description = IntentDescription("Open Mercury to finish composing a Telegram message")
+    static var openAppWhenRun = true
+
+    var destination: MercuryMessageDestination?
+    var subject: AttributedString?
+    var content: AttributedString?
+
+    @Parameter(default: [], supportedContentTypes: [.item, .image, .audio])
+    var attachments: [IntentFile]
+
+    @Parameter(supportedContentTypes: [.audio])
+    var audioMessage: IntentFile?
+
+    @Parameter(default: [])
+    var locations: [PlaceDescriptor]
+
+    @Parameter(default: [])
+    var links: [URL]
+
+    var scheduledDate: Date?
+
+    func perform() async throws -> some IntentResult {
+        var messageParts: [String] = []
+        if let subject {
+            let text = String(subject.characters)
+            if !text.isEmpty { messageParts.append(text) }
+        }
+        if let content {
+            let text = String(content.characters)
+            if !text.isEmpty { messageParts.append(text) }
+        }
+        messageParts.append(contentsOf: links.map(\.absoluteString))
+        messageParts.append(contentsOf: locations.map(\.description))
+
+        let names: [String]
+        switch destination {
+        case .people(let people):
+            names = people.compactMap(\.mercuryDisplayName)
+        case nil:
+            names = []
+        }
+        PendingMercuryDraft.save(PendingMercuryDraft(
+            recipientNames: names,
+            body: messageParts.joined(separator: "\n")
+        ))
+        return .result()
+    }
+}
+
 @AppIntent(schema: .messages.sendMessage)
 struct SendMessageAppIntent: AppIntent {
     static var title: LocalizedStringResource = "Send Mercury Message"

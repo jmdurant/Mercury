@@ -8,7 +8,7 @@
 import SwiftUI
 import TDLibKit
 
-struct ChatRow: Identifiable {
+struct ChatRow: Identifiable, Hashable {
     let id: Int64
     let title: String
     let subtitle: String
@@ -97,7 +97,10 @@ enum PinStore {
 
 struct ChatListScreen: View {
 
+    @Environment(\.scenePhase) private var scenePhase
     @State private var store = ChatListStore()
+    @State private var path: [ChatRow] = []
+    @State private var draftBodyByChatId: [Int64: String] = [:]
     @State private var showAgentSettings = false
     @State private var showLiveVoice = false
 
@@ -118,7 +121,7 @@ struct ChatListScreen: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 section("📌  Pinned", pinnedRows)
                 section("🤖  Agents", agentRows)
@@ -146,7 +149,22 @@ struct ChatListScreen: View {
                 }
             }
             .refreshable { await store.load() }
-            .task { await store.load() }
+            .task {
+                await store.load()
+                openPendingDraft()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    openPendingDraft()
+                }
+            }
+            .navigationDestination(for: ChatRow.self) { row in
+                ChatDetailScreen(
+                    chatId: row.id,
+                    title: row.title,
+                    initialDraft: draftBodyByChatId[row.id] ?? ""
+                )
+            }
             .alert("Agent id for \(editing?.title ?? "")",
                    isPresented: Binding(get: { editing != nil },
                                         set: { if !$0 { editing = nil } })) {
@@ -165,9 +183,7 @@ struct ChatListScreen: View {
         if !rows.isEmpty {
             Section(title) {
                 ForEach(rows) { row in
-                    NavigationLink {
-                        ChatDetailScreen(chatId: row.id, title: row.title)
-                    } label: {
+                    NavigationLink(value: row) {
                         rowLabel(row)
                     }
                     .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -211,6 +227,24 @@ struct ChatListScreen: View {
                 }
             }
         }
+    }
+
+    private func openPendingDraft() {
+        guard let pending = PendingMercuryDraft.consume(),
+              let recipient = pending.recipientNames.first else { return }
+        let normalized = recipient.folding(
+            options: [.caseInsensitive, .diacriticInsensitive],
+            locale: .current
+        )
+        guard let row = store.rows.first(where: {
+            let title = $0.title.folding(
+                options: [.caseInsensitive, .diacriticInsensitive],
+                locale: .current
+            )
+            return title == normalized || title.contains(normalized) || normalized.contains(title)
+        }) else { return }
+        draftBodyByChatId[row.id] = pending.body
+        path.append(row)
     }
 
     private func rowLabel(_ row: ChatRow) -> some View {

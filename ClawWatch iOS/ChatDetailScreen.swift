@@ -187,9 +187,10 @@ struct ChatDetailScreen: View {
 
     private let quickReplies = ["👍", "On my way", "Thanks!", "Give me a minute", "Call you soon"]
 
-    init(chatId: Int64, title: String) {
+    init(chatId: Int64, title: String, initialDraft: String = "") {
         self.title = title
         _store = State(initialValue: ChatDetailStore(chatId: chatId))
+        _draft = State(initialValue: initialDraft)
     }
 
     var body: some View {

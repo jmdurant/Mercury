@@ -1673,11 +1673,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch iOS/ClawWatch-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch iOS/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = ClawWatch;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1704,11 +1705,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch iOS/ClawWatch-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch iOS/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = ClawWatch;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -1734,7 +1736,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
@@ -1762,7 +1764,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
@@ -1790,7 +1792,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch NotificationService/Info.plist";
@@ -1816,7 +1818,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch NotificationService/Info.plist";
@@ -1844,7 +1846,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Share/ClawWatch-Share.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Share/Info.plist";
@@ -1871,7 +1873,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Share/ClawWatch-Share.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Share/Info.plist";

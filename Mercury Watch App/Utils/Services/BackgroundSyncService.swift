@@ -47,10 +47,10 @@ enum BackgroundSyncService {
         #else
         let request = BGAppRefreshTaskRequest(identifier: taskIdentifier)
         request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60)
-        do {
-            try BGTaskScheduler.shared.submit(request)
-        } catch {
-            logger.log("BGTask scheduling failed: \(error)", level: .error)
+        BGTaskScheduler.shared.submitTaskRequest(request) { error in
+            if let error {
+                logger.log("BGTask scheduling failed: \(error)", level: .error)
+            }
         }
         #endif
     }
