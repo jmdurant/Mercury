@@ -54,23 +54,17 @@ struct ChatCellView: View {
 
         let isMutedText = model.isMuted
         ? Text(Image(systemName: "speaker.slash.fill"))
+            .font(.caption)
+            .foregroundColor(.secondary)
         : Text("")
 
         let lockText = model.isSecretChat
-        ? Text(Image(systemName: "lock.fill")).foregroundColor(.green)
+        ? Text(Image(systemName: "lock.fill"))
+            .font(.caption2)
+            .foregroundColor(.green)
         : Text("")
 
-        Group {
-            lockText
-                .font(.caption2)
-            +
-            Text(model.title)
-                .font(.headline)
-            +
-            isMutedText
-                .font(.caption)
-                .foregroundColor(.secondary)
-        }
+        Text("\(lockText)\(Text(model.title).font(.headline))\(isMutedText)")
         .lineLimit(2)
     }
     

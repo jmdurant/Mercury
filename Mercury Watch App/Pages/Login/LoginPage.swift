@@ -8,9 +8,14 @@
 import SwiftUI
 
 struct LoginPage: View {
-    @State
-    @Mockable(mockInit: LoginViewModelMock.init)
-    var vm = LoginViewModel.init
+    @State private var vm: LoginViewModel
+
+    init() {
+        let model: LoginViewModel = AppState.shared.isMock
+            ? LoginViewModelMock()
+            : LoginViewModel()
+        _vm = State(initialValue: model)
+    }
     
     var body: some View {
         NavigationStack {

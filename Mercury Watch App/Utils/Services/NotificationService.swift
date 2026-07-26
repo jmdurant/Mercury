@@ -114,7 +114,7 @@ enum NotificationService {
             if granted {
                 DispatchQueue.main.async {
                     #if os(watchOS)
-                    WKExtension.shared().registerForRemoteNotifications()
+                    WKApplication.shared().registerForRemoteNotifications()
                     #else
                     UIApplication.shared.registerForRemoteNotifications()
                     #endif

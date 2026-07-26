@@ -51,7 +51,7 @@ enum SystemActionService {
 
     @MainActor static func open(_ url: URL) {
         #if os(watchOS)
-        WKExtension.shared().openSystemURL(url)
+        WKApplication.shared().openSystemURL(url)
         #else
         UIApplication.shared.open(url)
         #endif

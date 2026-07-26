@@ -57,7 +57,7 @@ struct VideoPlayerView: View {
                         avPlayer.actionAtItemEnd = .none
                         // Loop for GIFs
                         NotificationCenter.default.addObserver(
-                            forName: .AVPlayerItemDidPlayToEndTime,
+                            forName: AVPlayerItem.didPlayToEndTimeNotification,
                             object: avPlayer.currentItem,
                             queue: .main
                         ) { _ in

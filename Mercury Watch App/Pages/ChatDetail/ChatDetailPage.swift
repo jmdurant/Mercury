@@ -9,15 +9,13 @@ import SwiftUI
 
 struct ChatDetailPage: View {
     
-    @State
-    @Mockable
-    var vm: ChatDetailViewModel
+    @State private var vm: ChatDetailViewModel
     
     init(chatId: Int64) {
-        _vm = Mockable.state(
-            value: { ChatDetailViewModel(chatId: chatId) },
-            mock: { ChatDetailViewModelMock() }
-        )
+        let model: ChatDetailViewModel = AppState.shared.isMock
+            ? ChatDetailViewModelMock()
+            : ChatDetailViewModel(chatId: chatId)
+        _vm = State(initialValue: model)
     }
     
     var body: some View {

@@ -40,7 +40,7 @@ extension ChatDetailViewModel {
 
         self.chatAction = .chatActionTyping
 
-        WKExtension.shared()
+        WKApplication.shared()
             .visibleInterfaceController?
             .presentTextInputController(withSuggestions: [],
                                         allowedInputMode: .allowEmoji) { result in

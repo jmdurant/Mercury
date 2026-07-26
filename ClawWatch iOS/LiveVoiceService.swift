@@ -385,7 +385,7 @@ final class LiveVoiceService: NSObject {
         try? session.setCategory(.playAndRecord, mode: .voiceChat)
         #else
         try? session.setCategory(.playAndRecord, mode: .voiceChat,
-                                 options: [.defaultToSpeaker, .allowBluetooth])
+                                 options: [.defaultToSpeaker, .allowBluetoothHFP])
         #endif
         try? session.setActive(true)
     }
@@ -398,16 +398,28 @@ final class LiveVoiceService: NSObject {
         // need for the server's CW_BARGE_IN=0 half-duplex fallback.
         try? input.setVoiceProcessingEnabled(true)
 
-        engine.attach(playerNode)
-        engine.connect(playerNode, to: engine.mainMixerNode, format: playbackFormat)
+        if playerNode.engine == nil {
+            engine.attach(playerNode)
+            try engine.connectNode(
+                playerNode,
+                to: engine.mainMixerNode,
+                format: playbackFormat
+            )
+        }
 
         let inputFormat = input.outputFormat(forBus: 0)
-        input.installTap(onBus: 0, bufferSize: 4096, format: inputFormat) { [weak self] buffer, _ in
+        input.removeTap(onBus: 0)
+        try input.__installTap(
+            onBus: 0,
+            bufferSize: 4096,
+            format: inputFormat,
+            error: ()
+        ) { [weak self] buffer, _ in
             self?.sendCaptured(buffer)
         }
         engine.prepare()
         try engine.start()
-        playerNode.play()
+        try playerNode.playAudio()
     }
 
     private func sendCaptured(_ buffer: AVAudioPCMBuffer) {

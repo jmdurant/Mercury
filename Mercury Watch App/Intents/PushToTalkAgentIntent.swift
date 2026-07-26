@@ -19,7 +19,7 @@ struct PushToTalkAgentIntent: AppIntent {
     static var title: LocalizedStringResource = "Push-to-Talk with Agent"
     static var description = IntentDescription(
         "Arm push-to-talk for your agent — brings up the hold-to-talk button on iPhone.")
-    static var openAppWhenRun: Bool = true
+    static var supportedModes: IntentModes = .foreground(.immediate)
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let message = await MainActor.run { () -> String in

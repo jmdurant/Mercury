@@ -16,6 +16,7 @@ struct LiveVoiceView: View {
     var chatId: Int64? = nil
     var agentLabel: String = ""
 
+    @Environment(\.systemPrefersReducedResourceUsage) private var prefersReducedResourceUsage
     @State private var voice = LiveVoiceService.shared
     @State private var ptt = PTTChannelService.shared
     @State private var node = OpenClawNodeService.shared
@@ -194,7 +195,12 @@ struct LiveVoiceView: View {
             .frame(width: 110, height: 110)
             .overlay(Image(systemName: "brain.head.profile").font(.system(size: 40)).foregroundStyle(.white))
             .scaleEffect(voice.state == .live ? 1.0 : 0.85)
-            .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: voice.state)
+            .animation(
+                prefersReducedResourceUsage
+                    ? .default
+                    : .easeInOut(duration: 0.6).repeatForever(autoreverses: true),
+                value: voice.state
+            )
     }
 
     private var orbColor: Color {

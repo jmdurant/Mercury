@@ -10,9 +10,7 @@ import TDLibKit
 
 struct MessageOptionsSubpage: View {
     
-    @State
-    @Mockable
-    var vm: MessageOptionsViewModel
+    @State private var vm: MessageOptionsViewModel
     
     @Binding var isPresented: Bool
     var onReply: (() -> Void)?
@@ -20,10 +18,10 @@ struct MessageOptionsSubpage: View {
     init(isPresented: Binding<Bool>, model: MessageOptionsModel, onReply: (() -> Void)? = nil) {
         self._isPresented = isPresented
         self.onReply = onReply
-        _vm = Mockable.state(
-            value: { MessageOptionsViewModel(model: model, onReply: onReply) },
-            mock: { MessageOptionsViewModelMock() }
-        )
+        let viewModel: MessageOptionsViewModel = AppState.shared.isMock
+            ? MessageOptionsViewModelMock()
+            : MessageOptionsViewModel(model: model, onReply: onReply)
+        _vm = State(initialValue: viewModel)
     }
     
     private let columns = [
@@ -212,4 +210,3 @@ struct MessageInfoView: View {
         })
 }
     
-

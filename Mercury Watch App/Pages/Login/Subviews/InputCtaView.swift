@@ -105,7 +105,7 @@ struct InputCtaView: View {
     
     func didTapOnCta() {
         if model.keyboardType == .text {
-            WKExtension.shared()
+            WKApplication.shared()
                 .visibleInterfaceController?
                 .presentTextInputController(
                     withSuggestions: [],

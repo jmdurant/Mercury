@@ -15,18 +15,16 @@ enum ProfileDetailPageType {
 
 struct ProfileDetailPage: View {
     
-    @State
-    @Mockable
-    var vm: ProfileDetailViewModel
+    @State private var vm: ProfileDetailViewModel
     
     @Environment(\.dismiss) private var dismiss
 
     
     init(type: ProfileDetailPageType) {
-        _vm = Mockable.state(
-            value: { ProfileDetailViewModel(type: type) },
-            mock: { ProfileDetailViewModelMock() }
-        )
+        let model: ProfileDetailViewModel = AppState.shared.isMock
+            ? ProfileDetailViewModelMock()
+            : ProfileDetailViewModel(type: type)
+        _vm = State(initialValue: model)
     }
     
     var body: some View {

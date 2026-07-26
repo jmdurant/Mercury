@@ -13,18 +13,16 @@ import DSWaveformImageViews
 
 struct VoiceNoteRecordSubpage: View {
     
-    @State
-    @Mockable
-    var vm: VoiceNoteRecordViewModel
+    @State private var vm: VoiceNoteRecordViewModel
     
     @Binding var isPresented: Bool
     
     init(isPresented: Binding<Bool>, action: Binding<ChatAction?>, sendService: SendMessageService) {
         self._isPresented = isPresented
-        _vm = Mockable.state(
-            value: { VoiceNoteRecordViewModel(action: action, sendService: sendService, isPresented: isPresented) },
-            mock: { VoiceNoteRecordViewModelMock(sendService: sendService, isPresented: isPresented) }
-        )
+        let viewModel: VoiceNoteRecordViewModel = AppState.shared.isMock
+            ? VoiceNoteRecordViewModelMock(sendService: sendService, isPresented: isPresented)
+            : VoiceNoteRecordViewModel(action: action, sendService: sendService, isPresented: isPresented)
+        _vm = State(initialValue: viewModel)
     }
     
     var elapsedTime: String {

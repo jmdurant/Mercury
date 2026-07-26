@@ -9,13 +9,18 @@ import SwiftUI
 
 struct SettingsPage: View {
     
-    @State
-    @Mockable(mockInit: SettingsViewModelMock.init)
-    var vm = SettingsViewModel.init
+    @State private var vm: SettingsViewModel
 
     @State private var voiceAgentId = LiveVoiceService.shared.defaultAgentId
     @State private var deviceName = OpenClawNodeService.shared.displayName
     @State private var showResetConfirm = false
+
+    init() {
+        let model: SettingsViewModel = AppState.shared.isMock
+            ? SettingsViewModelMock()
+            : SettingsViewModel()
+        _vm = State(initialValue: model)
+    }
     
     var body: some View {
         ScrollView {

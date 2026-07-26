@@ -28,7 +28,10 @@ extension ChatDetailViewModel {
             return .photo(model: message.getModel(), caption: message.caption.text)
             
         case .messageSticker(let message):
-            switch message.sticker.format {
+            // Materialize the enum before switching. Xcode 27's Release
+            // optimizer otherwise mismanages the borrow of Sticker.format.
+            let format = message.sticker.format
+            switch format {
             case .stickerFormatWebp:
                 return .stickerImage(model: message.getImageModel())
             case .stickerFormatTgs:

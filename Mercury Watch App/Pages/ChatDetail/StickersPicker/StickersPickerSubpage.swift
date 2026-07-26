@@ -8,9 +8,7 @@
 import SwiftUI
 
 struct StickersPickerSubpage: View {
-    @State
-    @Mockable
-    var vm: StickersPickerViewModel
+    @State private var vm: StickersPickerViewModel
     
     @Binding var isPresented: Bool
     
@@ -23,10 +21,10 @@ struct StickersPickerSubpage: View {
     
     init(isPresented: Binding<Bool>, sendService: SendMessageService?) {
         _isPresented = isPresented
-        _vm = Mockable.state(
-            value: { StickersPickerViewModel(sendService: sendService) },
-            mock: { StickersPickerViewModelMock(sendService: sendService) }
-        )
+        let model: StickersPickerViewModel = AppState.shared.isMock
+            ? StickersPickerViewModelMock(sendService: sendService)
+            : StickersPickerViewModel(sendService: sendService)
+        _vm = State(initialValue: model)
     }
     
     

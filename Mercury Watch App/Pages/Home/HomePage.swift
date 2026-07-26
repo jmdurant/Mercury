@@ -9,9 +9,14 @@ import SwiftUI
 
 struct HomePage: View {
     
-    @State
-    @Mockable(mockInit: HomeViewModelMock.init)
-    var vm = HomeViewModel.init
+    @State private var vm: HomeViewModel
+
+    init() {
+        let model: HomeViewModel = AppState.shared.isMock
+            ? HomeViewModelMock()
+            : HomeViewModel()
+        _vm = State(initialValue: model)
+    }
     
     var body: some View {
         NavigationStack(path: $vm.navigationPath) {

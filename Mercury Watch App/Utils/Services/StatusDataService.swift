@@ -13,6 +13,7 @@ import MusicKit
 import WeatherKit
 import CoreLocation
 import CoreMotion
+import MapKit
 #if os(watchOS)
 import WatchKit
 #else
@@ -297,22 +298,28 @@ enum StatusDataService {
         let locationManager = CLLocationManager()
         guard let location = locationManager.location else { return nil }
 
-        let geocoder = CLGeocoder()
-        do {
-            let placemarks = try await geocoder.reverseGeocodeLocation(location)
-            if let place = placemarks.first {
-                let parts = [place.locality, place.administrativeArea].compactMap { $0 }
-                if !parts.isEmpty {
-                    return "Currently in \(parts.joined(separator: ", "))"
-                }
-            }
-        } catch {
-            logger.log(error, level: .error)
+        if let place = await reverseGeocodedMapItem(for: location),
+           let city = place.addressRepresentations?.cityWithContext {
+            return "Currently in \(city)"
         }
 
         let lat = String(format: "%.4f", location.coordinate.latitude)
         let lon = String(format: "%.4f", location.coordinate.longitude)
         return "Location: \(lat), \(lon)"
+    }
+
+    /// MapKit replaced CLGeocoder in the iOS/watchOS 26 SDK. Keeping the
+    /// lookup here gives the phone and standalone Watch the same result.
+    static func reverseGeocodedMapItem(for location: CLLocation) async -> MKMapItem? {
+        guard let request = MKReverseGeocodingRequest(location: location) else {
+            return nil
+        }
+        do {
+            return try await request.mapItems.first
+        } catch {
+            logger.log(error, level: .error)
+            return nil
+        }
     }
 
     static func buildBatteryStatus() -> String? {
@@ -387,8 +394,6 @@ enum StatusDataService {
     static func buildActivityRingsStatus() async -> String? {
         let calendar = Calendar.current
         let now = Date()
-        let startOfDay = calendar.startOfDay(for: now)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? now
 
         let datePredicate = HKQuery.predicateForActivitySummary(
             with: calendar.dateComponents([.year, .month, .day], from: now)
@@ -727,13 +732,10 @@ enum StatusDataService {
 
         // Current location for context
         let locationManager = CLLocationManager()
-        if let location = locationManager.location {
-            let geocoder = CLGeocoder()
-            if let placemarks = try? await geocoder.reverseGeocodeLocation(location),
-               let place = placemarks.first,
-               let locality = place.locality {
-                parts.append("Currently near \(locality)")
-            }
+        if let location = locationManager.location,
+           let place = await reverseGeocodedMapItem(for: location),
+           let locality = place.addressRepresentations?.cityName {
+            parts.append("Currently near \(locality)")
         }
 
         guard !parts.isEmpty else { return nil }
@@ -805,7 +807,11 @@ enum StatusDataService {
                 let duration = Int(workout.duration / 60)
                 let type = workout.workoutActivityType.displayName
                 let startTime = workout.startDate.formatted(.dateTime.hour().minute())
-                let calories = Int(workout.totalEnergyBurned?.doubleValue(for: .kilocalorie()) ?? 0)
+                let calories = Int(
+                    workout.statistics(for: HKQuantityType(.activeEnergyBurned))?
+                        .sumQuantity()?
+                        .doubleValue(for: .kilocalorie()) ?? 0
+                )
 
                 var parts = ["\(type) started at \(startTime) (\(duration) min so far)"]
                 if calories > 0 {

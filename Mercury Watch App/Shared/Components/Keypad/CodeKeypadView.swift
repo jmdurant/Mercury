@@ -20,7 +20,7 @@ struct CodeKeypadView: View {
                         .foregroundStyle(.tertiary)
                         .overlay {
                             if code.count > index {
-                                Text("\(code[code.index(code.startIndex, offsetBy: index)])")
+                                Text(String(code[code.index(code.startIndex, offsetBy: index)]))
                                     .transition(
                                         .move(edge: .bottom)
                                         .combined(with: .opacity)

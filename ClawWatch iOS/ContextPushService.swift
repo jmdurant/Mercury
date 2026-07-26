@@ -9,13 +9,13 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 
 final class ContextPushService: NSObject, CLLocationManagerDelegate {
 
     static let shared = ContextPushService()
 
     private let manager = CLLocationManager()
-    private let geocoder = CLGeocoder()
     private let logger = LoggerService(ContextPushService.self)
 
     func start() {
@@ -44,9 +44,10 @@ final class ContextPushService: NSObject, CLLocationManagerDelegate {
         guard AutoResponderStore.isContextPushEnabled,
               AutoResponderStore.isConsented(.location) else { return }
         var place = "a location"
-        if let marks = try? await geocoder.reverseGeocodeLocation(location),
-           let m = marks.first {
-            place = [m.name, m.locality].compactMap { $0 }.first ?? place
+        if let mapItem = await StatusDataService.reverseGeocodedMapItem(for: location) {
+            place = mapItem.name
+                ?? mapItem.addressRepresentations?.cityName
+                ?? place
         }
         let text = "\(event) \(place)"
         for chatId in AutoResponderStore.assistantChatIds() {

@@ -10,7 +10,7 @@ import AppIntents
 struct CheckUnreadAppIntent: AppIntent {
     static var title: LocalizedStringResource = "Check Mercury Messages"
     static var description = IntentDescription("Check your unread Telegram messages")
-    static var openAppWhenRun: Bool = false
+    static var supportedModes: IntentModes = .background
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let count = SharedDataStore.getTotalUnreadCount()

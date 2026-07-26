@@ -13,7 +13,7 @@ struct TalkToAgentAppIntent: AppIntent {
     static var title: LocalizedStringResource = "Talk to Agent"
     static var description = IntentDescription("Start or end a live voice session with your agent.")
     // Live voice needs the app foregrounded to capture audio.
-    static var openAppWhenRun: Bool = true
+    static var supportedModes: IntentModes = .foreground(.immediate)
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let wasActive = await MainActor.run { () -> Bool in

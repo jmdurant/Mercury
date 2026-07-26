@@ -157,7 +157,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
             if let urlString = response.notification.request.content.userInfo[urlKey] as? String,
                let url = URL(string: urlString) {
                 DispatchQueue.main.async {
-                    WKExtension.shared().openSystemURL(url)
+                    WKApplication.shared().openSystemURL(url)
                 }
             }
 

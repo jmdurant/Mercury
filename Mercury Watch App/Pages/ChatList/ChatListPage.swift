@@ -9,17 +9,15 @@ import SwiftUI
 
 struct ChatListPage: View {
     
-    @State
-    @Mockable
-    var vm: ChatListViewModel
+    @State private var vm: ChatListViewModel
 
     @State private var showComposeOptions = false
 
     init(folder: ChatFolder) {
-        _vm = Mockable.state(
-            value: { ChatListViewModel(folder: folder) },
-            mock: { ChatListViewModelMock() }
-        )
+        let model: ChatListViewModel = AppState.shared.isMock
+            ? ChatListViewModelMock()
+            : ChatListViewModel(folder: folder)
+        _vm = State(initialValue: model)
     }
     
     var body: some View {
