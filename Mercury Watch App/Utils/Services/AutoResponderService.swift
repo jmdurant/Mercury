@@ -144,6 +144,7 @@ class AutoResponderService: TDLibManagerProtocol {
 
         // Focus auto-reply: respond to ALL chats when Focus is active
         if AutoResponderStore.isFocusAutoReplyEnabled,
+           !AutoResponderStore.isAssistantChat(chatId),
            INFocusStatusCenter.default.focusStatus.isFocused == true,
            !dndRepliedChats.contains(chatId) {
 
@@ -242,18 +243,15 @@ class AutoResponderService: TDLibManagerProtocol {
             suppressNotification(messageId: message.id, chatId: chatId)
         }
 
-        // Rate limit + per-category consent gate for tagged commands
-        if isSilent {
-            guard AutoResponderStore.allowRequest() else {
-                SendMessageService.sendQuickReply(text: "Rate limit reached, try again shortly", chatId: chatId)
-                return
-            }
-            if let needed = AutoResponderStore.requiredConsent(for: text),
-               !AutoResponderStore.isConsented(needed) {
-                SendMessageService.sendQuickReply(text: "\(needed.label) access is disabled", chatId: chatId)
-                return
-            }
-            AutoResponderStore.audit(command: text, chatId: chatId)
+        // Apply the same limits and audit trail to tagged and natural-language queries.
+        guard AutoResponderStore.allowRequest() else {
+            SendMessageService.sendQuickReply(text: "Rate limit reached, try again shortly", chatId: chatId)
+            return
+        }
+        AutoResponderStore.audit(command: text, chatId: chatId)
+        if isSilent, let denial = AutoResponderStore.consentDenial(for: text) {
+            SendMessageService.sendQuickReply(text: denial, chatId: chatId)
+            return
         }
 
         Task {
@@ -434,139 +432,148 @@ class AutoResponderService: TDLibManagerProtocol {
         // Match multiple queries and combine responses
         var responses: [String] = []
 
-        if matches(text, keywords: ["heart rate", "heart", "bpm", "pulse"]) {
+        func matches(_ text: String, keywords: [String], requiring categories: Set<AutoResponderStore.Consent>) -> Bool {
+            guard keywords.contains(where: { text.contains($0) }) else { return false }
+            if let denial = AutoResponderStore.consentDenial(requiring: categories) {
+                if !responses.contains(denial) { responses.append(denial) }
+                return false
+            }
+            return true
+        }
+
+        if matches(text, keywords: ["heart rate", "heart", "bpm", "pulse"], requiring: [.health]) {
             if let hr = await StatusDataService.getCurrentHeartRate() {
                 responses.append("Heart rate: \(hr) bpm")
             }
         }
 
-        if matches(text, keywords: ["steps", "step count", "walking"]) {
+        if matches(text, keywords: ["steps", "step count", "walking"], requiring: [.health]) {
             if let steps = await StatusDataService.getTodaySteps() {
                 responses.append("Steps today: \(steps.formatted())")
             }
         }
 
-        if matches(text, keywords: ["calories", "energy", "active energy"]) {
+        if matches(text, keywords: ["calories", "energy", "active energy"], requiring: [.health]) {
             if let cal = await StatusDataService.getActiveCalories() {
                 responses.append("Active calories: \(cal) cal")
             }
         }
 
-        if matches(text, keywords: ["location", "where are you", "where r u", "position", "gps"]) {
+        if matches(text, keywords: ["location", "where are you", "where r u", "position", "gps"], requiring: [.location]) {
             if let loc = await StatusDataService.buildLocationStatus() {
                 responses.append(loc)
             }
         }
 
-        if matches(text, keywords: ["weather", "temperature", "forecast", "outside"]) {
+        if matches(text, keywords: ["weather", "temperature", "forecast", "outside"], requiring: [.location]) {
             if let weather = await StatusDataService.buildWeatherStatus() {
                 responses.append(weather)
             }
         }
 
-        if matches(text, keywords: ["workout", "exercise", "training", "running", "gym"]) {
+        if matches(text, keywords: ["workout", "exercise", "training", "running", "gym"], requiring: [.health]) {
             if let workout = await StatusDataService.buildWorkoutStatus() {
                 responses.append(workout)
             }
         }
 
-        if matches(text, keywords: ["busy", "calendar", "schedule", "meeting", "free", "available"]) {
+        if matches(text, keywords: ["busy", "calendar", "schedule", "meeting", "free", "available"], requiring: [.calendar]) {
             if let cal = await StatusDataService.buildCalendarStatus() {
                 responses.append(cal)
             }
         }
 
-        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep"]) {
+        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep"], requiring: [.health]) {
             if let sleep = await StatusDataService.buildSleepStatus() {
                 responses.append(sleep)
             }
         }
 
-        if matches(text, keywords: ["activity", "rings", "move ring", "stand"]) {
+        if matches(text, keywords: ["activity", "rings", "move ring", "stand"], requiring: [.health]) {
             if let rings = await StatusDataService.buildActivityRingsStatus() {
                 responses.append(rings)
             }
         }
 
-        if matches(text, keywords: ["oxygen", "spo2", "blood oxygen", "o2"]) {
+        if matches(text, keywords: ["oxygen", "spo2", "blood oxygen", "o2"], requiring: [.health]) {
             if let spo2 = await StatusDataService.buildBloodOxygenStatus() {
                 responses.append(spo2)
             }
         }
 
-        if matches(text, keywords: ["noise", "loud", "sound", "decibel", "db"]) {
+        if matches(text, keywords: ["noise", "loud", "sound", "decibel", "db"], requiring: [.health]) {
             if let noise = await StatusDataService.buildNoiseLevelStatus() {
                 responses.append(noise)
             }
         }
 
-        if matches(text, keywords: ["altitude", "elevation", "height"]) {
+        if matches(text, keywords: ["altitude", "elevation", "height"], requiring: [.location]) {
             if let alt = await StatusDataService.buildAltitudeStatus() {
                 responses.append(alt)
             }
         }
 
-        if matches(text, keywords: ["listening", "music", "playing", "song", "what are you listening"]) {
+        if matches(text, keywords: ["listening", "music", "playing", "song", "what are you listening"], requiring: [.media]) {
             if let np = await StatusDataService.buildNowPlayingWithLink() {
                 responses.append(np)
             }
         }
 
-        if matches(text, keywords: ["battery", "charge", "power"]) {
+        if matches(text, keywords: ["battery", "charge", "power"], requiring: []) {
             if let bat = StatusDataService.buildBatteryStatus() {
                 responses.append(bat)
             }
         }
 
-        if matches(text, keywords: ["reminder", "task", "todo", "to do", "to-do"]) {
+        if matches(text, keywords: ["reminder", "task", "todo", "to do", "to-do"], requiring: [.calendar]) {
             if let rem = await StatusDataService.buildRemindersStatus() {
                 responses.append(rem)
             }
         }
 
-        if matches(text, keywords: ["temperature", "wrist temp", "body temp"]) {
+        if matches(text, keywords: ["temperature", "wrist temp", "body temp"], requiring: [.health]) {
             if let temp = await StatusDataService.buildWristTemperatureStatus() {
                 responses.append(temp)
             }
         }
 
-        if matches(text, keywords: ["vo2", "vo2 max", "cardio fitness", "fitness level"]) {
+        if matches(text, keywords: ["vo2", "vo2 max", "cardio fitness", "fitness level"], requiring: [.health]) {
             if let vo2 = await StatusDataService.buildVO2MaxStatus() {
                 responses.append(vo2)
             }
         }
 
-        if matches(text, keywords: ["breathing", "respiratory", "breath rate", "respiration"]) {
+        if matches(text, keywords: ["breathing", "respiratory", "breath rate", "respiration"], requiring: [.health]) {
             if let resp = await StatusDataService.buildRespiratoryRateStatus() {
                 responses.append(resp)
             }
         }
 
-        if matches(text, keywords: ["walking speed", "pace", "how fast"]) {
+        if matches(text, keywords: ["walking speed", "pace", "how fast"], requiring: [.health]) {
             if let speed = await StatusDataService.buildWalkingSpeedStatus() {
                 responses.append(speed)
             }
         }
 
-        if matches(text, keywords: ["distance", "how far", "miles", "km"]) {
+        if matches(text, keywords: ["distance", "how far", "miles", "km"], requiring: [.health]) {
             if let dist = await StatusDataService.buildDistanceStatus() {
                 responses.append(dist)
             }
         }
 
-        if matches(text, keywords: ["focus", "do not disturb", "dnd", "focus mode"]) {
+        if matches(text, keywords: ["focus", "do not disturb", "dnd", "focus mode"], requiring: []) {
             if let focus = StatusDataService.buildFocusStatus() {
                 responses.append(focus)
             }
         }
 
-        if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in"]) {
+        if matches(text, keywords: ["health", "vitals", "health status", "how are you", "status", "check in"], requiring: [.health]) {
             if let health = await StatusDataService.buildHealthStatus() {
                 responses.append(health)
             }
         }
 
-        if matches(text, keywords: ["available", "free", "when can you", "when will you", "availability", "when are you free"]) {
+        if matches(text, keywords: ["available", "free", "when can you", "when will you", "availability", "when are you free"], requiring: [.calendar]) {
             if let avail = await StatusDataService.buildWorkAvailabilityStatus() {
                 responses.append(avail)
             } else {
@@ -574,26 +581,26 @@ class AutoResponderService: TDLibManagerProtocol {
             }
         }
 
-        if matches(text, keywords: ["driving", "commute", "eta", "how long", "when will you arrive", "where are you heading"]) {
+        if matches(text, keywords: ["driving", "commute", "eta", "how long", "when will you arrive", "where are you heading"], requiring: [.location, .calendar]) {
             if let drive = await StatusDataService.buildDrivingContextStatus() {
                 responses.append(drive)
             }
         }
 
-        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep", "when did you go to bed", "bedtime"]) {
+        if matches(text, keywords: ["sleep", "slept", "rest", "how did you sleep", "when did you go to bed", "bedtime"], requiring: [.health]) {
             if let sleep = await StatusDataService.buildSleepContextStatus() {
                 responses.append(sleep)
             }
         }
 
-        if matches(text, keywords: ["workout detail", "how long have you been", "when did you start", "exercise detail"]) {
+        if matches(text, keywords: ["workout detail", "how long have you been", "when did you start", "exercise detail"], requiring: [.health]) {
             if let workoutCtx = await StatusDataService.buildWorkoutContextStatus() {
                 responses.append(workoutCtx)
             }
         }
 
         // "Give me everything" / "full status" returns all available data
-        if matches(text, keywords: ["full status", "all data", "everything", "full report", "all sensors", "all stats"]) {
+        if matches(text, keywords: ["full status", "all data", "everything", "full report", "all sensors", "all stats"], requiring: []) {
             return await buildFullStatus()
         }
 
@@ -601,11 +608,8 @@ class AutoResponderService: TDLibManagerProtocol {
         return responses.joined(separator: "\n")
     }
 
-    private func matches(_ text: String, keywords: [String]) -> Bool {
-        keywords.contains { text.contains($0) }
-    }
-
     private func buildFullStatus() async -> String? {
+        if let denial = AutoResponderStore.consentDenial(for: "#status") { return denial }
         var sections: [String] = []
 
         // Lead with the Focus profile summary (human-readable)

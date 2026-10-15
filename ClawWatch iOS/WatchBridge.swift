@@ -101,16 +101,22 @@ final class WatchBridge: NSObject, WCSessionDelegate {
     #if os(watchOS)
     /// Watch-exclusive sensors the phone can't measure itself.
     static func runWatchCommand(_ command: String) async -> [String: Any] {
+        if let denial = AutoResponderStore.consentDenial(for: command) {
+            return ["error": denial, "code": "PERMISSION_DENIED"]
+        }
         switch command {
         case "watch.heart", "heart.get":
             if let hr = await StatusDataService.getCurrentHeartRate() { return ["bpm": hr] }
             return ["error": "no recent heart rate"]
         case "watch.temp":
-            return ["summary": await StatusDataService.buildWristTemperatureStatus() ?? "no wrist temp"]
+            guard let summary = await StatusDataService.buildWristTemperatureStatus() else { return ["error": "no wrist temp"] }
+            return ["summary": summary]
         case "watch.o2":
-            return ["summary": await StatusDataService.buildBloodOxygenStatus() ?? "no blood oxygen"]
+            guard let summary = await StatusDataService.buildBloodOxygenStatus() else { return ["error": "no blood oxygen"] }
+            return ["summary": summary]
         case "watch.rings":
-            return ["summary": await StatusDataService.buildActivityRingsStatus() ?? "no activity data"]
+            guard let summary = await StatusDataService.buildActivityRingsStatus() else { return ["error": "no activity data"] }
+            return ["summary": summary]
         case "watch.health":
             return ["json": await StatusDataService.buildJSONStatus()]
         default:

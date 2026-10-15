@@ -23,13 +23,14 @@ tunnel: <TUNNEL-UUID>
 credentials-file: /path/to/<TUNNEL-UUID>.json
 
 ingress:
-  # OpenClaw gateway — the node (structured-tools) channel
+  # OpenClaw gateway — node tools AND OpenClaw Talk voice
   - hostname: gateway.example.com
     service: http://localhost:18789
 
-  # Live-voice server (STT -> agent -> TTS)
+  # Optional custom voice server (STT -> agent -> TTS).
+  # OpenClaw Talk does not use this hostname. Adjust to your server's port.
   - hostname: voice.example.com
-    service: http://localhost:8790
+    service: http://localhost:8795
 
   # Everything else is rejected
   - service: http_status:404

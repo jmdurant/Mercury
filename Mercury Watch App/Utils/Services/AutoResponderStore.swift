@@ -239,6 +239,8 @@ enum AutoResponderStore {
     private static let tokenKey = "agentToken"
     private static let auditKey = "agentAuditLog"
     private static let rateWindowKey = "agentRateTimestamps"
+    private static let requestLock = NSLock()
+    private static let auditLock = NSLock()
 
     /// Consent defaults to all-granted (opt-out) to preserve current behaviour.
     static func isConsented(_ c: Consent) -> Bool {
@@ -262,6 +264,8 @@ enum AutoResponderStore {
 
     /// Rate limit: max queries per rolling minute. Returns false if exceeded.
     static func allowRequest(limitPerMinute: Int = 30) -> Bool {
+        requestLock.lock()
+        defer { requestLock.unlock() }
         let now = Date().timeIntervalSince1970
         var stamps = (UserDefaults.standard.array(forKey: rateWindowKey) as? [Double] ?? [])
             .filter { now - $0 < 60 }
@@ -276,6 +280,8 @@ enum AutoResponderStore {
 
     /// Append a reviewable record of what the agent queried and when.
     static func audit(command: String, chatId: Int64) {
+        auditLock.lock()
+        defer { auditLock.unlock() }
         var log = UserDefaults.standard.array(forKey: auditKey) as? [String] ?? []
         let ts = ISO8601DateFormatter().string(from: Date())
         log.append("\(ts)\tchat \(chatId)\t\(command)")
@@ -286,21 +292,52 @@ enum AutoResponderStore {
         (UserDefaults.standard.array(forKey: auditKey) as? [String] ?? []).reversed()
     }
     static func clearAudit() {
+        auditLock.lock()
+        defer { auditLock.unlock() }
         UserDefaults.standard.removeObject(forKey: auditKey)
     }
 
-    /// Maps a command to the consent category it requires (nil = always allowed).
-    static func requiredConsent(for command: String) -> Consent? {
-        let c = command.lowercased()
-        if c.hasPrefix("#health") || c.hasPrefix("#heart") || c.hasPrefix("#steps")
-            || c.hasPrefix("#sleep") || c.hasPrefix("#o2") || c.hasPrefix("#rings")
-            || c.hasPrefix("#temp") || c.hasPrefix("#vo2") || c.hasPrefix("#respiratory")
-            || c.hasPrefix("#json") { return .health }
-        if c.hasPrefix("#location") || c.hasPrefix("#loc") || c.hasPrefix("#navigate")
-            || c.hasPrefix("#directions") { return .location }
-        if c.hasPrefix("#calendar") || c.hasPrefix("#cal") || c.hasPrefix("#reminder") { return .calendar }
-        if c.hasPrefix("#music") || c.hasPrefix("#play") { return .media }
-        if c.hasPrefix("#call") || c.hasPrefix("#remind") || c.hasPrefix("#open") { return .actions }
-        return nil
+    /// Exact names avoid alias collisions (e.g. #cal and #call). Composite
+    /// snapshots require every category they include, on either transport.
+    static func requiredConsents(for command: String) -> Set<Consent> {
+        let name = command.lowercased().split(whereSeparator: { $0.isWhitespace }).first.map(String.init) ?? ""
+        switch name {
+        case "#status", "#full", "#dump":
+            return [.health, .location, .calendar, .media]
+        case "#json", "health.snapshot", "watch.health":
+            return [.health, .location]
+        case "#health", "#heart", "#hr", "#heartrate", "#steps", "#sleep", "#workout",
+             "#rings", "#activity", "#o2", "#oxygen", "#noise", "#temp", "#vo2",
+             "#distance", "#dist", "#speed", "#respiratory", "#breathing",
+             "heart.get", "steps.get", "sleep.get", "workout.get",
+             "watch.heart", "watch.temp", "watch.o2", "watch.rings":
+            return [.health]
+        case "#location", "#loc", "#weather", "#altitude", "#alt", "location.get", "weather.get":
+            return [.location]
+        case "#calendar", "#cal", "#reminder", "#reminders", "calendar.get":
+            return [.calendar]
+        case "#music", "#playing":
+            return [.media]
+        case "#play":
+            return [.media, .actions]
+        case "#navigate", "#directions":
+            return [.location, .actions]
+        case "#remind":
+            return [.calendar, .actions]
+        case "#call", "#open", "#alert", "#notify", "system.notify":
+            return [.actions]
+        default:
+            return []
+        }
+    }
+
+    static func consentDenial(for command: String) -> String? {
+        consentDenial(requiring: requiredConsents(for: command))
+    }
+
+    static func consentDenial(requiring categories: Set<Consent>) -> String? {
+        let denied = Consent.allCases.filter { categories.contains($0) && !isConsented($0) }
+        guard !denied.isEmpty else { return nil }
+        return denied.map(\.label).joined(separator: ", ") + " access is disabled"
     }
 }

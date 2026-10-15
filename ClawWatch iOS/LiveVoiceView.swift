@@ -26,39 +26,72 @@ struct LiveVoiceView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                statusOrb
+            ScrollView {
+                VStack(spacing: 24) {
+                    statusOrb
 
-                Text(statusText)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
+                    Text(statusText)
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
 
-                // Who you're about to talk to
-                Text(agentDescription)
-                    .font(.subheadline.weight(.medium))
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    if voice.state == .live || voice.state == .connecting {
-                        voice.stop()
-                    } else {
-                        voice.start(agentId: agentId)
+                    Picker("Voice service", selection: Binding(get: { voice.backend }, set: { voice.backend = $0 })) {
+                        ForEach(LiveVoiceService.Backend.allCases) { backend in Text(backend.label).tag(backend) }
                     }
-                } label: {
-                    Label(voice.state == .live ? "End" : "Talk",
-                          systemImage: voice.state == .live ? "phone.down.fill" : "waveform")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(voice.state == .live ? .red : .blue)
-                .controlSize(.large)
-                .disabled(voice.state == .idle && effectiveAgentId.isEmpty)
+                    .pickerStyle(.menu)
+                    .disabled(voice.state == .live || voice.state == .connecting)
 
-                pttToggle
-                agentConfig
-                Spacer()
+                    if !voice.activeModel.isEmpty {
+                        Text(voice.activeModel).font(.caption).foregroundStyle(.secondary)
+                    }
+                    if let notice = voice.notice {
+                        Text(notice).font(.caption).foregroundStyle(.orange)
+                    }
+
+                    // Who you're about to talk to
+                    Text(agentDescription)
+                        .font(.subheadline.weight(.medium))
+                        .multilineTextAlignment(.center)
+
+                    Button {
+                        if voice.state == .live || voice.state == .connecting {
+                            voice.stop()
+                        } else {
+                            voice.start(agentId: agentId)
+                        }
+                    } label: {
+                        Label(voice.state == .live || voice.state == .connecting ? "End" : "Talk",
+                              systemImage: voice.state == .live || voice.state == .connecting ? "phone.down.fill" : "waveform")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(voice.state == .live ? .red : .blue)
+                    .controlSize(.large)
+                    .disabled(ptt.isJoined)
+                    .disabled((voice.state == .idle || voice.state == .error)
+                              && (isPerChat || voice.backend == .custom) && effectiveAgentId.isEmpty)
+
+                    if !voice.userTranscript.isEmpty || !voice.assistantTranscript.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            if !voice.userTranscript.isEmpty {
+                                Text("You: \(voice.userTranscript)").foregroundStyle(.secondary)
+                            }
+                            if !voice.assistantTranscript.isEmpty {
+                                Text(voice.assistantTranscript)
+                            }
+                        }
+                        .font(.callout)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
+                    }
+
+                    pttToggle
+                    agentConfig
+                        .disabled(voice.state == .live || voice.state == .connecting)
+                    Spacer()
+                }
+                .padding()
             }
-            .padding()
             .navigationTitle(isPerChat ? "Live Voice" : "Live Voice")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -91,7 +124,7 @@ struct LiveVoiceView: View {
                         ptt.leave()
                     }
                 }))
-            .disabled(effectiveAgentId.isEmpty)
+            .disabled(effectiveAgentId.isEmpty || ((voice.state == .live || voice.state == .connecting) && !ptt.isJoined))
             Text(pttHint)
                 .font(.caption2)
                 .foregroundStyle(ptt.isTransmitting ? Color.green : Color.secondary)
@@ -101,7 +134,11 @@ struct LiveVoiceView: View {
 
     private var pttHint: String {
         if let err = ptt.lastError { return err }
-        if !ptt.isJoined { return "Join to talk with the system PTT button — even in the background or on the lock screen." }
+        if !ptt.isJoined {
+            return voice.backend == .openClaw
+                ? "Transmit with the system PTT button. For a continuous conversation, use Talk above."
+                : "Join to talk with the system PTT button — even in the background or on the lock screen."
+        }
         return ptt.isTransmitting ? "Transmitting…" : "Joined — press the system PTT button to talk."
     }
 
@@ -156,7 +193,7 @@ struct LiveVoiceView: View {
                     }
                     .disabled(agentId.isEmpty)
                 }
-                Text("Endpoint, token and auto-stop live in Agent settings.")
+                Text("Voice service, model and connection settings are in Agent settings.")
                     .font(.caption2).foregroundStyle(.tertiary)
             }
             .onChange(of: agentId) { _, new in
@@ -182,9 +219,10 @@ struct LiveVoiceView: View {
         if isPerChat {
             return agentId.isEmpty ? "Set an agent id for \(agentLabel) below" : "Talking to \(agentLabel)"
         }
-        return voice.defaultAgentId.isEmpty
-            ? "No default agent set — pick one from an assistant chat"
-            : "Talking to default agent (\(voice.defaultAgentId))"
+        if agentId.isEmpty {
+            return voice.backend == .openClaw ? "Gateway’s default agent" : "Choose a default agent below"
+        }
+        return "Talking to \(agentId)"
     }
 
     // MARK: - Status visuals
@@ -217,7 +255,7 @@ struct LiveVoiceView: View {
         case .idle: return "Not connected"
         case .connecting: return "Connecting…"
         case .live: return "Listening"
-        case .error: return "Check the endpoint URL"
+        case .error: return voice.lastError ?? "Voice could not connect. Try again."
         }
     }
 }

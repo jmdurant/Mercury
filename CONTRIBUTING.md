@@ -126,6 +126,18 @@ Mercury Watch App/
 - For non-critical operations, use fallback UI or return empty arrays/models, as the existing loaders do.
 - Avoid intentional crashes or force unwraps in new code, especially around TDLib, file system access, and audio.
 
+## Agent integration regression checks
+
+Run `python3 Tests/AgentRegression/run.py` on macOS with Xcode installed. It
+checks consent enforcement, watch relays, node error responses and reconnects,
+voice cleanup/retry, Talk authentication/session ordering, playback acknowledgements,
+and both raw WebSocket and Talk protocol exchanges over real localhost sockets. Device APIs are
+replaced with in-memory fixtures; no account or gateway credentials are needed.
+The harness reads the production methods from the working tree. Also build the
+`ClawWatch iOS` scheme to verify the complete iPhone and embedded watch targets
+against their SDKs. Physical-device audio, WatchConnectivity, and gateway pairing
+still require integration testing.
+
 ## Thank You
 
 Thank you for helping improve Mercury ❤️

@@ -30,7 +30,7 @@ ClawWatch is a fork of [Mercury](https://github.com/mercurytelegram/Mercury) —
    iPhone       ────┤                                               │
    (ClawWatch iOS)  └───────────────────────────────────────────────┘
         │  │  │
-        │  │  └── Live voice ....... wss:// → voice server (STT → agent → TTS)
+        │  │  └── Live voice ....... OpenClaw Talk relay, or custom voice server
         │  └───── OpenClaw node .... wss:// → OpenClaw gateway (structured tools)
         └──────── Telegram ......... Telegram's servers (always-on floor)
 
@@ -103,7 +103,15 @@ Configure the gateway URL + token in **Agent settings** on the phone; it syncs t
 
 ### 3. Live voice
 
-Full-duplex spoken channel: the app streams mic audio up and plays agent audio back over a WebSocket. The app is a dumb audio pipe — **the server does STT and TTS** (see **Server setup**). Works on iPhone and (foreground-only) on the watch. Echo cancellation is on, so barge-in triggers on you, not the agent's own voice.
+Choose **OpenClaw Talk** (default) or **Custom voice server** in Agent settings on iPhone, the Live Voice screen, or Live voice settings on Watch. Settings sync through iCloud; changing the service does not erase the custom server configuration.
+
+OpenClaw Talk streams 24 kHz PCM16 audio through the Gateway WebSocket. OpenClaw owns GPT-Live conversation, interruptions, agent delegation, and saved transcripts. The app provides microphone capture, echo cancellation, playback acknowledgements, and live captions. No separate voice server, voice hostname, or OpenAI credential on the device is needed. Selected agents use a stable `agent:<id>:clawwatch-voice` session, separate from Telegram history; with no selection the Gateway chooses its default session.
+
+The conversation model can follow the Gateway settings, explicitly use **GPT-Live · ChatGPT first** (`gpt-live-1-codex`), or use **GPT-Live · API** (`gpt-live-1`). The ChatGPT route can fall back to paid API authentication when OAuth is unavailable. Gateway defaults prefer an available configured Platform credential over ChatGPT sign-in. Account/model access remains subject to the Gateway's provider configuration.
+
+Native Talk stays connected until you end it by default. Optional auto-stop has its own setting, so the custom server's previous silence timeout does not cut off a new GPT-Live conversation. The client currently supports these two GPT-Live models; an older GA Realtime model selected on the Gateway produces an actionable error instead of starting a call without agent-tool support.
+
+Both devices use Gateway relay over WebSocket, including through Cloudflare. This is separate from upstream OpenClaw's direct-UDP Watch media implementation. Start calls with the app visible. Physical-device audio, cellular handoff, and wrist-down operation still need validation. System PTT transmission remains available; background reception requires server APNs integration and is not provided by this relay.
 
 ### Trust & consent (applies to all of the above)
 
@@ -151,16 +159,39 @@ Minimal `~/.openclaw/openclaw.json` — set a token and allowlist ClawWatch's no
 
 You also need a model/LLM configured in OpenClaw for the agent to *use* the node. Pair the device with `openclaw nodes approve` on first connect.
 
-### Live-voice server
+### OpenClaw Talk setup
 
-A WebSocket server (default `:8790`) that turns audio into agent turns and back. Its contract — the fixed part the app already speaks:
+Use a current OpenClaw Gateway with GPT-Live and the Talk relay API (the client contract was checked against **v2026.10.3**). Enable the bundled OpenAI provider and configure its credentials on the Gateway. For ChatGPT sign-in, use `openclaw models auth login --provider openai`; for the public API, configure an OpenAI Platform API key there.
+
+Merge this into your existing Gateway configuration:
+
+```json
+{
+  "talk": {
+    "realtime": {
+      "provider": "openai",
+      "mode": "realtime",
+      "transport": "gateway-relay",
+      "brain": "agent-consult"
+    }
+  }
+}
+```
+
+With no model pin, OpenClaw selects the GPT-Live route from its configured credentials. The app's explicit model choices override that selection for a call. Provider-specific voices can be configured on the Gateway. See [OpenClaw's voice authentication documentation](https://docs.openclaw.ai/providers/openai/voice-and-speech).
+
+On iPhone, set the Gateway address and **Gateway token** in Agent settings → Advanced. Start Talk and approve the device's operator/Talk request on the Gateway if prompted. Node-only pairing does not grant voice access. After approval, ClawWatch stores the separate scoped Talk token locally in Keychain; each Watch needs its own approval. **Re-pair voice access** removes that cached Talk token so the next attempt uses the configured Gateway token again.
+
+### Custom live-voice server (optional)
+
+A WebSocket server (derived default `:8795`, or an explicit saved endpoint) that turns audio into agent turns and back. Select **Custom voice server** to expose its saved local/remote endpoint and token fields. Its contract:
 
 | | |
 |---|---|
 | Transport | WebSocket, binary frames |
 | Device → server | 16 kHz · mono · signed 16-bit LE PCM |
 | Server → device | 24 kHz · mono · signed 16-bit LE PCM |
-| Query params | `?token=<token>&device=<watch\|phone>` (the app appends these) |
+| Query params | `?token=<token>&device=<watch\|phone>&agent=<id>` (the app appends these) |
 | Turn-taking | server owns barge-in (`CW_BARGE_IN=1`; the app does echo cancellation) |
 
 Inside it: Whisper (STT) → the OpenClaw agent → TTS (local MLX/Chatterbox for ~free, or a hosted voice). [openclaw-voice](https://github.com/Purple-Horizons/openclaw-voice) provides most of this. See [`docs/`](docs) if present, or the voice server's own README.
@@ -169,7 +200,7 @@ Inside it: Whisper (STT) → the OpenClaw agent → TTS (local MLX/Chatterbox fo
 
 ## Remote access with Cloudflare Tunnel
 
-On the LAN the apps hit the gateway's local IP. Off-network, the standalone watch **cannot** join a Tailscale tailnet — but it *can* make a normal outbound `wss://` connection to a public hostname. So expose the gateway and voice server through a Cloudflare Tunnel.
+On the LAN the apps hit the gateway's local IP. Off-network, the standalone watch **cannot** join a Tailscale tailnet — but it *can* make a normal outbound `wss://` connection to a public hostname. OpenClaw Talk needs only the Gateway hostname through Cloudflare Tunnel. Add the separate voice hostname if you also use the custom server.
 
 ### On the server
 
@@ -180,6 +211,7 @@ cloudflared tunnel login
 cloudflared tunnel create clawwatch
 # copy the example config to ~/.cloudflared/config.yml, fill in the UUID + hostnames
 cloudflared tunnel route dns clawwatch gateway.example.com
+# Optional, for the custom voice server:
 cloudflared tunnel route dns clawwatch voice.example.com
 cloudflared tunnel run clawwatch
 # Cloudflare dashboard → Network → enable WebSockets
@@ -192,11 +224,11 @@ cloudflared tunnel run clawwatch
 In **Agent settings** (phone; syncs to the watch via iCloud), point the URLs at the public hostnames:
 
 - Node gateway: `wss://gateway.example.com`
-- Voice base URL: `wss://voice.example.com`
+- Custom voice base URL (optional): `wss://voice.example.com`
 
 **No Cloudflare API keys are ever needed in the app** — it just connects to a URL. Two options for auth:
 
-- **Plain tunnel** — the app's own `?token=` (voice) and the gateway's token + device pairing (node) are the auth. Nothing Cloudflare-specific in the app.
+- **Plain tunnel** — Gateway token + device pairing authorize node and Talk connections; the custom server uses its separate `?token=`. Nothing Cloudflare-specific in the app.
 - **Cloudflare Access** (recommended for a public gateway) — generate a Zero Trust *service token* and enter its two values (`CF-Access-Client-Id` / `CF-Access-Client-Secret`) in Agent settings. The app adds them as headers to both the node and voice sockets; the edge rejects anything without them. Leave blank for the plain-tunnel path.
 
 Use a **named** tunnel (stable hostname) rather than a quick `trycloudflare.com` URL, since the app syncs the URL to the watch.

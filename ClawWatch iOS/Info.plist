@@ -23,6 +23,8 @@
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>ClawWatch uses the microphone for voice messages.</string>
+	<key>NSMotionUsageDescription</key>
+	<string>ClawWatch uses motion activity to choose your driving or workout auto-reply context.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ClawWatch can share your location in chats.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>

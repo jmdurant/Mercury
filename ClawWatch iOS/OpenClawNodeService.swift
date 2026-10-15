@@ -166,10 +166,8 @@ final class OpenClawNodeService: NSObject {
 
     private var ws: WSClient?
 
-    /// The live Bonjour endpoint from "Find on network", if the user connected
-    /// that way. Dialing this endpoint survives iOS Local Network privacy;
-    /// re-dialing its raw IP does not. Ephemeral — valid while the mDNS entry
-    /// lives; cleared on reset.
+    /// The live Bonjour endpoint for a gateway on the local network.
+    /// Ephemeral: rediscovered on reconnect and cleared on reset.
     private var discoveredEndpoint: NWEndpoint?
     private var discoveredTls = false
     /// The URL the node actually connected to (LAN or tunnel) — reused for the
@@ -178,26 +176,49 @@ final class OpenClawNodeService: NSObject {
 
     // While pending approval, redial on a timer so the node connects on its own
     // once the operator runs `openclaw nodes approve` — no need to tap Connect.
-    private var pendingRetryScheduled = false
+    private var retryWork: DispatchWorkItem?
+    private var connectTimeoutWork: DispatchWorkItem?
+    private var connectionGeneration = UUID()
+    private var shouldReconnect = false
+    private var reconnectAttempts = 0
     private var pendingRetries = 0
-    private let maxPendingRetries = 40          // ~3.5 min at 5s intervals
+    private let maxPendingRetries = 40
     private let pendingRetryInterval: TimeInterval = 5
 
     private func schedulePendingRetry() {
-        guard status == .pending, !pendingRetryScheduled else { return }
+        guard status == .pending, retryWork == nil, shouldReconnect else { return }
         guard pendingRetries < maxPendingRetries else {
             lastEvent = "Still waiting — approve this device on the gateway, then tap Connect."
             return
         }
-        pendingRetryScheduled = true
         pendingRetries += 1
-        DispatchQueue.main.asyncAfter(deadline: .now() + pendingRetryInterval) { [weak self] in
-            guard let self else { return }
-            self.pendingRetryScheduled = false
-            guard self.status == .pending else { return }
+        scheduleRetry(after: pendingRetryInterval)
+    }
+
+    private func scheduleRetry(after delay: TimeInterval) {
+        guard shouldReconnect, retryWork == nil else { return }
+        let generation = connectionGeneration
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.shouldReconnect, self.connectionGeneration == generation else { return }
+            self.retryWork = nil
             self.ws?.close(); self.ws = nil
+            self.discoveredEndpoint = nil
             self.dial()
         }
+        retryWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+
+    private func connectionLost(_ reason: String) {
+        guard shouldReconnect else { return }
+        connectTimeoutWork?.cancel(); connectTimeoutWork = nil
+        ws?.close(); ws = nil
+        closeOperator()
+        status = .error
+        let delay = min(30, pow(2, Double(min(reconnectAttempts, 5))))
+        reconnectAttempts += 1
+        lastEvent = "\(reason) — reconnecting in \(Int(delay))s"
+        scheduleRetry(after: delay)
     }
 
     /// Called when the user taps a gateway found via "Find on network". Keeps
@@ -265,6 +286,84 @@ final class OpenClawNodeService: NSObject {
             .replacingOccurrences(of: "=", with: "")
     }
 
+    // Talk uses its own operator grant; a node token never authorizes voice.
+    var voiceGatewayIdentity: String { gatewayURL + "|" + remoteURL }
+
+    func voiceCredential() -> (value: String, field: String)? {
+        if let data = KeychainService.load(key: "ocTalkDeviceToken"),
+           let saved = try? JSONSerialization.jsonObject(with: data) as? [String: String],
+           saved["gateway"] == voiceGatewayIdentity, let value = saved["token"], !value.isEmpty {
+            return (value, "deviceToken")
+        }
+        return token.isEmpty ? nil : (token, "token")
+    }
+
+    func saveVoiceToken(_ token: String, gatewayIdentity: String) {
+        guard voiceGatewayIdentity == gatewayIdentity,
+              let data = try? JSONSerialization.data(withJSONObject: ["gateway": gatewayIdentity, "token": token]) else { return }
+        _ = KeychainService.save(key: "ocTalkDeviceToken", data: data)
+    }
+
+    func resetVoiceAccess() {
+        LiveVoiceService.shared.stop()
+        KeychainService.delete(key: "ocTalkDeviceToken")
+    }
+
+    func voiceConnectParameters(nonce: String, credential: String, authField: String) -> [String: Any]? {
+        let identity = loadOrCreateIdentity()
+        let signedAt = Int64(Date().timeIntervalSince1970 * 1000)
+        let scopes = ["operator.talk"]
+        let payload = ["v3", identity.deviceId, operatorClientId, "ui", "operator",
+                       scopes.joined(separator: ","), String(signedAt), credential, nonce,
+                       platformName, deviceFamilyName].joined(separator: "|")
+        guard let signature = try? identity.privateKey.signature(for: Data(payload.utf8)) else { return nil }
+        return [
+            "minProtocol": protocolVersion, "maxProtocol": protocolVersion,
+            "client": ["id": operatorClientId, "displayName": displayName + " Voice",
+                       "version": "1.0.0", "platform": platformName, "deviceFamily": deviceFamilyName,
+                       "mode": "ui", "instanceId": identity.deviceId],
+            "role": "operator", "scopes": scopes,
+            "device": ["id": identity.deviceId,
+                       "publicKey": base64url(identity.privateKey.publicKey.rawRepresentation),
+                       "signature": base64url(signature), "signedAt": signedAt, "nonce": nonce],
+            "auth": [authField: credential],
+        ]
+    }
+
+    /// Voice can start independently of the sensor node, including on a standalone Watch.
+    func connectVoiceGateway(_ client: WSClient, isCurrent: @escaping () -> Bool,
+                             failure: @escaping (String) -> Void) {
+        func validURL(_ text: String) -> URL? {
+            guard let url = URL(string: text), let host = url.host, !host.isEmpty,
+                  ["ws", "wss"].contains(url.scheme ?? "") else { return nil }
+            return url
+        }
+        func dial(_ url: URL, endpoint: NWEndpoint? = nil, tls: Bool = false) {
+            guard isCurrent() else { return }
+            if let endpoint, (url.path.isEmpty || url.path == "/"), url.query == nil {
+                client.connect(endpoint: endpoint, tls: tls, headers: cfHeaders)
+            } else {
+                client.connect(url: url, headers: cfHeaders)
+            }
+        }
+        if status == .connected, let activeURL {
+            dial(activeURL, endpoint: discoveredEndpoint, tls: discoveredTls)
+            return
+        }
+        let lan = validURL(gatewayURL)
+        let remote = validURL(remoteURL)
+        if let lan, let host = lan.host, Self.isPrivateLANHost(host) {
+            NodeDiscoveryService.shared.resolveEndpoint(forHost: host) { endpoint, tls in
+                if let endpoint { dial(lan, endpoint: endpoint, tls: tls) }
+                else { dial(remote ?? lan) }
+            }
+        } else if let url = lan ?? remote {
+            dial(url)
+        } else {
+            failure("Set an OpenClaw Gateway address in Agent settings before starting voice.")
+        }
+    }
+
     /// v3 signature payload, byte-identical to OpenClaw's buildDeviceAuthPayloadV3
     private func v3Payload(deviceId: String, signedAtMs: Int64, nonce: String) -> String {
         [
@@ -277,26 +376,47 @@ final class OpenClawNodeService: NSObject {
 
     func start() {
         guard status == .idle || status == .error else { return }
+        retryWork?.cancel(); retryWork = nil
+        connectTimeoutWork?.cancel(); connectTimeoutWork = nil
+        ws?.close(); ws = nil
+        closeOperator()
+        shouldReconnect = true
+        isAutoConnect = true
+        reconnectAttempts = 0
         pendingRetries = 0
         // Re-resolve the LAN endpoint on every fresh connect so home↔away
         // switching is reliable (a stale endpoint from home won't connect away
-        // and would otherwise block the tunnel fallback). The pending-approval
-        // retry loop reuses the endpoint via redial()/dial() directly.
+        // and would otherwise block the tunnel fallback).
         discoveredEndpoint = nil
         dial()
     }
 
     private func dial() {
-        let lan = URL(string: gatewayURL).flatMap { $0.scheme?.hasPrefix("ws") == true ? $0 : nil }
-        let remote = URL(string: remoteURL).flatMap { $0.scheme?.hasPrefix("ws") == true ? $0 : nil }
+        func validURL(_ raw: String) -> URL? {
+            guard let url = URL(string: raw), url.host != nil,
+                  url.scheme == "ws" || url.scheme == "wss",
+                  (1...65535).contains(url.port ?? (url.scheme == "wss" ? 443 : 80)) else { return nil }
+            return url
+        }
+        let lan = validURL(gatewayURL)
+        let remote = validURL(remoteURL)
         guard lan != nil || remote != nil else {
+            shouldReconnect = false
             status = .error
             lastEvent = gatewayURL.isEmpty ? "No gateway URL set" : "Bad gateway URL: \(gatewayURL)"
             return
         }
+        connectionGeneration = UUID()
+        let generation = connectionGeneration
         status = .connecting
-        isAutoConnect = true
         gotChallenge = false
+        connectTimeoutWork?.cancel()
+        let timeout = DispatchWorkItem { [weak self] in
+            guard let self, self.connectionGeneration == generation, self.status == .connecting else { return }
+            self.connectionLost("Gateway connection timed out")
+        }
+        connectTimeoutWork = timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 15, execute: timeout)
         connectedViaRemote = false
 
         // Already hold a live LAN Bonjour endpoint → use it (fast home path).
@@ -304,13 +424,11 @@ final class OpenClawNodeService: NSObject {
             openWebSocket(url: lan); return
         }
 
-        // LAN gateway is a private host: a raw-IP dial is aborted by iOS Local
-        // Network privacy, so resolve the Bonjour endpoint over mDNS. If it's not
-        // found (we're away), fall back to the tunnel URL.
+        // Discover the LAN gateway before selecting the local or tunnel route.
         if let lan, let host = lan.host, Self.isPrivateLANHost(host) {
             lastEvent = "Finding \(host) on the network…"
             NodeDiscoveryService.shared.resolveEndpoint(forHost: host) { [weak self] ep, tls in
-                guard let self, self.status == .connecting else { return }
+                guard let self, self.status == .connecting, self.connectionGeneration == generation else { return }
                 if let ep {
                     self.discoveredEndpoint = ep; self.discoveredTls = tls
                     self.openWebSocket(url: lan)
@@ -335,7 +453,7 @@ final class OpenClawNodeService: NSObject {
     }
 
     /// True for hosts on the local network (private IPv4 or an mDNS `.local`
-    /// name) — the ones a direct dial gets aborted for and mDNS can resolve.
+    /// name), where Bonjour discovery can establish whether we are at home.
     static func isPrivateLANHost(_ host: String) -> Bool {
         if host.hasSuffix(".local") { return true }
         let parts = host.split(separator: ".")
@@ -360,18 +478,26 @@ final class OpenClawNodeService: NSObject {
         lastEvent = "Dialing \(via) [\(cred)]\(cf)"
 
         let client = WSClient()
+        let generation = connectionGeneration
         ws = client
         client.onOpen = { [weak self] in
-            guard let self, self.status == .connecting else { return }
+            guard let self, self.connectionGeneration == generation, self.status == .connecting else { return }
             self.lastEvent = "Socket open — awaiting challenge"
         }
         client.onWaiting = { [weak self] reason in
-            guard let self, self.status == .connecting else { return }
-            self.lastEvent = "Waiting (route not ready): \(reason)"
+            guard let self, self.connectionGeneration == generation else { return }
+            if self.status == .connected {
+                self.connectionLost("Connection unavailable: \(reason)")
+            } else if self.status == .connecting {
+                self.lastEvent = "Waiting (route not ready): \(reason)"
+            }
         }
-        client.onText = { [weak self] text in self?.handleFrame(text) }
+        client.onText = { [weak self] text in
+            guard let self, self.connectionGeneration == generation else { return }
+            self.handleFrame(text)
+        }
         client.onClose = { [weak self] reason in
-            guard let self else { return }
+            guard let self, self.connectionGeneration == generation else { return }
             switch self.status {
             case .idle:
                 return
@@ -386,12 +512,11 @@ final class OpenClawNodeService: NSObject {
                 // real reason with a generic "closed / socket 57" line.
                 return
             default:
-                self.status = .error
                 let stage = self.gotChallenge ? "after handshake" : "before handshake"
-                self.lastEvent = "Closed \(stage): \(reason ?? "connection closed")"
+                self.connectionLost("Closed \(stage): \(reason ?? "connection closed")")
             }
         }
-        if let ep = discoveredEndpoint {
+        if let ep = discoveredEndpoint, (url.path.isEmpty || url.path == "/"), url.query == nil {
             client.connect(endpoint: ep, tls: discoveredTls, headers: cfHeaders)
         } else {
             client.connect(url: url, headers: cfHeaders)
@@ -402,7 +527,12 @@ final class OpenClawNodeService: NSObject {
     /// upgrade actually completed) before a failure.
     private var gotChallenge = false
 
-    func stop() {
+    func stop(disableAutoConnect: Bool = true) {
+        shouldReconnect = false
+        if disableAutoConnect { isAutoConnect = false }
+        connectionGeneration = UUID()
+        retryWork?.cancel(); retryWork = nil
+        connectTimeoutWork?.cancel(); connectTimeoutWork = nil
         ws?.close()
         ws = nil
         closeOperator()
@@ -420,6 +550,7 @@ final class OpenClawNodeService: NSObject {
             "ocBootstrapToken", "ocDeviceToken",
             "liveVoiceEndpoint", "liveVoiceRemote", "liveVoiceToken", "liveVoiceDefaultAgent",
             "liveVoiceAgentMap", "liveVoiceAutoStop", "liveVoiceSilenceTimeout",
+            "liveVoiceBackend", "liveVoiceTalkModel", "liveVoiceTalkAutoStop",
             "cfAccessClientId", "cfAccessClientSecret",
         ]
         for key in keys {
@@ -428,6 +559,7 @@ final class OpenClawNodeService: NSObject {
         }
         NSUbiquitousKeyValueStore.default.synchronize()
         KeychainService.delete(key: "ocNodePrivateKey")   // new identity next time
+        KeychainService.delete(key: "ocTalkDeviceToken")
         discoveredEndpoint = nil
         agents = []
         agentsDefaultId = ""
@@ -447,13 +579,16 @@ final class OpenClawNodeService: NSObject {
                let nonce = payload["nonce"] as? String {
                 gotChallenge = true
                 sendConnect(nonce: nonce)
-            } else if event == "node.invoke.request",
+            } else if event == "node.invoke.request", status == .connected,
                       let payload = obj["payload"] as? [String: Any] {
                 handleInvoke(payload)
             }
         } else if type == "res", let id = obj["id"] as? String, id == "connect" {
+            connectTimeoutWork?.cancel(); connectTimeoutWork = nil
             if (obj["ok"] as? Bool) == true {
                 status = .connected
+                reconnectAttempts = 0
+                retryWork?.cancel(); retryWork = nil
                 pendingRetries = 0
                 lastEvent = "Connected as node"
                 // Capture the persistent device token issued on approval; it
@@ -489,6 +624,7 @@ final class OpenClawNodeService: NSObject {
                 if c.contains("BOOTSTRAP") {
                     // Single-use token spent/expired — need a fresh scan.
                     bootstrapToken = ""
+                    shouldReconnect = false
                     status = .error
                     lastEvent = "Setup code expired — scan a fresh QR"
                 } else if c.contains("PAIRING") || c == "NOT_PAIRED"
@@ -500,6 +636,7 @@ final class OpenClawNodeService: NSObject {
                     // Keep retrying so approval alone completes the pairing.
                     schedulePendingRetry()
                 } else {
+                    shouldReconnect = false
                     status = .error
                     lastEvent = "Gateway rejected: \(msg)\(code.map { " [\($0)]" } ?? "")"
                 }
@@ -534,14 +671,17 @@ final class OpenClawNodeService: NSObject {
             lastEvent = "Connected — enter agent ids manually (auto-list needs the gateway token, or a gateway policy change)."
             return
         }
-        // Follow the same transport the node used (LAN endpoint or tunnel URL),
-        // NOT the raw LAN IP in gatewayURL — otherwise this aborts on tunnel.
+        // Follow the transport the node used, including any path and query.
         let target = activeURL ?? URL(string: gatewayURL)
         closeOperator()
         let client = WSClient()
         operatorWS = client
-        client.onText = { [weak self] text in self?.handleOperatorFrame(text) }
-        if let ep = discoveredEndpoint {
+        client.onText = { [weak self, weak client] text in
+            guard let self, let client, self.operatorWS === client else { return }
+            self.handleOperatorFrame(text)
+        }
+        if let ep = discoveredEndpoint, let target,
+           (target.path.isEmpty || target.path == "/"), target.query == nil {
             client.connect(endpoint: ep, tls: discoveredTls, headers: cfHeaders)
         } else if let target, target.scheme?.hasPrefix("ws") == true {
             client.connect(url: target, headers: cfHeaders)
@@ -706,31 +846,64 @@ final class OpenClawNodeService: NSObject {
               let nodeId = payload["nodeId"] as? String,
               let command = payload["command"] as? String else { return }
         lastEvent = "Agent asked: \(command)"
+        let generation = connectionGeneration
         var invokeParams: [String: Any] = [:]
-        if let paramsJSON = payload["paramsJSON"] as? String,
-           let data = paramsJSON.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            invokeParams = parsed
+        var invalidParams = false
+        if let raw = payload["paramsJSON"], !(raw is NSNull) {
+            if let text = raw as? String,
+               let parsed = try? JSONSerialization.jsonObject(with: Data(text.utf8)) as? [String: Any] {
+                invokeParams = parsed
+            } else {
+                invalidParams = true
+            }
         }
-        Task {
-            let result = await runCommand(command, params: invokeParams)
-            let params: [String: Any] = [
-                "id": id, "nodeId": nodeId, "ok": true,
-                "payloadJSON": String(decoding: (try? JSONSerialization.data(withJSONObject: result)) ?? Data("{}".utf8), as: UTF8.self),
-            ]
+        Task { @MainActor in
+            guard self.connectionGeneration == generation, self.status == .connected else { return }
+            let result: [String: Any]
+            if invalidParams {
+                result = ["error": "paramsJSON must contain a JSON object", "code": "INVALID_PARAMS"]
+            } else {
+                result = await runCommand(command, params: invokeParams)
+            }
+            guard self.connectionGeneration == generation, self.status == .connected else { return }
+            let params = Self.invocationResult(id: id, nodeId: nodeId, result: result)
             send(type: "req", body: ["id": UUID().uuidString, "method": "node.invoke.result", "params": params])
         }
+    }
+
+    /// Errors belong in the protocol envelope, not in a successful payload.
+    static func invocationResult(id: String, nodeId: String, result: [String: Any]) -> [String: Any] {
+        var envelope: [String: Any] = ["id": id, "nodeId": nodeId]
+        if let message = result["error"] as? String {
+            envelope["ok"] = false
+            envelope["error"] = ["code": result["code"] as? String ?? "UNAVAILABLE", "message": message]
+        } else if let data = try? JSONSerialization.data(withJSONObject: result) {
+            envelope["ok"] = true
+            envelope["payloadJSON"] = String(decoding: data, as: UTF8.self)
+        } else {
+            envelope["ok"] = false
+            envelope["error"] = ["code": "INTERNAL_ERROR", "message": "Could not encode command result"]
+        }
+        return envelope
     }
 
     private func runCommand(_ command: String, params: [String: Any]) async -> [String: Any] {
         // Consent gate: node commands honour the same per-category consent as
         // the Telegram #-command channel.
-        if let consent = consentCategory(for: command), !AutoResponderStore.isConsented(consent) {
-            return ["error": "\(consent.label) access is disabled"]
+        guard AutoResponderStore.allowRequest() else {
+            return ["error": "Rate limit reached, try again shortly", "code": "RATE_LIMITED"]
+        }
+        AutoResponderStore.audit(command: "node: " + command, chatId: 0)
+        guard commands.contains(command) else {
+            return ["error": "unsupported command \(command)", "code": "UNSUPPORTED_COMMAND"]
+        }
+        if let denial = AutoResponderStore.consentDenial(for: command) {
+            return ["error": denial, "code": "PERMISSION_DENIED"]
         }
         switch command {
         case "battery.get":
-            return ["battery": StatusDataService.buildBatteryStatus() ?? "unknown"]
+            guard let battery = StatusDataService.buildBatteryStatus() else { return ["error": "battery unavailable"] }
+            return ["battery": battery]
         case "location.get":
             if let loc = locationManager.location {
                 return ["lat": loc.coordinate.latitude, "lon": loc.coordinate.longitude]
@@ -745,7 +918,8 @@ final class OpenClawNodeService: NSObject {
             if let s = await StatusDataService.getTodaySteps() { return ["steps": s] }
             return ["error": "no step data"]
         case "sleep.get":
-            return ["summary": await StatusDataService.buildSleepStatus() ?? "no sleep data"]
+            guard let summary = await StatusDataService.buildSleepStatus() else { return ["error": "no sleep data"] }
+            return ["summary": summary]
         case "workout.get":
             return ["summary": await StatusDataService.buildWorkoutStatus() ?? "no active workout"]
         case "calendar.get":
@@ -754,7 +928,8 @@ final class OpenClawNodeService: NSObject {
             }
             return ["summary": await StatusDataService.buildCalendarStatus() ?? "no events"]
         case "weather.get":
-            return ["summary": await StatusDataService.buildWeatherStatus() ?? "weather unavailable"]
+            guard let summary = await StatusDataService.buildWeatherStatus() else { return ["error": "weather unavailable"] }
+            return ["summary": summary]
         case "system.notify":
             let text = params["text"] as? String ?? "Notification from your agent"
             AgentAlertService.raise(text, critical: params["critical"] as? Bool ?? false)
@@ -767,18 +942,13 @@ final class OpenClawNodeService: NSObject {
             if command.hasPrefix("watch.") {
                 return await WatchBridge.shared.fetchFromWatch(command)
             }
+            #elseif os(watchOS)
+            if command.hasPrefix("watch.") {
+                return await WatchBridge.runWatchCommand(command)
+            }
             #endif
-            return ["error": "unsupported command \(command)"]
+            return ["error": "unsupported command \(command)", "code": "UNSUPPORTED_COMMAND"]
         }
-    }
-
-    private func consentCategory(for command: String) -> AutoResponderStore.Consent? {
-        if command.hasPrefix("health") || command.hasPrefix("heart")
-            || command.hasPrefix("steps") || command.hasPrefix("sleep")
-            || command.hasPrefix("workout") { return .health }
-        if command.hasPrefix("location") { return .location }
-        if command.hasPrefix("calendar") { return .calendar }
-        return nil
     }
 
     // MARK: - Send

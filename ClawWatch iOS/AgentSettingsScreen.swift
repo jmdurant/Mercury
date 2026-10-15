@@ -29,6 +29,8 @@ struct AgentSettingsScreen: View {
     @State private var cfSecret: String = CloudflareAccess.clientSecret
     @State private var discovery = NodeDiscoveryService.shared
     @State private var voice = LiveVoiceService.shared
+    @State private var voiceBackend = LiveVoiceService.shared.backend
+    @State private var voiceModel = LiveVoiceService.shared.talkModel
     @State private var voiceURL: String = LiveVoiceService.shared.endpoint
     @State private var voiceToken: String = LiveVoiceService.shared.voiceToken
     @State private var defaultAgent: String = LiveVoiceService.shared.defaultAgentId
@@ -122,6 +124,26 @@ struct AgentSettingsScreen: View {
 
                 // MARK: Live voice (knobs)
                 Section {
+                    Picker("Voice service", selection: $voiceBackend) {
+                        ForEach(LiveVoiceService.Backend.allCases) { backend in
+                            Text(backend.label).tag(backend)
+                        }
+                    }
+                    .disabled(voice.state == .live || voice.state == .connecting)
+                    .onChange(of: voiceBackend) { _, value in
+                        voice.backend = value
+                        autoStop = voice.autoStopOnSilence
+                    }
+                    if voiceBackend == .openClaw {
+                        Picker("Conversation model", selection: $voiceModel) {
+                            ForEach(LiveVoiceService.TalkModel.allCases) { model in
+                                Text(model.label).tag(model)
+                            }
+                        }
+                        .disabled(voice.state == .live || voice.state == .connecting)
+                        .onChange(of: voiceModel) { _, value in voice.talkModel = value }
+                        Text(voiceModel.explanation).font(.caption).foregroundStyle(.secondary)
+                    }
                     if !node.agents.isEmpty {
                         Picker("Default agent", selection: $defaultAgent) {
                             Text("None").tag("")
@@ -146,7 +168,9 @@ struct AgentSettingsScreen: View {
                 } header: {
                     Text("Live voice")
                 } footer: {
-                    Text("Agents load once the node is connected.")
+                    Text(voiceBackend == .openClaw
+                         ? "Uses your Gateway connection. Configure OpenAI Talk and sign in or add an API key on OpenClaw. First use may require device approval for voice. Voice history is kept on the Gateway separately from Telegram."
+                         : "Uses the original voice server and its saved endpoint/token. Agents load once the node is connected.")
                 }
 
                 // MARK: Advanced (fallbacks + niche, collapsed)
@@ -157,7 +181,7 @@ struct AgentSettingsScreen: View {
                         TextField("ws://127.0.0.1:18789", text: $nodeURL)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: nodeURL) { _, v in node.gatewayURL = v }
-                        TextField("Gateway token", text: $nodeToken)
+                        SecureField("Gateway token", text: $nodeToken)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: nodeToken) { _, v in node.token = v }
                         TextField("Device name (nodes list)", text: $deviceName)
@@ -168,26 +192,32 @@ struct AgentSettingsScreen: View {
                         TextField("Remote gateway URL (wss://gateway.…)", text: $remoteURL)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
                             .onChange(of: remoteURL) { _, v in node.remoteURL = v }
-                        TextField("Remote voice URL (wss://clawvoice.…)", text: $remoteVoiceURL)
-                            .autocorrectionDisabled().textInputAutocapitalization(.never)
-                            .onChange(of: remoteVoiceURL) { _, v in voice.remoteEndpoint = v }
+                        if voiceBackend == .custom {
+                            TextField("Remote voice URL (wss://clawvoice.…)", text: $remoteVoiceURL)
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                                .onChange(of: remoteVoiceURL) { _, v in voice.remoteEndpoint = v }
 
-                        TextField("Voice endpoint override (optional)", text: $voiceURL)
-                            .autocorrectionDisabled().textInputAutocapitalization(.never)
-                            .onChange(of: voiceURL) { _, v in voice.endpoint = v }
-                        if voiceURL.isEmpty {
-                            Text("Using node host: \(voice.effectiveEndpoint.isEmpty ? "—" : voice.effectiveEndpoint)")
-                                .font(.caption2).foregroundStyle(.secondary)
-                        } else if let derived = voiceURLFromNodeHost, derived != voiceURL {
-                            Button {
-                                voiceURL = ""; voice.endpoint = ""
-                            } label: {
-                                Label("Reset to node host", systemImage: "arrow.uturn.backward").font(.caption)
+                            TextField("Voice endpoint override (optional)", text: $voiceURL)
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                                .onChange(of: voiceURL) { _, v in voice.endpoint = v }
+                            if voiceURL.isEmpty {
+                                Text("Using node host: \(voice.effectiveEndpoint.isEmpty ? "—" : voice.effectiveEndpoint)")
+                                    .font(.caption2).foregroundStyle(.secondary)
+                            } else if let derived = voiceURLFromNodeHost, derived != voiceURL {
+                                Button {
+                                    voiceURL = ""; voice.endpoint = ""
+                                } label: {
+                                    Label("Reset to node host", systemImage: "arrow.uturn.backward").font(.caption)
+                                }
                             }
+                            SecureField("Voice token", text: $voiceToken)
+                                .autocorrectionDisabled().textInputAutocapitalization(.never)
+                                .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
+                        } else {
+                            Button("Re-pair voice access") { node.resetVoiceAccess() }
+                            Text("For initial voice authorization, enter the Gateway token above. Each device keeps its own Talk credential after approval.")
+                                .font(.caption2).foregroundStyle(.secondary)
                         }
-                        TextField("Voice token", text: $voiceToken)
-                            .autocorrectionDisabled().textInputAutocapitalization(.never)
-                            .onChange(of: voiceToken) { _, v in voice.voiceToken = v }
 
                         TextField("CF-Access-Client-Id", text: $cfId)
                             .autocorrectionDisabled().textInputAutocapitalization(.never)
@@ -284,6 +314,7 @@ struct AgentSettingsScreen: View {
                     nodeURL = ""; nodeToken = ""; deviceName = node.displayName
                     remoteURL = ""; remoteVoiceURL = ""
                     voiceURL = ""; voiceToken = ""; defaultAgent = ""
+                    voiceBackend = .openClaw; voiceModel = .gateway
                     cfId = ""; cfSecret = ""
                 }
                 Button("Cancel", role: .cancel) {}

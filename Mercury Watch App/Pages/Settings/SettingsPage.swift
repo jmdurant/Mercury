@@ -161,6 +161,22 @@ struct SettingsPage: View {
                 let voice = LiveVoiceService.shared
                 let node = OpenClawNodeService.shared
                 Text("Voice: \(voice.state.rawValue)").font(.caption)
+                Picker("Voice service", selection: Binding(get: { voice.backend }, set: { voice.backend = $0 })) {
+                    ForEach(LiveVoiceService.Backend.allCases) { backend in Text(backend.label).tag(backend) }
+                }
+                .disabled(voice.state == .live || voice.state == .connecting)
+                if voice.backend == .openClaw {
+                    Picker("Model", selection: Binding(get: { voice.talkModel }, set: { voice.talkModel = $0 })) {
+                        ForEach(LiveVoiceService.TalkModel.allCases) { model in Text(model.label).tag(model) }
+                    }
+                    .disabled(voice.state == .live || voice.state == .connecting)
+                }
+                if let error = voice.lastError {
+                    Text(error).font(.caption2).foregroundStyle(.red)
+                }
+                if let notice = voice.notice {
+                    Text(notice).font(.caption2).foregroundStyle(.orange)
+                }
 
                 // Agent picker — fed by the gateway roster (node connected)
                 if !node.agents.isEmpty {
@@ -180,10 +196,13 @@ struct SettingsPage: View {
                     else { voice.start(agentId: voiceAgentId.isEmpty ? nil : voiceAgentId) }
                 }
                 .font(.caption)
+                if !voice.assistantTranscript.isEmpty {
+                    Text(voice.assistantTranscript).font(.caption2).lineLimit(8)
+                }
             } header: {
                 Text("Live voice")
             } footer: {
-                Text("Talks to the selected agent (roster synced from your gateway). Stays connected while the session runs, even when your wrist drops.")
+                Text("Voice settings sync with iPhone. OpenClaw Talk uses the Gateway connection; Custom uses your saved voice server. Keep the app open while connecting.")
             }
 
             Section("Recent agent activity") {
