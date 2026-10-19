@@ -31,6 +31,8 @@
 	<string>AgentOnDemand can push arrival/departure context to your AI agent.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>AgentOnDemand can share health status as quick replies.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>AgentOnDemand reads health data for status replies. It does not request permission to add or change your health records.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>AgentOnDemand can share your calendar status as a quick reply.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>

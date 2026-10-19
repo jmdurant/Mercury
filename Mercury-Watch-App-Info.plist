@@ -8,6 +8,8 @@
 	<string>AgentOnDemand needs your location to share it in chats.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>AgentOnDemand can share your workout, steps, and heart rate as quick status replies.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>AgentOnDemand reads health data for status replies. It does not request permission to add or change your health records.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>AgentOnDemand can share your calendar status as a quick reply.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>

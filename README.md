@@ -273,6 +273,16 @@ xcodebuild -project Mercury.xcodeproj -scheme "ClawWatch iOS" \
 
 Xcode GUI builds to a paired 64-bit watch don't hit this. Note also that the **Critical Alerts** entitlement is removed by default — it needs per-account approval from Apple; re-add `com.apple.developer.usernotifications.critical-alerts` once granted.
 
+### 4. TestFlight archives
+
+The App Store Connect listing is **AgentOnDemand AI**; the device display name is **AgentOnDemand**. Archive the **ClawWatch iOS** scheme with `EXCLUDED_ARCHS=armv7k`. Before exporting with the `app-store-connect` method, prepare the archive:
+
+```bash
+python3 Scripts/prepare-testflight-archive.py /path/to/AgentOnDemand.xcarchive
+```
+
+TDLib's packaged Watch framework declares watchOS 4 even when Xcode links its arm64 binary for watchOS 26. The script raises that framework's metadata to its actual binary minimum, checks it against the Watch app's deployment target, and restores the archive signatures. This prevents App Store Connect validation error 90208. Run it after each archive and before `xcodebuild -exportArchive`; it is safe to rerun.
+
 ---
 
 ## Security

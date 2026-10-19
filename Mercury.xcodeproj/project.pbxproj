@@ -1579,7 +1579,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Mercury Watch App/Mercury Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
@@ -1611,7 +1611,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Mercury Watch App/Mercury Watch App.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_ASSET_PATHS = "\"Mercury Watch App/Preview Content\"";
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
@@ -1642,7 +1642,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentOnDemand;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -1659,7 +1659,7 @@
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				INFOPLIST_KEY_CFBundleDisplayName = AgentOnDemand;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -1679,7 +1679,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch iOS/ClawWatch-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1711,7 +1711,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch iOS/ClawWatch-iOS.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -1742,7 +1742,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
@@ -1770,7 +1770,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Widget/ClawWatch-Widget.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Widget/Info.plist";
@@ -1798,7 +1798,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch NotificationService/Info.plist";
@@ -1824,7 +1824,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch NotificationService/Info.plist";
@@ -1852,7 +1852,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Share/ClawWatch-Share.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Share/Info.plist";
@@ -1879,7 +1879,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = "ClawWatch Share/ClawWatch-Share.entitlements";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 15;
+				CURRENT_PROJECT_VERSION = 16;
 				DEVELOPMENT_TEAM = ADVQS8RXPZ;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "ClawWatch Share/Info.plist";
