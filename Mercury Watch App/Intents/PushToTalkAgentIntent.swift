@@ -18,7 +18,7 @@ import AppIntents
 struct PushToTalkAgentIntent: AppIntent {
     static var title: LocalizedStringResource = "Push-to-Talk with Agent"
     static var description = IntentDescription(
-        "Arm push-to-talk for your agent — brings up the hold-to-talk button on iPhone.")
+        "Enable or disable push-to-talk with your agent.")
     static var supportedModes: IntentModes = .foreground(.immediate)
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
