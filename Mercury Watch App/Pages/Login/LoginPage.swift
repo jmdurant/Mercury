@@ -29,7 +29,7 @@ struct LoginPage: View {
                 background()
             }
             .navigationTitle {
-                Text("Mercury")
+                Text("AgentOnDemand")
                     .foregroundStyle(vm.showFullscreenQR ? .white : .blue)
                     .opacity(vm.showFullscreenQR ? 0 : 1)
             }

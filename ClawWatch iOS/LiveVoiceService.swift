@@ -381,7 +381,7 @@ final class LiveVoiceService: NSObject {
         let generation = captureGeneration
         requestMicrophoneAccess { [weak self] granted in
             guard let self, self.state == .connecting, self.captureGeneration == generation else { return }
-            guard granted else { self.fail("Allow microphone access for ClawWatch in Settings, then try again."); return }
+            guard granted else { self.fail("Allow microphone access for AgentOnDemand in Settings, then try again."); return }
             do {
                 try self.configureSession()
                 self.openVoiceConnection()

@@ -8,18 +8,18 @@
 import AppIntents
 
 struct CheckUnreadAppIntent: AppIntent {
-    static var title: LocalizedStringResource = "Check Mercury Messages"
+    static var title: LocalizedStringResource = "Check AgentOnDemand Messages"
     static var description = IntentDescription("Check your unread Telegram messages")
     static var supportedModes: IntentModes = .background
 
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let count = SharedDataStore.getTotalUnreadCount()
         if count == 0 {
-            return .result(dialog: "You have no unread messages on Mercury")
+            return .result(dialog: "You have no unread messages on AgentOnDemand")
         } else if count == 1 {
-            return .result(dialog: "You have 1 unread message on Mercury")
+            return .result(dialog: "You have 1 unread message on AgentOnDemand")
         } else {
-            return .result(dialog: "You have \(count) unread messages on Mercury")
+            return .result(dialog: "You have \(count) unread messages on AgentOnDemand")
         }
     }
 }

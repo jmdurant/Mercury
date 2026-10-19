@@ -242,11 +242,11 @@ final class OpenClawNodeService: NSObject {
     #if os(watchOS)
     private let platformName = "watchos"
     private let deviceFamilyName = "watch"
-    private let defaultDisplayName = "ClawWatch Watch"
+    private let defaultDisplayName = "AgentOnDemand Watch"
     #else
     private let platformName = "ios"
     private let deviceFamilyName = "phone"
-    private let defaultDisplayName = "ClawWatch iPhone"
+    private let defaultDisplayName = "AgentOnDemand iPhone"
     #endif
 
     /// Friendly name shown in `openclaw nodes list` and the approval prompt.
@@ -935,7 +935,7 @@ final class OpenClawNodeService: NSObject {
             AgentAlertService.raise(text, critical: params["critical"] as? Bool ?? false)
             return ["ok": true]
         case "device.info":
-            return ["platform": platformName, "app": "ClawWatch", "session": AutoResponderStore.sessionId]
+            return ["platform": platformName, "app": "AgentOnDemand", "session": AutoResponderStore.sessionId]
         default:
             #if os(iOS)
             // watch-exclusive sensors: relay to the watch over WatchConnectivity

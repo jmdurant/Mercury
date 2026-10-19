@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>NSMotionUsageDescription</key>
-	<string>ClawWatch uses motion activity to choose your driving or workout auto-reply context.</string>
+	<string>AgentOnDemand uses motion activity to choose your driving or workout auto-reply context.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Mercury needs your location to share it in chats.</string>
+	<string>AgentOnDemand needs your location to share it in chats.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Mercury can share your workout, steps, and heart rate as quick status replies.</string>
+	<string>AgentOnDemand can share your workout, steps, and heart rate as quick status replies.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Mercury can share your calendar status as a quick reply.</string>
+	<string>AgentOnDemand can share your calendar status as a quick reply.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>Mercury can share your next reminder as a quick reply.</string>
+	<string>AgentOnDemand can share your next reminder as a quick reply.</string>
 	<!-- Extended runtime session type for walkie-talkie conversations.
 	     Per WKExtendedRuntimeSession.h the session type comes from
 	     WKBackgroundModes; "self-care" is a foreground session type that
@@ -24,7 +24,7 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ClawWatch finds and connects to your OpenClaw gateway on the local network.</string>
+	<string>AgentOnDemand finds and connects to your OpenClaw gateway on the local network.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_openclaw-gw._tcp</string>

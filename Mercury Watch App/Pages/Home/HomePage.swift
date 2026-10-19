@@ -43,7 +43,7 @@ struct HomePage: View {
                 }
                 
             }
-            .navigationTitle("Mercury")
+            .navigationTitle("AgentOnDemand")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {

@@ -1,8 +1,8 @@
-# ClawWatch
+# AgentOnDemand
 
 **A Telegram client for Apple Watch and iPhone, built as an agent-native surface.**
 
-ClawWatch is a fork of [Mercury](https://github.com/mercurytelegram/Mercury) — the open-source standalone Telegram client for Apple Watch — extended into a two-app, agent-connected system. It keeps everything Mercury does on the wrist, adds a native iPhone app that shares the same engine, and turns the whole thing into a device your AI agent can *talk to and act through* — over Telegram, as a structured OpenClaw node, and by live voice.
+AgentOnDemand (formerly ClawWatch) is a fork of [Mercury](https://github.com/mercurytelegram/Mercury) — the open-source standalone Telegram client for Apple Watch — extended into a two-app, agent-connected system. It keeps everything Mercury does on the wrist, adds a native iPhone app that shares the same engine, and turns the whole thing into a device your AI agent can *talk to and act through* — over Telegram, as a structured OpenClaw node, and by live voice.
 
 > This is a personal fork under DoctorDuRant LLC. For the original standalone watch client, see the [upstream Mercury project](https://github.com/mercurytelegram/Mercury). Credits to the original authors are at the bottom.
 
@@ -287,6 +287,6 @@ Xcode GUI builds to a paired 64-bit watch don't hit this. Note also that the **C
 
 ## Credits
 
-ClawWatch is a fork of **[Mercury](https://github.com/mercurytelegram/Mercury)** by **Alessandro Alberti** ([@AlessandroAlberti](https://t.me/AlessandroAlberti)) and **Marco Tammaro** ([@MarcoTammaro](https://t.me/MarcoTammaro)) — the original standalone Apple Watch Telegram client. This fork adds the iPhone app, the AI agent channel, live voice, and the OpenClaw/Cloudflare integration.
+AgentOnDemand (formerly ClawWatch) is a fork of **[Mercury](https://github.com/mercurytelegram/Mercury)** by **Alessandro Alberti** ([@AlessandroAlberti](https://t.me/AlessandroAlberti)) and **Marco Tammaro** ([@MarcoTammaro](https://t.me/MarcoTammaro)) — the original standalone Apple Watch Telegram client. This fork adds the iPhone app, the AI agent channel, live voice, and the OpenClaw/Cloudflare integration.
 
 Before opening a pull request, read the [contributor guidelines](CONTRIBUTING.md).

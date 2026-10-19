@@ -62,7 +62,7 @@ struct UnreadWidget: Widget {
             UnreadWidgetView(entry: entry)
         }
         .configurationDisplayName("Unread Messages")
-        .description("Your ClawWatch unread count.")
+        .description("Your AgentOnDemand unread count.")
         .supportedFamilies([.systemSmall])
     }
 }

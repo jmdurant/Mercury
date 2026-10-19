@@ -7,9 +7,9 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSCameraUsageDescription</key>
-	<string>ClawWatch scans the OpenClaw setup QR code to pair with your gateway.</string>
+	<string>AgentOnDemand scans the OpenClaw setup QR code to pair with your gateway.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>ClawWatch finds and connects to your OpenClaw gateway on the local network.</string>
+	<string>AgentOnDemand finds and connects to your OpenClaw gateway on the local network.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_openclaw-gw._tcp</string>
@@ -22,19 +22,19 @@
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>ClawWatch uses the microphone for voice messages.</string>
+	<string>AgentOnDemand uses the microphone for voice messages.</string>
 	<key>NSMotionUsageDescription</key>
-	<string>ClawWatch uses motion activity to choose your driving or workout auto-reply context.</string>
+	<string>AgentOnDemand uses motion activity to choose your driving or workout auto-reply context.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>ClawWatch can share your location in chats.</string>
+	<string>AgentOnDemand can share your location in chats.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>ClawWatch can push arrival/departure context to your AI agent.</string>
+	<string>AgentOnDemand can push arrival/departure context to your AI agent.</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>ClawWatch can share health status as quick replies.</string>
+	<string>AgentOnDemand can share health status as quick replies.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>ClawWatch can share your calendar status as a quick reply.</string>
+	<string>AgentOnDemand can share your calendar status as a quick reply.</string>
 	<key>NSRemindersFullAccessUsageDescription</key>
-	<string>ClawWatch can share your next reminder as a quick reply.</string>
+	<string>AgentOnDemand can share your next reminder as a quick reply.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>

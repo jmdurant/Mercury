@@ -19,7 +19,7 @@ struct LoginView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    Text("ClawWatch")
+                    Text("AgentOnDemand")
                         .font(.largeTitle.bold())
 
                     if vm.isLoading {

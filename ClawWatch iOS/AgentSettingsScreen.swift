@@ -295,7 +295,7 @@ struct AgentSettingsScreen: View {
                         if let (url, bt) = OpenClawNodeService.decodeSetupCode(code), !bt.isEmpty {
                             let sent = WatchBridge.shared.sendPairingToWatch(url: url, bootstrapToken: bt)
                             watchPairStatus = sent
-                                ? "Sent to watch — open ClawWatch on the watch, then approve it on the gateway."
+                                ? "Sent to watch — open AgentOnDemand on the watch, then approve it on the gateway."
                                 : "Couldn't reach the watch app. Make sure it's installed."
                         } else {
                             watchPairStatus = "That QR isn't an OpenClaw setup code."

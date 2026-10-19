@@ -121,7 +121,7 @@ enum MercuryMessageEffect: String {
     case mercury
 
     static let caseDisplayRepresentations: [Self: DisplayRepresentation] = [
-        .mercury: "Mercury",
+        .mercury: "AgentOnDemand",
     ]
 }
 
@@ -150,7 +150,7 @@ struct MercuryCustomAttachment {
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
-            title: sourceName.map { "\($0)" } ?? "Mercury attachment",
+            title: sourceName.map { "\($0)" } ?? "AgentOnDemand attachment",
             subtitle: description.map { "\($0)" },
             image: .init(systemName: "paperclip")
         )
@@ -196,8 +196,8 @@ struct MercurySentMessage: IndexedEntity {
 
     var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(
-            title: body.map { "\($0)" } ?? "Mercury message",
-            subtitle: "Sent with Mercury",
+            title: body.map { "\($0)" } ?? "AgentOnDemand message",
+            subtitle: "Sent with AgentOnDemand",
             image: .init(systemName: "paperplane.fill")
         )
     }
@@ -276,8 +276,8 @@ struct PendingMercuryDraft: Codable {
 
 @AppIntent(schema: .messages.draftMessage)
 struct DraftMessageAppIntent: AppIntent {
-    static var title: LocalizedStringResource = "Draft Mercury Message"
-    static var description = IntentDescription("Open Mercury to finish composing a Telegram message")
+    static var title: LocalizedStringResource = "Draft AgentOnDemand Message"
+    static var description = IntentDescription("Open AgentOnDemand to finish composing a Telegram message")
     static var openAppWhenRun = true
 
     var destination: MercuryMessageDestination?
@@ -328,8 +328,8 @@ struct DraftMessageAppIntent: AppIntent {
 
 @AppIntent(schema: .messages.sendMessage)
 struct SendMessageAppIntent: AppIntent {
-    static var title: LocalizedStringResource = "Send Mercury Message"
-    static var description = IntentDescription("Send a Telegram message via Mercury")
+    static var title: LocalizedStringResource = "Send AgentOnDemand Message"
+    static var description = IntentDescription("Send a Telegram message via AgentOnDemand")
     static var supportedModes: IntentModes = .background
 
     var content: AttributedString?
@@ -352,12 +352,12 @@ struct SendMessageAppIntent: AppIntent {
 
     func perform() async throws -> some IntentResult & ReturnsValue<[MercurySentMessage]> & ProvidesDialog {
         guard scheduledDate == nil || scheduledDate! <= Date() else {
-            return .result(value: [], dialog: "Mercury does not support scheduled messages yet.")
+            return .result(value: [], dialog: "AgentOnDemand does not support scheduled messages yet.")
         }
         guard attachments.isEmpty, audioMessage == nil else {
             return .result(
                 value: [],
-                dialog: "Mercury can send text and links from Siri, but not attachments yet."
+                dialog: "AgentOnDemand can send text and links from Siri, but not attachments yet."
             )
         }
 
@@ -386,7 +386,7 @@ struct SendMessageAppIntent: AppIntent {
 
         let names = people.compactMap(\.mercuryDisplayName)
         guard !names.isEmpty else {
-            return .result(value: [], dialog: "I couldn't determine the Mercury recipient.")
+            return .result(value: [], dialog: "I couldn't determine the AgentOnDemand recipient.")
         }
 
         for name in names {
@@ -476,8 +476,8 @@ private extension IntentPerson {
 }
 #else
 struct SendMessageAppIntent: AppIntent {
-    static var title: LocalizedStringResource = "Send Mercury Message"
-    static var description = IntentDescription("Send a Telegram message via Mercury")
+    static var title: LocalizedStringResource = "Send AgentOnDemand Message"
+    static var description = IntentDescription("Send a Telegram message via AgentOnDemand")
     static var supportedModes: IntentModes = .background
 
     @Parameter(title: "Recipient")
